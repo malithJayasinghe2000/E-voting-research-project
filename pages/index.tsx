@@ -9,6 +9,7 @@ import { generateFakePolls } from '@/services/data'
 import { useDispatch, useSelector } from 'react-redux'
 import { globalActions } from '@/store/globalSlices'
 import { useEffect } from 'react'
+import { getPolls } from '@/services/blockchain'
 
 export default function Home({ pollsData }: { pollsData: PollStruct[] }) {
   const dispatch = useDispatch()
@@ -46,7 +47,7 @@ export default function Home({ pollsData }: { pollsData: PollStruct[] }) {
 }
 
 export const getServerSideProps = async () => {
-  const pollsData: PollStruct[] = generateFakePolls(4)
+  const pollsData: PollStruct[] =await getPolls()
   return {
     props: {
       pollsData: JSON.parse(JSON.stringify(pollsData)),
