@@ -2,15 +2,15 @@ import linkedin_image from "@/public/assets/images/linkedin.png";
 import Image from "next/image";
 import twitter_image from "@/public/assets/images/twitter.png";
 import Link from "next/link";
-import github_image from "@/public/assets/images/github.png";
+import github_image from "@/public/assets/images/fb.png";
 import whatsapp_image from "@/public/assets/images/whatsapp.png";
-import profile_pic from "@/public/assets/images/logo.png";
+import profile_pic from "@/public/assets/images/pic1.jpg";
 import Navbar from "@/components/Navbar";
 import { FaThumbsUp } from "react-icons/fa"; // Import the like icon
 import ReviewFormModal from "@/components/ReviewForm";
 import { Line } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
-import React, { useState } from 'react'; // Make sure React is imported
+import React, { useState, useRef } from 'react'; // Make sure React is imported
 
 
 // Register Chart.js components
@@ -25,15 +25,36 @@ export default function About() {
     "https://api.whatsapp.com/send/?phone=923312269636&text&type=phone_number&app_absent=0";
 
 
-  const [open, setOpen] = useState(false); // State to manage modal visibility
+//   const [open, setOpen] = useState(false); // State to manage modal visibility
   const [liked, setLiked] = useState(false); // State to track if the like button was clicked
+  const [showComments, setShowComments] = useState(false); // State for toggling comment section visibility
 
-  const handleOpen = () => setOpen(true); // Open modal
-  const handleClose = () => setOpen(false); // Close modal
+//   const handleOpen = () => setShowComments(!showComments); // Toggle visibility of the comment section
+//   const handleOpen = () => setOpen(true); // Open modal
+//   const handleClose = () => setOpen(false); // Close modal
+
+const commentSectionRef = useRef<HTMLDivElement>(null); // Create a ref for the comment section
+const handleOpen = () => {
+    // Scroll to the comment section
+    commentSectionRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const handleLikeClick = () => {
     setLiked((prevLiked) => !prevLiked); // Toggle like state on click
   };
+
+  // Inside your About component
+
+// Add state for comments and new comment
+const [comments, setComments] = useState<string[]>([]);
+const [newComment, setNewComment] = useState("");
+
+// Handler to post a comment
+const handlePostComment = () => {
+  if (newComment.trim() === "") return; // Prevent empty comments
+  setComments([...comments, newComment]); // Add new comment to the array
+  setNewComment(""); // Clear input field
+};
 
 // Portfolio card data
 const portfolioData = [
@@ -96,32 +117,12 @@ const portfolioData = [
         </section>
       <div className="max-w-[1240px] m-auto md:grid grid-cols-3 gap-8">
         <div className="col-span-2">
-          <h1 className="text-4xl font-bold mb-4 ">About Me</h1>
-          <p>
+          <h1 className="text-4xl font-bold mb-4 ">Hello, I’m Namal Perera </h1>
+          <p className="text-xl">
             <span className="font-bold custom-class text-3xl">❝</span>
-            My name is Ahmed Mujtaba Mohsin, and I m excited to share my success
-            story with you. When I was just 12 years old, I enrolled in two
-            courses - RPA and Hardware - at a local institute in my area that
-            provides free courses exclusively for Dhoraji Memon students.
-            Despite my young age, I was determined to make the most of my summer
-            vacation and learn as much as I could about these topics. When I
-            arrived for my first class, my teachers were surprised to see
-            someone so young in their class. Although I only had a basic
-            understanding of Python that I had learned in school, I was eager to
-            learn more. My instructor, Sir Salman, was impressed by my
-            enthusiasm and dedication to learning. Over the next four months, I
-            worked hard to absorb as much information as possible and apply it
-            to my coursework. My classmates, who were university and college
-            students, also encouraged and motivated me throughout the program.
-            When the course ended, I was thrilled to learn that Sir Salman was
-            interested in having some of his students work under him. I was one
-            of the few selected for this opportunity, and it was a tremendous
-            honour to be recognized for my hard work and dedication. Today, I am
-            proud to say that I have continued to learn and grow in my career. I
-            am grateful for the opportunities that have come my way and for the
-            support of my family, teachers, and classmates who have helped me
-            along the way. I have become a Python Developer, Web Developer, and
-            Backend Developer. 
+            As a dedicated public servant, I am committed to fostering transparency,
+             advocating for community-driven policies, 
+             and ensuring that every voice in our district is heard and represented.
             <span className="font-bold custom-class text-3xl">❞</span>
 
           </p>
@@ -131,9 +132,9 @@ const portfolioData = [
             <button
                 className="px-5 py-2 bg-blue-500 text-white rounded-full"
                 onClick={handleOpen}
-            >
-                Open Form
-            </button>
+                >
+                Review Me
+        </button>
 
             {/* Like icon */}
             <div
@@ -146,8 +147,8 @@ const portfolioData = [
 
 
 
-          {/* ContactFormModal component */}
-          <ReviewFormModal open={open} onClose={handleClose} />
+          {/* ContactFormModal component
+          <ReviewFormModal open={open} onClose={handleClose} /> */}
 
           <div className="flex items-center justify-between max-w-[330px] m-auto py-4">
             <Link href={linkedinUrl} target="_blank" rel="noopener noreferrer">
@@ -219,6 +220,47 @@ const portfolioData = [
           </div>
         </div>
       </section>
+      <div  ref={commentSectionRef} className="max-w-[1240px] m-auto py-16 mt-10 rounded-xl shadow-xl p-4 bg-gray-100">
+        <h2 className="text-2xl font-bold mb-4">Reviews </h2>
+        {/* Comment Input */}
+        <div className="flex items-center gap-4 mb-6">
+            <input
+            type="text"
+            className="flex-grow border-2 border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring focus:ring-blue-300"
+            placeholder="Write a comment..."
+            value={newComment}
+            onChange={(e) => setNewComment(e.target.value)}
+            />
+            <button
+            className="px-4 py-2 bg-blue-500 text-white rounded-lg font-bold hover:bg-blue-600 transition"
+            onClick={handlePostComment}
+            >
+            Post
+            </button>
+        </div>
+
+        {/* Display Comments */}
+        <div className="space-y-4">
+        {comments.map((comment, index) => (
+            <div
+            key={index}
+            className="p-4 bg-white rounded-lg shadow-sm border border-gray-200 flex items-center gap-4"
+            >
+            {/* User Avatar */}
+            <img
+                src="/assets/images/profile.png"
+                alt="User Avatar"
+                className="w-10 h-10 rounded-full"
+            />
+
+            {/* Comment Text */}
+            <p className="text-gray-700">{comment}</p>
+            </div>
+        ))}
+        </div>
+
+        </div>
+
     </div>
   );
 }

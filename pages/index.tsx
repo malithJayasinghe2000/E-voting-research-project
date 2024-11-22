@@ -18,23 +18,23 @@ export default function Home({ pollsData }: { pollsData: PollStruct[] }) {
   const portfolioItems = [
     {
       id: '1',
-      title: 'Web Development Project',
+      title: 'Namal Perera',
       description: 'A responsive website built using React and Tailwind CSS.',
-      image: '/assets/images/profile.png',
+      image: '/assets/images/pic1.jpg',
       date: '2024-11-20',
     },
     {
       id: '2',
-      title: 'Mobile App Design',
+      title: 'Saman Kumara',
       description: 'A user-friendly mobile app design for e-commerce platforms.',
-      image: '/assets/images/profile.png',
+      image: '/assets/images/pic2.jpg',
       date: '2024-10-15',
     },
     {
       id: '3',
-      title: 'AI-Powered Chatbot',
+      title: 'Lal Hemasinghe',
       description: 'A chatbot system powered by natural language processing and machine learning.',
-      image: '/assets/images/profile.png',
+      image: '/assets/images/pic3.jpg',
       date: '2024-09-10',
     },
   ];
