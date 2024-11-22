@@ -9,11 +9,36 @@ import { generateFakePolls } from '@/services/data'
 import { useDispatch, useSelector } from 'react-redux'
 import { globalActions } from '@/store/globalSlices'
 import { useEffect } from 'react'
+import Portfolio from '@/components/Politicians'
 
 export default function Home({ pollsData }: { pollsData: PollStruct[] }) {
   const dispatch = useDispatch()
   const {setPolls} = globalActions
   const {polls} = useSelector((states:RootState)=>states.globalStates)
+  const portfolioItems = [
+    {
+      id: '1',
+      title: 'Web Development Project',
+      description: 'A responsive website built using React and Tailwind CSS.',
+      image: '/assets/images/profile.png',
+      date: '2024-11-20',
+    },
+    {
+      id: '2',
+      title: 'Mobile App Design',
+      description: 'A user-friendly mobile app design for e-commerce platforms.',
+      image: '/assets/images/profile.png',
+      date: '2024-10-15',
+    },
+    {
+      id: '3',
+      title: 'AI-Powered Chatbot',
+      description: 'A chatbot system powered by natural language processing and machine learning.',
+      image: '/assets/images/profile.png',
+      date: '2024-09-10',
+    },
+  ];
+  
 
   useEffect(()=>{
     dispatch(setPolls(pollsData))
@@ -37,6 +62,7 @@ export default function Home({ pollsData }: { pollsData: PollStruct[] }) {
           <Navbar />
           <Banner />
           <Polls polls={polls} />
+          <Portfolio portfolioItems={portfolioItems} />
           <Footer />
         </section>
         <CreatePoll />
