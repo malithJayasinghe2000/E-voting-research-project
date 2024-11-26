@@ -59,21 +59,22 @@ const handlePostComment = () => {
 // Portfolio card data
 const portfolioData = [
     {
-      title: "Web Development Project",
-      description:
-        "A responsive website built using React and Tailwind CSS. Focused on performance and user experience.",
+      title: "Bio",
+      DOB:"15-04-1966",
+      CS:"Married",
+      religion:"Buddhism",
       image: "/assets/images/profile.png",
       link: "https://www.example.com/project1",
     },
     {
-      title: "Mobile App Design",
+      title: "Education",
       description:
         "A user-friendly mobile app design for e-commerce platforms with smooth navigation and user interface.",
       image: "/assets/images/profile.png",
       link: "https://www.example.com/project2",
     },
     {
-      title: "Blockchain-Based Application",
+      title: "Professional Experience",
       description:
         "A decentralized application (DApp) built using Ethereum and Solidity, demonstrating smart contract interaction.",
       image: "/assets/images/profile.png",
