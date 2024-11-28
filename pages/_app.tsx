@@ -6,6 +6,8 @@ import { Provider } from 'react-redux'
 import { store } from '@/store'
 import { useEffect, useState } from 'react'
 import { checkWallet } from '@/services/blockchain'
+import { SessionProvider } from 'next-auth/react'
+import  AuthProvider  from '@/components/AuthProvider'
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   const [showChild, setShowChild] = useState<boolean>(false)
@@ -15,7 +17,9 @@ export default function MyApp({ Component, pageProps }: AppProps) {
     setShowChild(true)
   }, [])
   return (
+   
     <Provider store={store}>
+          <AuthProvider>
       <Component {...pageProps} />
 
       <ToastContainer
@@ -30,7 +34,8 @@ export default function MyApp({ Component, pageProps }: AppProps) {
         pauseOnHover
         theme="dark"
       />
-      </Provider>
+  </AuthProvider>
+      </Provider>  
     
   )
 }
