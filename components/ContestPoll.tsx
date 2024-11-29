@@ -15,6 +15,11 @@ const ContestPoll: React.FC<{ poll: PollStruct }> = ({ poll }) => {
   const [contestant, setContestant] = useState({
     name: '',
     image: '',
+    party:'',
+    nationalId:'',
+    bio:'',
+    electionId: poll.id,
+    electionName: poll.title,
   })
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -28,15 +33,43 @@ const ContestPoll: React.FC<{ poll: PollStruct }> = ({ poll }) => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
 
-    if (!contestant.name || !contestant.image) return
+    if (!contestant.name || !contestant.image || !contestant.party || !contestant.nationalId || !contestant.bio) return
 
     await toast.promise(
       new Promise<void>((resolve,reject)=>{
-        contestPoll(poll.id,contestant.name,contestant.image)
-        .then((tx) => {
-          closeModal()
-          console.log(tx)
-          resolve(tx)
+        contestPoll(poll.id,contestant.name,contestant.image,contestant.party,contestant.nationalId,contestant.bio)
+        .then(async (tx) => {
+          
+          try{
+            const response = await fetch('/api/Candidates/addCandidate', {
+              method: 'POST',
+              body: JSON.stringify({contestant}),
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            })
+            
+            if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.message || "Backend error");
+          }
+
+          const data = await response.json();
+          console.log("Backend API successful:", data);
+
+          closeModal(); 
+          resolve();
+            
+
+          }catch(error :any){
+            console.error("Error calling backend API:", error.message);
+            reject(error.message);
+
+          }
+
+          // closeModal()
+          // console.log(tx)
+          // resolve(tx)
 
         })
         .catch((error) => reject(error))
@@ -54,6 +87,11 @@ const ContestPoll: React.FC<{ poll: PollStruct }> = ({ poll }) => {
     setContestant({
       name: '',
       image: '',
+      party:'',
+      nationalId:'',
+      bio:'',
+      electionId: poll.id,
+      electionName:  poll.title,
     })
   }
 
@@ -94,6 +132,39 @@ const ContestPoll: React.FC<{ poll: PollStruct }> = ({ poll }) => {
                 name="image"
                 accept="image/*"
                 value={contestant.image}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="py-4 w-full border border-[#212D4A] rounded-full flex items-center px-4 mb-3 mt-2">
+              <input
+                placeholder="Party"
+                className="bg-transparent outline-none w-full placeholder-[#929292] text-sm"
+                name="party"
+                value={contestant.party}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="py-4 w-full border border-[#212D4A] rounded-full flex items-center px-4 mb-3 mt-2">
+              <input
+                placeholder="National ID"
+                className="bg-transparent outline-none w-full placeholder-[#929292] text-sm"
+                name="nationalId"
+                value={contestant.nationalId}
+                onChange={handleChange}
+                required
+              />
+            </div>
+
+            <div className="py-4 w-full border border-[#212D4A] rounded-full flex items-center px-4 mb-3 mt-2">
+              <textarea
+                placeholder="Bio"
+                className="bg-transparent outline-none w-full placeholder-[#929292] text-sm"
+                name="bio"
+                value={contestant.bio}
                 onChange={handleChange}
                 required
               />

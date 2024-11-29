@@ -141,7 +141,7 @@ const getPoll = async (id: number): Promise<PollStruct> => {
     return structurePolls([poll])[0]
   }
 
-  const contestPoll = async(id: number,name: string,image: string) => {
+  const contestPoll = async(id: number,name: string,image: string,party: string,nationalId: string,bio: string) => {
     if(!ethereum){
         reportError('please install metamask')
         return Promise.reject(new Error('Metamask not installed'))
@@ -149,7 +149,7 @@ const getPoll = async (id: number): Promise<PollStruct> => {
 
     try {
         const contract = await getEthereumContract()
-        const tx = await contract.contest(id,name,image)
+        const tx = await contract.contest(id,name,image,party,nationalId,bio)
         await tx.wait()
 
         const poll = await getPoll(id)
