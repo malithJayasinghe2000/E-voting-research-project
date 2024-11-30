@@ -10,6 +10,7 @@ interface PortfolioItem {
   title: string;
   description: string;
   image: string;
+  party: string;
   date: string;
 }
 
@@ -47,8 +48,9 @@ const PortfolioCard: React.FC<{ item: PortfolioItem }> = ({ item }) => {
   />
 </div>
 
-        <div className="p-4 bg-white rounded-b-xl">
-        <h3 style={{ color: "black", fontSize: "1.25rem",textAlign:"center" }}>{item.title}</h3>
+        <div className="p-2 bg-white rounded-b-xl align-center">
+        <h3 className="text-3xl font-bold mb-4 text-black text-center">{item.title}</h3>
+        <h2 className="text-xl font-bold mb-4 text-black text-center">{item.party}</h2>
 
           {/* <p className="text-gray-600 mt-2">
             {truncate({ text: item.description, startChars: 100, endChars: 0, maxLength: 120 })}
