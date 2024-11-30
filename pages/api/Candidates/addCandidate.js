@@ -55,7 +55,7 @@ export default async function handler(req, res) {
                 party,
                 nationalId,
                 bio: candidateData.bio || "",
-                role: "candidate", // Role is fixed as "candidate"
+                role: "candidate", 
                 electionId,
                 electionName,
             });

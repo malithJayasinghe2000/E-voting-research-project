@@ -43,7 +43,7 @@ const ContestPoll: React.FC<{ poll: PollStruct }> = ({ poll }) => {
           try{
             const response = await fetch('/api/Candidates/addCandidate', {
               method: 'POST',
-              body: JSON.stringify({contestant}),
+              body: JSON.stringify(contestant),
               headers: {
                 'Content-Type': 'application/json',
               },
