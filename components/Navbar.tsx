@@ -44,7 +44,15 @@ const Navbar = () => {
           transition-all duration-300 bg-[#1B5CFE] hover:bg-blue-500"
           onClick={() => navigate.push('/resultDashboard')} 
         >
-          Politician Profile
+          Result Dashboard
+        </button>
+        <button
+          className="h-[48px] w-[130px] 
+          sm:w-[148px] px-3 rounded-full text-sm font-bold
+          transition-all duration-300 bg-[#1B5CFE] hover:bg-blue-500"
+          onClick={() => navigate.push('/predictionDashboard')} 
+        >
+          Predicted Result Dashboard
         </button>
     </nav>
   )
