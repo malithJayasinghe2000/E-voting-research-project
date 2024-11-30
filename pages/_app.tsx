@@ -4,8 +4,18 @@ import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { Provider } from 'react-redux'
 import { store } from '@/store'
+import { appWithTranslation } from "next-i18next";
+import { UserConfig } from "next-i18next";
+import nextI18NextConfig from "../next-i18next.config.js";
 
-export default function MyApp({ Component, pageProps }: AppProps) {
+const emptyInitialI18NextConfig: UserConfig = {
+  i18n: {
+    defaultLocale: nextI18NextConfig.i18n.defaultLocale,
+    locales: nextI18NextConfig.i18n.locales,
+  },
+};
+
+function MyApp({ Component, pageProps }: AppProps) {
   return (
     <Provider store={store}>
       <Component {...pageProps} />
@@ -26,3 +36,5 @@ export default function MyApp({ Component, pageProps }: AppProps) {
     
   )
 }
+
+export default appWithTranslation(MyApp, emptyInitialI18NextConfig);
