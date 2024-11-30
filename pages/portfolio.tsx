@@ -83,10 +83,10 @@ const portfolioData = [
   ];
     // Line chart data for two graphs
     const lineChartData1 = {
-        labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        labels: ["1999", "2005", "2010", "2015", "2019","2024"],
         datasets: [
           {
-            label: "Website Traffic",
+            label: "Vote Distribution through out the years(Presidential)",
             data: [65, 59, 80, 81, 56, 55, 40, 85, 92, 78, 110, 130],
             borderColor: "rgba(75, 192, 192, 1)",
             backgroundColor: "rgba(75, 192, 192, 0.2)",
@@ -96,10 +96,10 @@ const portfolioData = [
       };
     
       const lineChartData2 = {
-        labels: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+        labels: ["2000", "2001", "2004", "2010", "2015", "2020","2024"],
         datasets: [
           {
-            label: "Sales Revenue",
+            label: "Vote Distribution through out the years(Parliament)",
             data: [150, 120, 100, 170, 130, 110, 140, 160, 180, 190, 210, 230],
             borderColor: "rgba(255, 99, 132, 1)",
             backgroundColor: "rgba(255, 99, 132, 0.2)",
@@ -119,6 +119,7 @@ const portfolioData = [
       <div className="max-w-[1240px] m-auto md:grid grid-cols-3 gap-8">
         <div className="col-span-2">
           <h1 className="text-4xl font-bold mb-4 ">Hello, I’m Namal Perera </h1>
+          <h2 className="text-xl font-bold mb-4 ">NPP- National People Party </h2>
           <p className="text-xl">
             <span className="font-bold custom-class text-3xl">❝</span>
             As a dedicated public servant, I am committed to fostering transparency,
@@ -187,36 +188,65 @@ const portfolioData = [
         </div>
       </div>
       
-       {/* Portfolio Section */}
-       <section className="max-w-[1240px] m-auto py-16">
+      {/* Portfolio Section */}
+      <section className="max-w-[1240px] m-auto py-16">
         <h2 className="text-3xl font-bold text-center mb-8">My Portfolio</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-          {portfolioData.map((project, index) => (
-            <div
-              key={index}
-              className="rounded-xl shadow-xl hover:scale-105 ease-in duration-300"
-            >
-              <Link href={project.link} target="_blank" rel="noopener noreferrer">
-
-                <div className="p-4 bg-white rounded-b-xl">
-                  <h3 className="text-xl font-semibold">{project.title}</h3>
-                  <p className="text-gray-600 mt-2">{project.description}</p>
-                </div>
-              </Link>
+          
+          {/* Project 1 - Bio Data */}
+          <div className="rounded-xl shadow-xl hover:scale-105 ease-in duration-300">
+            <div className="p-4 bg-white rounded-b-xl">
+              <h3 className="text-xl font-semibold">Bio Data</h3>
+              <ul className="text-gray-600 mt-2 space-y-2">
+                <li><strong>Date of Birth:</strong> January 1, 1990</li>
+                <li><strong>Nationality:</strong> Sri Lankan</li>
+                <li><strong>Religion:</strong> Katholic</li>
+                <li><strong>Marital Status:</strong> Married</li>
+                <li><strong>Estimated Networth:</strong> 300000$</li>
+              </ul>
             </div>
-          ))}
+          </div>
+          
+          {/* Project 2 - Education Qualifications */}
+          <div className="rounded-xl shadow-xl hover:scale-105 ease-in duration-300">
+            <div className="p-4 bg-white rounded-b-xl">
+              <h3 className="text-xl font-semibold">Education Qualifications</h3>
+              <ul className="text-gray-600 mt-2 space-y-2">
+                <li><strong>Bachelor's Degree:</strong> B.Sc. in Computer Science, XYZ University, 2012</li>
+                <li><strong>Master's Degree:</strong> M.Sc. in Data Science, ABC University, 2015</li>
+                <li><strong>Certifications:</strong> AWS Certified Solutions Architect, 2018</li>
+                <li><strong>High School:</strong> High School Diploma, ABC High School, 2008</li>
+              </ul>
+            </div>
+          </div>
+          
+          {/* Project 3 - Professional Experience */}
+          <div className="rounded-xl shadow-xl hover:scale-105 ease-in duration-300">
+            <div className="p-4 bg-white rounded-b-xl">
+              <h3 className="text-xl font-semibold">Professional Experience</h3>
+              <ul className="text-gray-600 mt-2 space-y-2">
+                <li><strong>Software Developer:</strong> XYZ Tech Solutions, 2015–2018</li>
+                <li><strong>Data Analyst:</strong> ABC Data Labs, 2018–2020</li>
+                <li><strong>Senior Data Scientist:</strong> DEF Analytics, 2020–Present</li>
+                <li><strong>Freelance Projects:</strong> Multiple AI and web development projects</li>
+              </ul>
+            </div>
+          </div>
+        
         </div>
       </section>
+
+
       {/* Line Graph Section */}
       <section className="max-w-[1240px] m-auto py-16">
-        <h2 className="text-3xl font-bold text-center mb-8">Analytics</h2>
+        <h2 className="text-3xl font-bold text-center mb-8">Voting History</h2>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <div className="rounded-xl shadow-xl p-4">
-            <h3 className="text-xl font-semibold text-center mb-4">Website Traffic</h3>
+            <h3 className="text-xl font-semibold text-center mb-4">Presidential</h3>
             <Line data={lineChartData1} />
           </div>
           <div className="rounded-xl shadow-xl p-4">
-            <h3 className="text-xl font-semibold text-center mb-4">Sales Revenue</h3>
+            <h3 className="text-xl font-semibold text-center mb-4">Parliament</h3>
             <Line data={lineChartData2} />
           </div>
         </div>

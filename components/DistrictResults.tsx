@@ -17,11 +17,11 @@ interface DistrictResultsProps {
 
 const DistrictResults: React.FC<DistrictResultsProps> = ({ candidates, totalVotes }) => {
   return (
-    <div style={{ padding: "20px" }}>
+    <div >
 
 
       {/* Main Content */}
-      <div style={{ display: "flex", gap: "20px", padding: "20px" }}>
+      <div style={{ display: "flex", gap: "20px", padding: "10px" }}>
         {/* Results Section */}
         <div style={{ display: "flex", flexDirection: "column", gap: "15px" }}>
           {candidates.map((candidate, index) => (
@@ -124,8 +124,20 @@ const DistrictResults: React.FC<DistrictResultsProps> = ({ candidates, totalVote
         </div>
 
         {/* Pie Chart Section */}
-        <div style={{ flex: 1 }}>
-          <PieChart width={330} height={400}>
+        <div style={{ flex: 1, background: "#ffffff",
+              border: "1px solid #eaeaea",
+              borderRadius: "8px",
+              boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
+              padding: "15px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems:"center",
+              minWidth: "300px",
+              width: "100%",textAlign: "center" }}>
+            <h2 style={{ marginBottom: "20px", fontSize: "18px", color: "#333", fontWeight: "bold" }}>
+                Candidate-wise Vote Distribution
+            </h2>
+          <PieChart width={400} height={400}>
             <Pie
               data={candidates}
               dataKey="votes"
