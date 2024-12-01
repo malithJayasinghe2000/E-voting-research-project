@@ -1,95 +1,95 @@
-import { updatePoll } from '@/services/blockchain'
+import Banner from '@/components/Banner'
+import Sidebar from '../components/Sidebar'
+import { useSession } from 'next-auth/react'
 import { globalActions } from '@/store/globalSlices'
-import { formatTimestamp } from '@/utils/helper'
-import { PollParams, PollStruct, RootState } from '@/utils/types'
-import React, { ChangeEvent, FormEvent, useEffect, useState } from 'react'
+
+import { PollParams, RootState } from '@/utils/types'
+import { create } from 'domain'
+import React, { ChangeEvent, FormEvent, useState } from 'react'
 import { FaTimes } from 'react-icons/fa'
 import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
+import { createPoll } from '@/services/blockchain'
 
-const UpdatePoll: React.FC<{ pollData: PollStruct }> = ({ pollData }) => {
-  // const updateModal = 'scale-0'
-  const dispatch = useDispatch()
-  const {setUpdateModal} = globalActions
-  const { updateModal } = useSelector((states: RootState) => states.globalStates)
-
-
-  const [poll, setPoll] = useState<PollParams>({
-    image: '',
-    title: '',
-    description: '',
-    startsAt: '',
-    endsAt: '',
-  })
-
-  useEffect(() => {
-    if (pollData) {
-      const { image, title, description, startsAt, endsAt } = pollData
+export default function CreateElectionPage() {
+    const {createModal} = useSelector((states:RootState)=>states.globalStates)
+    const dispatch = useDispatch()
+    const {setCreateModal} = globalActions
+  
+  
+    const [poll, setPoll] = useState<PollParams>({
+      image: '',
+      title: '',
+      description: '',
+      startsAt: '',
+      endsAt: '',
+    })
+  
+    const handleSubmit = async (e: FormEvent) => {
+      e.preventDefault()
+  
+      if (!poll.image || !poll.title || !poll.description || !poll.startsAt || !poll.endsAt) return
+  
+      poll.startsAt = new Date(poll.startsAt).getTime()
+      poll.endsAt = new Date(poll.endsAt).getTime()
+  
+      await toast.promise(
+        new Promise<void>((resolve,reject)=>{
+          createPoll(poll)
+          .then((tx) => {
+            closeModal()
+            console.log(tx)
+            resolve(tx)
+  
+          })
+          .catch((error) => reject(error))
+          
+        }),
+        {
+          pending:'Creating poll...',
+          success:'Poll created successfully',
+          error:'Failed to create poll'}
+      )
+    }
+  
+    const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const { name, value } = e.target
+      setPoll((prevState) => ({
+        ...prevState,
+        [name]: value,
+      }))
+    }
+  
+    const closeModal = () => {
+      dispatch(setCreateModal('scale-0'))
       setPoll({
-        image,
-        title,
-        description,
-        startsAt: formatTimestamp(startsAt),
-        endsAt: formatTimestamp(endsAt),
+        image: '',
+        title: '',
+        description: '',
+        startsAt: '',
+        endsAt: '',
       })
     }
-  }, [pollData])
 
-  const handleUpdate = async (e: FormEvent) => {
-    e.preventDefault()
-
-    if (!poll.image || !poll.title || !poll.description || !poll.startsAt || !poll.endsAt) return
-
-    poll.startsAt = new Date(poll.startsAt).getTime()
-    poll.endsAt = new Date(poll.endsAt).getTime()
-
-    await toast.promise(
-      new Promise<void>((resolve,reject)=>{
-        updatePoll(pollData.id,poll)
-        .then((tx) => {
-          closeModal()
-          console.log(tx)
-          resolve(tx)
-
-        })
-        .catch((error) => reject(error))
-        
-      }),
-      {
-        pending:'Updating poll...',
-        success:'Poll updated successfully',
-        error:'Failed to update poll'}
-    )
-  }
-
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target
-    setPoll((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }))
-  }
-
-  const closeModal = () => {
-    dispatch(setUpdateModal('scale-0'))
-  }
-
-  return (
-    <div
+    return (
+      <div className="flex min-h-screen bg-gray-100">
+      <Sidebar />
+      <div className="flex-grow p-6">
+      <div
       className={`fixed top-0 left-0 w-screen h-screen flex items-center justify-center
-    bg-black bg-opacity-50 transform z-50 transition-transform duration-300 ${updateModal}`}
+    bg-black bg-opacity-50 transform z-50 transition-transform duration-300 ${createModal}`}
     >
       <div className="bg-[#0c0c10] text-[#BBBBBB] shadow-lg shadow-[#1B5CFE] rounded-xl w-11/12 md:w-2/5 h-7/12 p-6">
         <div className="flex flex-col">
           <div className="flex flex-row justify-between items-center">
-            <p className="font-semibold">Edit Poll</p>
+            <p className="font-semibold">Add Poll</p>
             <button onClick={closeModal} className="border-0 bg-transparent focus:outline-none">
               <FaTimes />
             </button>
           </div>
 
           <form
-            onSubmit={handleUpdate}
+            onSubmit={handleSubmit}
             className="flex flex-col justify-center items-start rounded-xl mt-5 mb-5"
           >
             <div className="py-4 w-full border border-[#212D4A] rounded-full flex items-center px-4 mb-3 mt-2">
@@ -172,13 +172,16 @@ const UpdatePoll: React.FC<{ pollData: PollStruct }> = ({ pollData }) => {
               className="h-[48px] w-full block mt-2 px-3 rounded-full text-sm font-bold
               transition-all duration-300 bg-[#1B5CFE] hover:bg-blue-500"
             >
-              Update Poll
+              Create Poll
             </button>
           </form>
         </div>
       </div>
     </div>
-  )
-}
-
-export default UpdatePoll
+  
+      </div>
+    </div>
+    )
+  }
+  
+  

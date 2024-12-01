@@ -27,6 +27,9 @@ contract DappVotes {
         uint id;
         string image;
         string name;
+        string party;
+        string nationalId;
+        string bio;
         address voter;
         uint votes;
         address[] voters;
@@ -125,18 +128,24 @@ contract DappVotes {
         }
     }
 
-    function contest(uint id,string memory name, string memory image) public {
+    function contest(uint id,string memory name, string memory image, string memory party, string memory nationalId, string memory bio) public {
         require(pollExists[id], "Poll does not exist");
         require(bytes(name).length > 0, "Name is required");
         require(bytes(image).length > 0, "Image is required");
+        require(bytes(party).length > 0, "Party is required");
+        require(bytes(nationalId).length > 0, "National ID is required");
+        require(bytes(bio).length > 0, "Bio is required");
         require(polls[id].votes < 1 , "Poll has votes, cannot be contested");
-        require(!contested[id][msg.sender], "You have already contested in this poll");
+     //   require(!contested[id][msg.sender], "You have already contested in this poll");
 
         totalContestants.increment();
 
         ContestantStruct memory contestant;
         contestant.name = name;
         contestant.image = image;
+        contestant.party = party;
+        contestant.nationalId = nationalId;
+        contestant.bio = bio;
         contestant.voter = msg.sender;
         contestant.id = totalContestants.current();
 

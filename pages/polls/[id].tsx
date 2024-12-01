@@ -8,10 +8,11 @@ import { GetServerSidePropsContext } from 'next'
 import { ContestantStruct, PollStruct, RootState } from '@/utils/types'
 import UpdatePoll from '@/components/UpdatePoll'
 import DeletePoll from '@/components/DeletePoll'
-import { generateFakeContestants, generateFakePolls } from '@/services/data'
+import { generateFakeContestants } from '@/services/data'
 import { useDispatch, useSelector } from 'react-redux'
 import { globalActions } from '@/store/globalSlices'
 import { useEffect } from 'react'
+import { getContestants, getPoll } from '@/services/blockchain'
 
 export default function Polls({
   pollData,
@@ -61,8 +62,8 @@ export default function Polls({
 
 export const getServerSideProps = async (context: GetServerSidePropsContext) => {
   const { id } = context.query
-  const pollData = generateFakePolls(1)[0]
-  const contestantData = generateFakeContestants(2)
+  const pollData = await getPoll(Number(id))
+  const contestantData = await getContestants(Number(id))
 
   return {
     props: {

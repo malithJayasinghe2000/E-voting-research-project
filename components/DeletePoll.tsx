@@ -1,17 +1,44 @@
-import { PollStruct } from '@/utils/types'
+import { PollStruct, RootState } from '@/utils/types'
 import { BsTrash3Fill } from 'react-icons/bs'
 import React from 'react'
 import { FaTimes } from 'react-icons/fa'
+import { globalActions } from '@/store/globalSlices'
+import { useDispatch, useSelector } from 'react-redux'
+import { toast } from 'react-toastify'
+import { deletePoll } from '@/services/blockchain'
+import { useRouter } from 'next/router'
 
 const DeletePoll: React.FC<{ poll: PollStruct }> = ({ poll }) => {
-  const deleteModal = 'scale-0'
+  // const deleteModal = 'scale-0'
+  const dispatch = useDispatch()
+  const {setDeleteModal} = globalActions
+  const { deleteModal } = useSelector((states: RootState) => states.globalStates)
+  const router = useRouter()
 
   const handleDelete = async () => {
-    console.log(poll)
-    closeModal()
+    await toast.promise(
+      new Promise<void>((resolve,reject)=>{
+        deletePoll(poll.id)
+        .then((tx) => {
+          closeModal()
+          router.push('/')
+          console.log(tx)
+          resolve(tx)
+
+        })
+        .catch((error) => reject(error))
+        
+      }),
+      {
+        pending:'Deleting poll...',
+        success:'Poll deleted successfully',
+        error:'Failed to delete poll'}
+    )
   }
 
-  const closeModal = () => {}
+  const closeModal = () => {
+    dispatch(setDeleteModal('scale-0'))
+  }
 
   return (
     <div
