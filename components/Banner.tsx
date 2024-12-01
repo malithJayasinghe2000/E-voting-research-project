@@ -1,17 +1,20 @@
 import { globalActions } from '@/store/globalSlices'
+import { useSession } from 'next-auth/react'
 import React from 'react'
 import { useDispatch } from 'react-redux'
 
 const Banner = () => {
+  const { data: session } = useSession()
   const dispatch = useDispatch()
   const {setCreateModal} = globalActions
 
+  const isAdmin = session?.user?.role === 'admin'
+
   return (
     <main className="mx-auto text-center space-y-8">
-      <h1 className="text-[45px] font-[600px] text-center leading-none">Vote Without Rigging</h1>
+      <h1 className="text-[45px] font-[600px] text-center leading-none">Vote With Blockchain Technology</h1>
       <p className="text-[16px] font-[500px] text-center">
-        A beauty pageantry is a competition that has traditionally focused on judging and ranking
-        the physical...
+        First time in Sri Lanka
       </p>
 
       <button
@@ -21,6 +24,7 @@ const Banner = () => {
       >
         Create poll
       </button>
+
     </main>
   )
 }

@@ -5,10 +5,12 @@ import Link from 'next/link'
 import { useRouter } from 'next/router'
 import React from 'react'
 import { useSelector } from 'react-redux'
+import { useSession, signIn, signOut } from 'next-auth/react';
 
 const Navbar = () => {
   const {wallet} = useSelector((states:RootState)=>states.globalStates)
   const navigate = useRouter()
+  const { data: session } = useSession(); // Use useSession for session management
 
   return (
     <nav
@@ -18,6 +20,10 @@ const Navbar = () => {
       <Link href="/" className="text-[20px] text-blue-800 sm:text-[24px]">
         Dapp<span className="text-white font-bold">Votes</span>
       </Link>
+      <Link href="/Member/page">Member</Link>
+      <Link href="/CreateUser/page">Create User</Link>
+      <Link href="/CreateGSW/page">Add GSW</Link>
+
       {wallet ? (
         <button
           className="h-[48px] w-[130px] 
@@ -38,6 +44,25 @@ const Navbar = () => {
         
         
       )}
+      {session ? (
+        <button
+          onClick={() => signOut({ callbackUrl: '/' })}
+          className="h-[48px] w-[130px] 
+          sm:w-[148px] px-3 rounded-full text-sm font-bold
+          transition-all duration-300 bg-[#1B5CFE] hover:bg-blue-500"
+        >
+          Logout
+        </button>
+      ) : (
+        <button
+          onClick={() => signIn()}
+          className="h-[48px] w-[130px] 
+          sm:w-[148px] px-3 rounded-full text-sm font-bold
+          transition-all duration-300 bg-[#1B5CFE] hover:bg-blue-500"
+        >
+          Login
+        </button>
+      )}
               <button
           className="h-[48px] w-[130px] 
           sm:w-[148px] px-3 rounded-full text-sm font-bold
@@ -55,7 +80,7 @@ const Navbar = () => {
           Predicted Result Dashboard
         </button>
     </nav>
-  )
-}
+  );
+};
 
-export default Navbar
+export default Navbar;
