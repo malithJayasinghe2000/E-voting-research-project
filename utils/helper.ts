@@ -35,7 +35,16 @@ export const formatDate = (timestamp: number): string => {
   const day = date.getUTCDate()
   const year = date.getUTCFullYear()
 
-  return `${dayOfWeek}, ${month} ${day}, ${year}`
+   // Extract hours and minutes
+   const hours = date.getUTCHours();
+   const minutes = date.getUTCMinutes();
+ 
+   // Format hours and minutes into 12-hour format with AM/PM
+   const period = hours >= 12 ? 'PM' : 'AM';
+   const formattedHours = hours % 12 || 12; // Convert 0 to 12 for 12-hour format
+   const formattedMinutes = minutes.toString().padStart(2, '0'); // Add leading zero to minutes
+ 
+  return `${dayOfWeek}, ${month} ${day}, ${year}, ${formattedHours}:${formattedMinutes} ${period}`
 }
 
 export const formatTimestamp = (timestamp: number) => {

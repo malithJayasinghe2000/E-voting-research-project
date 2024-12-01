@@ -33,6 +33,9 @@ export interface ContestantStruct {
   id: number
   image: string
   name: string
+  party: string
+  nationalId: string
+  bio: string
   voter: string
   votes: number
   voters: string[]
