@@ -34,6 +34,7 @@ export default async function handler(req, res) {
             }
         }
             const userData = req.body.formData;
+            
 
             // Validate input
             if (!userData.email || !userData.password) {
@@ -55,6 +56,10 @@ export default async function handler(req, res) {
                 // No additional actions required for `admin` creating `plk`
             }
 
+
+            else if (session.user.role === "admin" && userData.role === "polling_manager") {
+                
+            }
             // PLK creating `gsw`
             else if (session.user.role === "plk" && userData.role === "gsw") {
                 // Set the `addedBy` field for the new GSW user

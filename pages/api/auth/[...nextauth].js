@@ -16,7 +16,7 @@ export const authOptions = {
         console.log("email", profile.email);
 
         let userRole = "Github User";
-        if (profile?.email === "IT21268144@my.sliit.lk") {
+        if (profile?.email === "shabry@knightowl.online") {
           userRole = "admin";
           console.log("admin");
         }
@@ -78,6 +78,9 @@ export const authOptions = {
               if(credentials.role === "gsw"){
                 foundUser["role"] = "gsw";
               }
+              if(credentials.role === "polling_manager"){
+                foundUser["role"] = "polling_manager";
+              }
 
               return foundUser;
 
@@ -100,8 +103,25 @@ export const authOptions = {
       if (session?.user) session.user.role = token.role;
       return session;
     },
+    async signIn(user, account, profile) {
+      if (user.role === "admin") {
+        return "/admin/page";
+      } else if (user.role === "plk") {
+        return "/admin/page";
+      } else if (user.role === "gsw") {
+        return "/admin/page";
+      } 
+      return true; // Default to true to allow sign-in
+    },
+    async redirect({url, baseUrl}) {
+      // Redirect to the URL set in the signIn callback
+      return url.startsWith(baseUrl) ? url : baseUrl;
+    },
   },
   secret: process.env.NEXTAUTH_SECRET,
+  pages: {
+    signIn: '/api/auth/signin', // Customize the sign-in page URL
+  },
 };
 
 // Export the default handler for NextAuth

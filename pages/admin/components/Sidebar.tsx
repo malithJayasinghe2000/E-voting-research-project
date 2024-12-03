@@ -16,7 +16,7 @@ const navItems = [
     ],
   },
   { href: "/admin/manageGsw/", 
-    label: "Village Officers", 
+    label: "Grama Niladhari", 
     icon: Users ,
     subLinks: [
       { href: "/admin/manageGsw/create", label: "Create" },
@@ -33,12 +33,22 @@ const navItems = [
     ],
   },
   {
-    href: "/admin/elections",
+    href: "/admin/polingManager",
     label: "polling managers",
-    icon: FileText,
+    icon: Users,
     subLinks: [
-      { href: "/admin/elections/page", label: "Create Election" },
-      { href: "/admin/elections/manage", label: "Manage Elections" },
+      { href: "/admin/polingManagers/create", label: "Add Polling Manager" },
+      { href: "/admin/polingManagers/manage", label: "Manage Polling Manager" },
+    ],
+  },
+
+  {
+    href: "/admin/dd",
+    label: "Add Voters",
+    icon: Users,
+    subLinks: [
+      { href: "/admin/dd/create", label: "Add Polling Manager" },
+      { href: "/admin/ded/manage", label: "Manage Polling Manager" },
     ],
   },
 
