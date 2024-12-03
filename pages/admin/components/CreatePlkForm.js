@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation"
 import React, { useState } from "react"
+import { toast, ToastContainer } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
 
 const CreatePlkForm = () => {
     const router = useRouter()
@@ -9,102 +11,218 @@ const CreatePlkForm = () => {
         name: "",
         email: "",
         role: "plk",
-        password: ""
+        password: "",
+        council: "",
+        phone: "",
+        address: "",
+        dob: "",
+        nationalId: "",
     })
-    const [errorMessage,setErrorMessage] = useState("")
 
     const handleChange = (e) => {
-        const value = e.target.value
-        const name = e.target.name
-        setFormData((prevState)=>({
+        const { name, value } = e.target
+        setFormData((prevState) => ({
             ...prevState,
             [name]: value
-        }));
-    };
+        }))
+    }
 
     const handleSubmit = async (e) => {
         e.preventDefault()
-        console.log(formData)
-        setErrorMessage("")
-        const res = await fetch("/api/Users/route", {
-            method: "POST",
-            body: JSON.stringify({formData}),
-            headers: {
-                "Content-Type": "application/json"
-            }
-        });
+        const toastId = toast.loading("Submitting...")
+        try {
+            const res = await fetch("/api/Users/route", {
+                method: "POST",
+                body: JSON.stringify({ formData }),
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            })
 
-        if (!res.ok) {
-            const response = await res.json()
-            setErrorMessage(response.message)
-        } else {
-            router.refresh()
-            router.push("/")
+            if (!res.ok) {
+                const response = await res.json()
+                toast.update(toastId, {
+                    render: response.message,
+                    type: "error",
+                    isLoading: false,
+                    autoClose: 5000
+                })
+            } else {
+                toast.update(toastId, {
+                    render: "User created successfully!",
+                    type: "success",
+                    isLoading: false,
+                    autoClose: 5000
+                })
+                router.refresh()
+                router.push("/")
+            }
+        } catch (error) {
+            toast.update(toastId, {
+                render: "Something went wrong. Please try again.",
+                type: "error",
+                isLoading: false,
+                autoClose: 5000
+            })
         }
     }
 
     return (
-        <>
-        <form onSubmit={handleSubmit}
-        method = "post"
-        className="flex flex-col gap-3 w-1/2"
-        >
-            <h1>Create User</h1>
-            <label>Full Name</label>
-            <input
-                id="name"
-                type="text"
-                name="name"
-                placeholder="Name"
-                onChange={handleChange}
-                required={true}
-                value={formData.name}
-                className="m-2 bg-slate-400 rounded"
-            />
-
-            <label>Email</label>
-            <input
-                id="email"
-                type="email"
-                name="email"
-                placeholder="Email"
-                onChange={handleChange}
-                value={formData.email}
-                required={true}
-                className="m-2 bg-slate-400 rounded"
-            />
-
-            <label>Role</label>
-            <select
-                id="role"
-                name="role"
-                onChange={handleChange}
-                value={formData.role}
-                required={true}
-                className="m-2 bg-slate-400 rounded"
-                disabled={true} 
-            >
-            
-            <option value="plk">plk</option>
-            </select>
-
-            <label>Password</label>
-            <input
-                type="password"
-                name="password"
-                placeholder="Password"
-                onChange={handleChange}
-                value={formData.password}
-                required={true}
-                className="m-2 bg-slate-400 rounded"
-            />
-            <input type="submit" value="Create User" className="m-2 bg-blue-300 hover:bg-blue-100" />
-        </form>
-        {errorMessage && <p className="text-red-500">{errorMessage}</p>}
-        </>
-        
+        <div className="flex flex-col items-center justify-center  bg-gray-100">
+            <ToastContainer position="top-right" autoClose={5000} />
+            <div className="w-full max-w-3xl p-8 bg-white rounded-lg shadow-lg">
+                <h1 className="text-3xl font-semibold text-center text-gray-700 mb-6">
+                    Create Divisional Secretary
+                </h1>
+                <form onSubmit={handleSubmit} method="post" className="grid grid-cols-2 gap-6">
+                    <div>
+                        <label htmlFor="name" className="block text-sm font-medium text-gray-700">
+                            Full Name
+                        </label>
+                        <input
+                            id="name"
+                            type="text"
+                            name="name"
+                            placeholder="Enter full name"
+                            onChange={handleChange}
+                            value={formData.name}
+                            required
+                            className="w-full mt-2 px-4 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+                            Email
+                        </label>
+                        <input
+                            id="email"
+                            type="email"
+                            name="email"
+                            placeholder="Enter email"
+                            onChange={handleChange}
+                            value={formData.email}
+                            required
+                            className="w-full mt-2 px-4 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="role" className="block text-sm font-medium text-gray-700">
+                            Role
+                        </label>
+                        <select
+                            id="role"
+                            name="role"
+                            onChange={handleChange}
+                            value={formData.role}
+                            required
+                            className="w-full mt-2 px-4 py-2 text-sm border rounded-lg bg-gray-100 cursor-not-allowed focus:outline-none"
+                            disabled
+                        >
+                            <option value="plk">Divisional Secretary</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label
+                            htmlFor="password"
+                            className="block text-sm font-medium text-gray-700"
+                        >
+                            Password
+                        </label>
+                        <input
+                            id="password"
+                            type="password"
+                            name="password"
+                            placeholder="Enter password"
+                            onChange={handleChange}
+                            value={formData.password}
+                            required
+                            className="w-full mt-2 px-4 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="council" className="block text-sm font-medium text-gray-700">
+                            The Local Council
+                        </label>
+                        <input
+                            id="council"
+                            type="text"
+                            name="council"
+                            placeholder="Enter local council"
+                            onChange={handleChange}
+                            value={formData.council}
+                            className="w-full mt-2 px-4 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="phone" className="block text-sm font-medium text-gray-700">
+                            Phone Number
+                        </label>
+                        <input
+                            id="phone"
+                            type="text"
+                            name="phone"
+                            placeholder="Enter phone number"
+                            onChange={handleChange}
+                            value={formData.phone}
+                            className="w-full mt-2 px-4 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="address" className="block text-sm font-medium text-gray-700">
+                            Address
+                        </label>
+                        <input
+                            id="address"
+                            type="text"
+                            name="address"
+                            placeholder="Enter address"
+                            onChange={handleChange}
+                            value={formData.address}
+                            className="w-full mt-2 px-4 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        />
+                    </div>
+                    <div>
+                        <label htmlFor="dob" className="block text-sm font-medium text-gray-700">
+                            Date of Birth
+                        </label>
+                        <input
+                            id="dob"
+                            type="date"
+                            name="dob"
+                            onChange={handleChange}
+                            value={formData.dob}
+                            className="w-full mt-2 px-4 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        />
+                    </div>
+                    <div>
+                        <label
+                            htmlFor="nationalId"
+                            className="block text-sm font-medium text-gray-700"
+                        >
+                            National ID Number
+                        </label>
+                        <input
+                            id="nationalId"
+                            type="text"
+                            name="nationalId"
+                            placeholder="Enter National ID number"
+                            onChange={handleChange}
+                            value={formData.nationalId}
+                            className="w-full mt-2 px-4 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                        />
+                    </div>
+                    <div className="col-span-2">
+                        <button
+                            type="submit"
+                            className="w-full py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                            Create User
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     )
-
 }
 
-export default CreatePlkForm;
+export default CreatePlkForm

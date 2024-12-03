@@ -1,9 +1,9 @@
 import Header from '../components/Header'
 import Sidebar from '../components/Sidebar'
-import CreatePlkForm from '../components/CreatePlkForm'
+import GswForm from '../components/GswForm'
 
 
-export default function createPlk() {
+export default function createGsw() {
     return (
       <div className="flex h-screen bg-gray-100">
       <Sidebar />
@@ -11,7 +11,7 @@ export default function createPlk() {
         <Header />
         <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-100">
           <div className="container mx-auto px-6 py-8">
-        <CreatePlkForm />
+        <GswForm />
       </div>
     </main>
     </div>

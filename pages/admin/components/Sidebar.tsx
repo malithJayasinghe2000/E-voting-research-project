@@ -7,7 +7,22 @@ import { LayoutDashboard, Users, FileText, Settings, ChevronDown, ChevronUp } fr
 
 const navItems = [
   { href: "/admin/page", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/users/page", label: "Users", icon: Users },
+  { href: "/admin/manageplk/", 
+    label: "Divisional Secretaries", 
+    icon: Users ,
+    subLinks: [
+      { href: "/admin/manageplk/createPlk", label: "Create" },
+      { href: "/admin/manageplk/manage", label: "Manage" },
+    ],
+  },
+  { href: "/admin/manageGsw/", 
+    label: "Village Officers", 
+    icon: Users ,
+    subLinks: [
+      { href: "/admin/manageGsw/create", label: "Create" },
+      { href: "/admin/manageGsw/manage", label: "Manage" },
+    ],
+  },
   {
     href: "/admin/elections",
     label: "Elections",
@@ -17,6 +32,16 @@ const navItems = [
       { href: "/admin/elections/manage", label: "Manage Elections" },
     ],
   },
+  {
+    href: "/admin/elections",
+    label: "polling managers",
+    icon: FileText,
+    subLinks: [
+      { href: "/admin/elections/page", label: "Create Election" },
+      { href: "/admin/elections/manage", label: "Manage Elections" },
+    ],
+  },
+
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
