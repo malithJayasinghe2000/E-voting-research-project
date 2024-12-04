@@ -103,25 +103,10 @@ export const authOptions = {
       if (session?.user) session.user.role = token.role;
       return session;
     },
-    async signIn(user, account, profile) {
-      if (user.role === "admin") {
-        return "/admin/page";
-      } else if (user.role === "plk") {
-        return "/admin/page";
-      } else if (user.role === "gsw") {
-        return "/admin/page";
-      } 
-      return true; // Default to true to allow sign-in
-    },
-    async redirect({url, baseUrl}) {
-      // Redirect to the URL set in the signIn callback
-      return url.startsWith(baseUrl) ? url : baseUrl;
-    },
+   
   },
   secret: process.env.NEXTAUTH_SECRET,
-  pages: {
-    signIn: '/api/auth/signin', // Customize the sign-in page URL
-  },
+  
 };
 
 // Export the default handler for NextAuth
