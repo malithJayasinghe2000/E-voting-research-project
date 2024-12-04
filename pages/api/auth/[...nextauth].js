@@ -16,7 +16,7 @@ export const authOptions = {
         console.log("email", profile.email);
 
         let userRole = "Github User";
-        if (profile?.email === "IT21268144@my.sliit.lk") {
+        if (profile?.email === "shabry@knightowl.online") {
           userRole = "admin";
           console.log("admin");
         }
@@ -78,6 +78,9 @@ export const authOptions = {
               if(credentials.role === "gsw"){
                 foundUser["role"] = "gsw";
               }
+              if(credentials.role === "polling_manager"){
+                foundUser["role"] = "polling_manager";
+              }
 
               return foundUser;
 
@@ -100,8 +103,10 @@ export const authOptions = {
       if (session?.user) session.user.role = token.role;
       return session;
     },
+   
   },
   secret: process.env.NEXTAUTH_SECRET,
+  
 };
 
 // Export the default handler for NextAuth
