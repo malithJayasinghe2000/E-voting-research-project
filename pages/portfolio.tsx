@@ -11,13 +11,14 @@ import ReviewFormModal from "@/components/ReviewForm";
 import { Line } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
 import React, { useState, useRef } from 'react'; // Make sure React is imported
+import HomeNavbar from "@/components/Home-Navbar";
 
 
 // Register Chart.js components
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 
-export default function About() {
+export default function CandidatePortfolio() {
   const linkedinUrl = "https://www.linkedin.com/in/creative-programmer";
   const githubUrl = "https://www.github.com/ahmedmujtaba1";
   const twitterUrl = "https://twitter.com/Ahmed_Mujtaba69";
@@ -48,6 +49,7 @@ const handleOpen = () => {
 // Add state for comments and new comment
 const [comments, setComments] = useState<string[]>([]);
 const [newComment, setNewComment] = useState("");
+const [currentView, setCurrentView] = useState('home'); // State to toggle views
 
 // Handler to post a comment
 const handlePostComment = () => {
@@ -113,7 +115,11 @@ const portfolioData = [
   return (
     <div id="about" className="w-fill md:h-screen p-2 items-center">
         <section className="relative px-5 py-10 space-y-16 text-white sm:p-10">
-          <Navbar />
+        <HomeNavbar
+            onResultDashboardClick={() => setCurrentView('resultDashboard')}
+            onPredictionDashboardClick={() => setCurrentView('predictionDashboard')} // Add handler
+            onHomeClick={() => setCurrentView('home')}
+          />
 
         </section>
       <div className="max-w-[1240px] m-auto md:grid grid-cols-3 gap-8">
