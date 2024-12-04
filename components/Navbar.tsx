@@ -1,13 +1,15 @@
-import { connectWallet } from '@/services/blockchain';
-import { truncate } from '@/utils/helper';
-import { RootState } from '@/utils/types';
-import Link from 'next/link';
-import React from 'react';
-import { useSelector } from 'react-redux';
+import { connectWallet } from '@/services/blockchain'
+import { truncate } from '@/utils/helper'
+import { RootState } from '@/utils/types'
+import Link from 'next/link'
+import { useRouter } from 'next/router'
+import React from 'react'
+import { useSelector } from 'react-redux'
 import { useSession, signIn, signOut } from 'next-auth/react';
 
 const Navbar = () => {
-  const { wallet } = useSelector((states: RootState) => states.globalStates);
+  const {wallet} = useSelector((states:RootState)=>states.globalStates)
+  const navigate = useRouter()
   const { data: session } = useSession(); // Use useSession for session management
 
   return (
@@ -39,8 +41,9 @@ const Navbar = () => {
         >
           Connect wallet
         </button>
+        
+        
       )}
-
       {session ? (
         <button
           onClick={() => signOut({ callbackUrl: '/' })}
@@ -60,6 +63,22 @@ const Navbar = () => {
           Login
         </button>
       )}
+              <button
+          className="h-[48px] w-[130px] 
+          sm:w-[148px] px-3 rounded-full text-sm font-bold
+          transition-all duration-300 bg-[#1B5CFE] hover:bg-blue-500"
+          onClick={() => navigate.push('/resultDashboard')} 
+        >
+          Result Dashboard
+        </button>
+        <button
+          className="h-[48px] w-[130px] 
+          sm:w-[148px] px-3 rounded-full text-sm font-bold
+          transition-all duration-300 bg-[#1B5CFE] hover:bg-blue-500"
+          onClick={() => navigate.push('/predictionDashboard')} 
+        >
+          Predicted Result Dashboard
+        </button>
     </nav>
   );
 };
