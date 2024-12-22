@@ -27,7 +27,7 @@
   },
   "dependencies": {
     "@highcharts/map-collection": "2.3.0",
-    "@mui/material": "6.1.8",
+    "@mui/material": "6.1.9",
     "@openzeppelin/test-helpers": "0.5.16",
     "@reduxjs/toolkit": "1.9.3",
     "bcrypt": "5.1.1",
