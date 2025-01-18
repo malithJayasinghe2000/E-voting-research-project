@@ -7,12 +7,15 @@ const userSchema = new mongoose.Schema(
     gsws: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     role: { 
         type: String, 
-        enum: ["gsw", "plk", "candidate"],
+        enum: ["gsw", "plk", "candidate", "polling_manager"],
         required: true 
       },
     password: { type: String, required: true },
     addedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // Reference to the plk who added this gsw
-    
+    constituency_identification_number: { type: String},
+    phone: { type: String},
+    status: { type: String, enum: ["active", "inactive"], default: "active" },
+
   },
   { timestamps: true }
 );
