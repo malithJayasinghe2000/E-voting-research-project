@@ -196,7 +196,7 @@ const portfolioData = [
           {/* Project 1 - Bio Data */}
           <div className="rounded-xl shadow-xl hover:scale-105 ease-in duration-300">
             <div className="p-4 bg-white rounded-b-xl">
-              <h3 className="text-xl font-semibold">Bio Data</h3>
+              <h3 className="text-xl font-bold text-black">Bio Data</h3>
               <ul className="text-gray-600 mt-2 space-y-2">
                 <li><strong>Date of Birth:</strong> January 1, 1990</li>
                 <li><strong>Nationality:</strong> Sri Lankan</li>
@@ -210,7 +210,7 @@ const portfolioData = [
           {/* Project 2 - Education Qualifications */}
           <div className="rounded-xl shadow-xl hover:scale-105 ease-in duration-300">
             <div className="p-4 bg-white rounded-b-xl">
-              <h3 className="text-xl font-semibold">Education Qualifications</h3>
+              <h3 className="text-xl font-bold text-black">Education Qualifications</h3>
               <ul className="text-gray-600 mt-2 space-y-2">
                 <li><strong>Bachelor's Degree:</strong> B.Sc. in Computer Science, XYZ University, 2012</li>
                 <li><strong>Master's Degree:</strong> M.Sc. in Data Science, ABC University, 2015</li>
@@ -223,7 +223,7 @@ const portfolioData = [
           {/* Project 3 - Professional Experience */}
           <div className="rounded-xl shadow-xl hover:scale-105 ease-in duration-300">
             <div className="p-4 bg-white rounded-b-xl">
-              <h3 className="text-xl font-semibold">Professional Experience</h3>
+              <h3 className="text-xl font-bold text-black">Professional Experience</h3>
               <ul className="text-gray-600 mt-2 space-y-2">
                 <li><strong>Software Developer:</strong> XYZ Tech Solutions, 2015–2018</li>
                 <li><strong>Data Analyst:</strong> ABC Data Labs, 2018–2020</li>
