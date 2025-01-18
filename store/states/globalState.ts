@@ -10,5 +10,4 @@ export const globalStates : GlobalState = {
     poll:null,
     contestants: [],
 
-
 }
