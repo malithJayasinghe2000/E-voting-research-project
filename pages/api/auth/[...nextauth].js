@@ -16,7 +16,7 @@ export const authOptions = {
         console.log("email", profile.email);
 
         let userRole = "Github User";
-        if (profile?.email === "shabry@knightowl.online") {
+        if (profile?.email === "IT21268144@my.sliit.lk") {
           userRole = "admin";
           console.log("admin");
         }
@@ -59,9 +59,13 @@ export const authOptions = {
       async authorize(credentials){
         try{
           await connectDB();
-          const foundUser = await User.findOne({email: credentials.email})
-          .lean()
-          .exec();
+            const foundUser = await User.findOne({email: credentials.email})
+            .lean()
+            .exec();
+
+            if (foundUser && foundUser.status !== 'active') {
+            throw new Error('User account is not active');
+            }
 
           if (foundUser) {
             console.log("user exists");
