@@ -66,7 +66,7 @@ const ManageUsers = () => {
     const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setEditData({ ...editData, [e.target.name]: e.target.value });
     };
-    
+
     const handleEditSubmit = async () => {
         try {
             if (!editingUser) return;
@@ -95,8 +95,8 @@ const ManageUsers = () => {
     useEffect(() => {
         fetchUsers();
     }, []);
-    
-    
+
+
 
     return (
         <div className="flex h-screen bg-gray-100">
@@ -133,21 +133,21 @@ const ManageUsers = () => {
                                                     <td className="px-6 py-4">{user.phone}</td>
                                                     <td className="px-6 py-4">{user.email}</td>
                                                     <td className="px-6 py-4">
-                                                    <div>
-        {user.status === "active" ? (
-            <span className="text-green-600 font-semibold">Active</span>
-        ) : (
-            <span className="text-red-600 font-semibold">Inactive</span>
-        )}
-    </div>
+                                                        <div>
+                                                            {user.status === "active" ? (
+                                                                <span className="text-green-600 font-semibold">Active</span>
+                                                            ) : (
+                                                                <span className="text-red-600 font-semibold">Inactive</span>
+                                                            )}
+                                                        </div>
                                                     </td>
-                                                    
-                                                    <td className="px-6 py-4 flex items-center justify-center gap-6">
-    {/* Display Status */}
-    
 
-    {/* Toggle Button */}
-    {/* <button
+                                                    <td className="px-6 py-4 flex items-center justify-center gap-6">
+                                                        {/* Display Status */}
+
+
+                                                        {/* Toggle Button */}
+                                                        {/* <button
         onClick={() => handleToggleStatus(user._id, user.status)}
         className={`px-4 py-2 rounded ${
             user.status === "active"
@@ -158,26 +158,26 @@ const ManageUsers = () => {
         {user.status === "active" ? "Deactivate" : "Activate"}
     </button> */}
 
-    {/* Other Action Buttons */}
-    {/* <button
+                                                        {/* Other Action Buttons */}
+                                                        {/* <button
         onClick={() => handleView(user._id)}
         className="text-blue-500 hover:text-blue-700 text-2xl"
     >
         <FaEye />
     </button> */}
-    <button
-        onClick={() => handleEdit(user._id)}
-        className="text-yellow-500 hover:text-yellow-700 text-2xl"
-    >
-        <FaEdit />
-    </button>
-    {/* <button
+                                                        <button
+                                                            onClick={() => handleEdit(user._id)}
+                                                            className="text-yellow-500 hover:text-yellow-700 text-2xl"
+                                                        >
+                                                            <FaEdit />
+                                                        </button>
+                                                        {/* <button
         onClick={() => handleDelete(user._id)}
         className="text-red-500 hover:text-red-700 text-2xl"
     >
         <FaTrash />
     </button> */}
-</td>
+                                                    </td>
 
                                                 </tr>
                                             ))}
