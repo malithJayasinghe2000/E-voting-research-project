@@ -66,11 +66,12 @@ export default function Home({ pollsData }: { pollsData: PollStruct[] }) {
         />
 
         <section className="relative px-5 py-10 space-y-16 text-white sm:p-10">
-          <HomeNavbar
+          {/* <HomeNavbar
             onResultDashboardClick={() => setCurrentView('resultDashboard')}
             onPredictionDashboardClick={() => setCurrentView('predictionDashboard')} // Add handler
             onHomeClick={() => setCurrentView('home')}
-          />
+          /> */}
+          <Navbar />
           {currentView === 'home' && (
             <>
               <HomeBanner />

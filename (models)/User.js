@@ -16,6 +16,10 @@ const userSchema = new mongoose.Schema(
     phone: { type: String},
     status: { type: String, enum: ["active", "inactive"], default: "active" },
 
+    nationaId: { type: String },
+    district: { type: String },
+    local_council: { type: String },
+
   },
   { timestamps: true }
 );

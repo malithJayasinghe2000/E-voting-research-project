@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutDashboard, Users, FileText, Settings, ChevronDown, ChevronUp } from "lucide-react";
+import { icon } from "leaflet";
 
 const navItems = [
   { href: "/admin/page", label: "Dashboard", icon: LayoutDashboard },
@@ -51,6 +52,25 @@ const navItems = [
       { href: "/admin/ded/manage", label: "Manage Polling Manager" },
     ],
   },
+
+  { href: "/admin/candidates", 
+    label: "Candidates", 
+    icon: Users ,
+    subLinks: [
+      { href: "/admin/candidates/create", label: "Add Candidate" },
+      { href: "/admin/candidates/manage", label: "Manage Candidates" },
+    ],
+  },
+
+  { href: "/admin/parties", 
+    label: "Parties", 
+    icon: Users ,
+    subLinks: [
+      { href: "/admin/parties/create", label: "Add Party" },
+      { href: "/admin/parties/manage", label: "Manage Parties" },
+    ],
+  },
+
 
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];

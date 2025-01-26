@@ -1,13 +1,13 @@
 import multer from "multer";
 import path from "path";
 import connectDB from "../../../(models)/db";
-import Candidate from "../../../(models)/Candidate";
+import Party from "../../../(models)/Party";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]";
 
 const upload = multer({
   storage: multer.diskStorage({
-    destination: "./public/uploads/",
+    destination: "./public/uploads/parties",
     filename: (req, file, cb) => {
       const uniqueSuffix = Date.now() + "-" + file.originalname;
       cb(null, uniqueSuffix);
@@ -20,7 +20,7 @@ const upload = multer({
     }
     cb(null, true);
   },
-}).single("image");
+}).single("logo");
 
 export const config = {
   api: {
@@ -53,36 +53,34 @@ export default async function handler(req, res) {
       }
 
       // Parse the form data
-      const candidateData = req.body;
-      const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+      const patyData = req.body;
+      const imagePath = req.file ? `/uploads/parties/${req.file.filename}` : null;
 
       // Validate required fields
-      const { bio, name,no, party, nationalId, electionId } = candidateData;
-      if (!bio || !name || !no || !imagePath || !party || !nationalId || !electionId) {
+      const { short_name, full_name, description } = req.body;
+      const logo = req.file ? `/uploads/parties/${req.file.filename}` : null;
+
+      // Validate required fields
+      if (!short_name || !full_name || !description || !logo) {
         return res.status(400).json({ message: "All required fields must be provided" });
       }
-
       // Check for duplicate national ID
-      const duplicate = await Candidate.findOne({ nationalId }).lean().exec();
+      const duplicate = await Party.findOne({ short_name }).lean().exec();
       if (duplicate) {
-        return res.status(409).json({ message: "Candidate with this National ID already exists" });
+        return res.status(409).json({ message: "Party with this name already exists" });
       }
 
       // Create the new candidate
-      const newCandidate = await Candidate.create({
-        name,
-        no,
-        image: imagePath,
-        party,
-        nationalId,
-        bio,
-        role: "candidate",
-        electionId,
+      const newParty = await Party.create({
+        short_name,
+        full_name,
+        logo: imagePath,
+        description,
       });
 
-      return res.status(201).json({ message: "Candidate added successfully", candidate: newCandidate });
+      return res.status(201).json({ message: "Party added successfully", party: newParty });
     } catch (error) {
-      console.error("Error adding candidate:", error);
+      console.error("Error adding Party:", error);
       return res.status(500).json({ message: "Server error", error: error.message });
     }
   });
