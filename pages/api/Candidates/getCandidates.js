@@ -19,15 +19,15 @@ export default async function handler(req, res) {
 
     try {
         // Get the current session
-        const session = await getServerSession(req, res, authOptions);
-        if (!session?.user?.email) {
-            return res.status(401).json({ message: "Unauthorized" });
-        }
+        // const session = await getServerSession(req, res, authOptions);
+        // if (!session?.user?.email) {
+        //     return res.status(401).json({ message: "Unauthorized" });
+        // }
 
         // Check if the user has permission to get candidates
-        if (session.user.role !== "admin") {
-            return res.status(403).json({ message: "Forbidden: You do not have permission to get candidates" });
-        }
+        // if (session.user.role !== "admin") {
+        //     return res.status(403).json({ message: "Forbidden: You do not have permission to get candidates" });
+        // }
 
         // Get all candidates
         const candidates = await Candidate.find();
