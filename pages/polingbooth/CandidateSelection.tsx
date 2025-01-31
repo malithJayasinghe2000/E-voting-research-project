@@ -11,6 +11,13 @@ const fetchCandidates = async () => {
   return data.candidates;
 };
 
+// Simulate fetching party data from an API
+const fetchParties = async () => {
+  const response = await fetch("http://localhost:3000/api/Parties/getParties");
+  const data = await response.json();
+  return data.parties;
+};
+
 const CandidateSelection = () => {
   const router = useRouter();
   const { locale } = router;
@@ -20,6 +27,7 @@ const CandidateSelection = () => {
   const [selectedCandidates, setSelectedCandidates] = useState<number[]>([]);
   const [isSpeakerEnabled, setSpeakerEnabled] = useState<boolean>(false);
   const audioRef = useRef<HTMLAudioElement | null>(null); // Ref for audio element to avoid conflicts
+  const [parties, setParties] = useState<any[]>([]);
 
   // Handle audio play function for different actions
   const playAudio = (type: string) => {
@@ -46,12 +54,15 @@ const CandidateSelection = () => {
     }
   }, []); 
 
-  // Fetch candidates data on page load
+  // Fetch candidates and parties data on page load
   useEffect(() => {
     // Fetch candidates data on page load
     const fetchData = async () => {
-      const data = await fetchCandidates();
-      setCandidates(data);
+      const candidatesData = await fetchCandidates();
+      setCandidates(candidatesData);
+
+      const partiesData = await fetchParties();
+      setParties(partiesData);
     };
     fetchData();
 
@@ -132,6 +143,12 @@ const CandidateSelection = () => {
     if (isSpeakerEnabled) playAudio("hover");
   };
 
+  // Get party logo by party ID
+  const getPartyLogo = (partyId: string) => {
+    const party = parties.find((p) => p._id === partyId);
+    return party ? party.logo : "";
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#F1F1F1] to-[#B0D0E6]">
       <Navbar />
@@ -150,24 +167,28 @@ const CandidateSelection = () => {
           <table className="table-auto w-full border-collapse text-left text-xl">
             <thead className="bg-[#003366] text-white font-semibold text-2xl">
               <tr>
-                <th className="px-8 py-6 border">{t("candidateNo")}</th>
+                <th className="px-8 py-6 border">{}</th>
                 <th className="px-8 py-6 border">{t("candidateName")}</th>
-                <th className="px-8 py-6 border">{t("partyName")}</th>
-                <th className="px-8 py-6 border">{t("symbol")}</th>
+                <th className="px-8 py-6 border">{t("party")}</th>
+                <th className="px-8 py-6 border">{t("symble")}</th>
+                <th className="px-8 py-6 border text-center">{t("candidateNo")}</th>
                 <th className="px-8 py-6 border text-center">{t("select")}</th>
               </tr>
             </thead>
             <tbody>
               {candidates.map((candidate) => (
                 <tr key={candidate._id} className="hover:bg-gray-100 bg-white">
-                  <td className="px-8 py-6 border text-center text-5xl">{candidate.no}</td>
+                  <td className="px-8 py-6 border text-center">
+                    <img src={candidate.image} alt={candidate.name} className="w-20 h-20 object-cover rounded-full mx-auto" />
+                  </td>
                   <td className="px-8 py-6 border">
                     <div className="text-2xl font-bold">{candidate.name}</div>
                   </td>
                   <td className="px-8 py-6 border text-2xl font-bold">{candidate.party}</td>
                   <td className="px-8 py-6 border text-center">
-                    <img src={candidate.image} alt={candidate.name} className="w-20 h-20 object-cover rounded-full mx-auto" />
+                    <img src={getPartyLogo(candidate.party)} alt={candidate.party} className="w-20 h-20 object-cover rounded-full mx-auto" />
                   </td>
+                  <td className="px-8 py-6 border text-center text-5xl">{candidate.no}</td>
                   <td className="px-8 py-6 border text-center">
                     <button
                       className={`w-20 h-20 ${selectedCandidates.includes(candidate._id) ? "bg-blue-600 text-white" : "bg-transparent border-4 border-gray-400"} rounded-full text-4xl font-bold`}

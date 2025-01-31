@@ -11,12 +11,20 @@ const fetchCandidates = async () => {
   return data.candidates;
 };
 
+// Fetch parties from API
+const fetchParties = async () => {
+  const response = await fetch("http://localhost:3000/api/Parties/getParties");
+  const data = await response.json();
+  return data.parties;
+};
+
 const ConfirmVote = () => {
   const router = useRouter();
   const { t } = useTranslation();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isSpeakerEnabled, setSpeakerEnabled] = useState<boolean>(false);
   const [candidates, setCandidates] = useState<any[]>([]);
+  const [parties, setParties] = useState<any[]>([]);
 
   const { candidates: selectedCandidateIds } = router.query;
   const selectedCandidates = selectedCandidateIds
@@ -26,11 +34,14 @@ const ConfirmVote = () => {
     selectedCandidates.includes(candidate._id)
   );
 
-  // Fetch candidates data on component mount
+  // Fetch candidates and parties data on component mount
   useEffect(() => {
     const fetchData = async () => {
-      const data = await fetchCandidates();
-      setCandidates(data);
+      const candidatesData = await fetchCandidates();
+      setCandidates(candidatesData);
+
+      const partiesData = await fetchParties();
+      setParties(partiesData);
     };
     fetchData();
   }, []);
@@ -123,6 +134,11 @@ const ConfirmVote = () => {
     }
   }, [isSpeakerEnabled, router.locale]);
   
+  // Get party logo by party ID
+  const getPartyLogo = (partyId: string) => {
+    const party = parties.find((p) => p._id === partyId);
+    return party ? party.logo : "";
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#F1F1F1] to-[#B0D0E6]">
@@ -133,22 +149,28 @@ const ConfirmVote = () => {
           <table className="table-auto w-full border-collapse text-left text-lg">
             <thead className="bg-[#003366] text-white font-semibold text-xl">
               <tr>
-                <th className="px-8 py-6 border">{t("candidateNo")}</th>
+                <th className="px-8 py-6 border">{}</th>
                 <th className="px-8 py-6 border">{t("candidateName")}</th>
                 <th className="px-8 py-6 border">{t("partyName")}</th>
+                
+                <th className="px-8 py-6 border text-center">{t("candidateNo")}</th>
                 <th className="px-8 py-6 border">{t("symbol")}</th>
               </tr>
             </thead>
             <tbody>
               {displayedCandidates.map((candidate) => (
                 <tr key={candidate._id} className="hover:bg-gray-100 bg-white">
-                  <td className="px-8 py-6 border text-center text-5xl">{candidate.no}</td>
+                  <td className="px-8 py-6 border text-center">
+                    <img src={candidate.image} alt={candidate.name} className="w-20 h-20 object-cover rounded-full mx-auto" />
+                  </td>
                   <td className="px-8 py-6 border">
                     <div className="text-2xl font-bold">{candidate.name}</div>
                   </td>
                   <td className="px-8 py-6 border text-2xl font-bold">{candidate.party}</td>
+                  
+                  <td className="px-8 py-6 border text-center text-5xl">{candidate.no}</td>
                   <td className="px-8 py-6 border text-center">
-                    <img src={candidate.image} alt={candidate.name} className="w-20 h-20 object-cover rounded-full mx-auto" />
+                    <img src={getPartyLogo(candidate.party)} alt={candidate.party} className="w-20 h-20 object-cover rounded-full mx-auto" />
                   </td>
                 </tr>
               ))}
