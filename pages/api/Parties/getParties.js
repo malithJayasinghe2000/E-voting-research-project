@@ -20,14 +20,9 @@ export default async function handler(req, res) {
     try {
         // Get the current session
         const session = await getServerSession(req, res, authOptions);
-        if (!session?.user?.email) {
-            return res.status(401).json({ message: "Unauthorized" });
-        }
+        
 
-        // Check if the user has permission to get parties
-        if (session.user.role !== "admin") {
-            return res.status(403).json({ message: "Forbidden: You do not have permission to get parties" });
-        }
+       
 
         // Get all parties
         const parties = await Party.find();
