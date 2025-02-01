@@ -6,14 +6,14 @@ import Navbar from "./navbar";
 
 // Simulate fetching candidate data from an API
 const fetchCandidates = async () => {
-  const response = await fetch("http://localhost:3000/api/Candidates/getCandidates");
+  const response = await fetch("/api/Candidates/getCandidates");
   const data = await response.json();
   return data.candidates;
 };
 
 // Simulate fetching party data from an API
 const fetchParties = async () => {
-  const response = await fetch("http://localhost:3000/api/Parties/getParties");
+  const response = await fetch("/api/Parties/getParties");
   const data = await response.json();
   return data.parties;
 };
@@ -79,6 +79,8 @@ const CandidateSelection = () => {
       }
     };
   }, [locale, isSpeakerEnabled]);
+
+
 
   // Handle candidate selection (selection, deselection, max selection)
   const handleCandidateSelection = (candidateId: number) => {
@@ -184,7 +186,9 @@ const CandidateSelection = () => {
                   <td className="px-8 py-6 border">
                     <div className="text-2xl font-bold">{candidate.name}</div>
                   </td>
-                  <td className="px-8 py-6 border text-2xl font-bold">{candidate.party}</td>
+                    <td className="px-8 py-6 border text-2xl font-bold">
+                    {parties.find((party) => party._id === candidate.party)?.short_name || candidate.party}
+                    </td>
                   <td className="px-8 py-6 border text-center">
                     <img src={getPartyLogo(candidate.party)} alt={candidate.party} className="w-20 h-20 object-cover rounded-full mx-auto" />
                   </td>
