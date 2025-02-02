@@ -103,7 +103,7 @@ const CandidateSelection = () => {
 
   // Handle submit
   const handleSubmit = () => {
-    if (selectedCandidates.length === 3) {
+    if (selectedCandidates.length > 0 && selectedCandidates.length <= 3) {
       if (isSpeakerEnabled) {
         playAudio("submit");
         if (audioRef.current) {
@@ -122,7 +122,7 @@ const CandidateSelection = () => {
         });
       }
     } else {
-      alert(t("selectExactly3Alert"));
+      alert(t("selectAtLeastOneAlert"));
     }
   };
   
