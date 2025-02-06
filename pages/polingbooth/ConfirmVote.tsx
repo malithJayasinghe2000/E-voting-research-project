@@ -6,14 +6,14 @@ import { useRef, useEffect, useState } from "react";
 
 // Fetch candidates from API
 const fetchCandidates = async () => {
-  const response = await fetch("http://localhost:3000/api/Candidates/getCandidates");
+  const response = await fetch("/api/Candidates/getCandidates");
   const data = await response.json();
   return data.candidates;
 };
 
 // Fetch parties from API
 const fetchParties = async () => {
-  const response = await fetch("http://localhost:3000/api/Parties/getParties");
+  const response = await fetch("/api/Parties/getParties");
   const data = await response.json();
   return data.parties;
 };
@@ -30,9 +30,9 @@ const ConfirmVote = () => {
   const selectedCandidates = selectedCandidateIds
     ? JSON.parse(selectedCandidateIds as string)
     : [];
-  const displayedCandidates = candidates.filter((candidate) =>
-    selectedCandidates.includes(candidate._id)
-  );
+  const displayedCandidates = selectedCandidates.map((id: string) =>
+    candidates.find((candidate) => candidate._id === id)
+  ).filter(Boolean);
 
   // Fetch candidates and parties data on component mount
   useEffect(() => {
@@ -101,16 +101,37 @@ const ConfirmVote = () => {
     
   };
 
-  const handleConfirm = () => {
-    if (isSpeakerEnabled) {
-      playAudio("confirmSuccess", () => {
-        router.push("/polingbooth/Thankyou");
+  const handleConfirm = async () => {
+    try {
+      // Create the 'votes' array with candidate IDs and priority (index + 1)
+      const votes = selectedCandidates.map((candidate, index) => ({
+        candidate_id: candidate, // This is just the candidate's ID (you might need to replace this with the candidate object if you need more details)
+        priority: index + 1, // Assign priority based on selection order
+      }));
+  
+      // Log the selected candidates with priority
+      console.log("Selected Candidates with Priority: ", votes);
+  
+      const response = await fetch("http://localhost:5000/api/vote/encrypt", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          votes, // Send both candidate_id and priority
+        }),
       });
-    }else{
-      router.push("/polingbooth/Thankyou");
+  
+      if (response.ok) {
+        router.push("/polingbooth/Thankyou"); // Redirect after successful encryption
+      } else {
+        console.error("Error encrypting votes:", await response.text());
+      }
+    } catch (error) {
+      console.error("Error sending votes:", error);
     }
-   
   };
+  
 
   const handleHoverButton = (buttonAction: string) => {
     playAudio(buttonAction);
@@ -166,8 +187,9 @@ const ConfirmVote = () => {
                   <td className="px-8 py-6 border">
                     <div className="text-2xl font-bold">{candidate.name}</div>
                   </td>
-                  <td className="px-8 py-6 border text-2xl font-bold">{candidate.party}</td>
-                  
+                  <td className="px-8 py-6 border text-2xl font-bold">
+                    {parties.find((party) => party._id === candidate.party)?.short_name || candidate.party}
+                  </td>
                   <td className="px-8 py-6 border text-center text-5xl">{candidate.no}</td>
                   <td className="px-8 py-6 border text-center">
                     <img src={getPartyLogo(candidate.party)} alt={candidate.party} className="w-20 h-20 object-cover rounded-full mx-auto" />
