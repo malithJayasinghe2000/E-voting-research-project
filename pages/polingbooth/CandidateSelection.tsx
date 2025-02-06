@@ -122,7 +122,7 @@ const CandidateSelection = () => {
         });
       }
     } else {
-      alert(t("selectAtLeastOneAlert"));
+      alert(t("selectExactly3Alert"));
     }
   };
   
