@@ -41,7 +41,27 @@ export default async function handler(req, res) {
       })
 
       const data = await response.json()
-      return res.status(200).json(data)
+      console.log("Prediction Data:", data); // Display prediction in console
+
+      // Combine consecutive predictions to form multi-digit numbers
+      const predictedNumber = data.predictions.map(prediction => prediction.digit).join('');
+      console.log("Combined Predicted Number:", predictedNumber);
+
+      // Fetch candidate list
+      const candidatesResponse = await fetch("http://localhost:3000/api/Candidates/getCandidates");
+      const candidatesData = await candidatesResponse.json();
+      const candidates = candidatesData.candidates;
+
+      // Check if predicted number is in candidate list
+      const candidate = candidates.find(candidate => candidate.no === predictedNumber);
+
+      if (candidate) {
+        console.log(`Predicted Number: ${predictedNumber}, Candidate Name: ${candidate.name}`);
+        return res.status(200).json({ predictedNumber, candidateName: candidate.name });
+      } else {
+        console.log(`Predicted Number: ${predictedNumber}`);
+        return res.status(200).json({ predictedNumber });
+      }
     } catch (error) {
       console.error("Error:", error)
       return res.status(500).json({ error: "Failed to fetch predictions" })
