@@ -49,7 +49,7 @@ def encrypt_vote_route():
                 return jsonify({"error": "'candidate_id' and 'priority' are required"}), 400
 
             try:
-                priority = float(priority)  # ✅ Convert priority to number
+                priority = float(priority)  # Convert priority to number
             except ValueError:
                 return jsonify({"error": "Priority must be a number"}), 400
 

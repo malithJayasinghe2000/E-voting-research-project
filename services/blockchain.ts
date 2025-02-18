@@ -1,237 +1,87 @@
 import { ethers } from "ethers";
-import address from '../artifacts/contractAddress.json';
-import abi from '../artifacts/contracts/DappVotes.sol/DappVotes.json';
-import { globalActions } from "@/store/globalSlices";
-import { store } from "@/store";
-import { ContestantStruct, PollParams, PollStruct } from "@/utils/types";
-import { time } from "console";
 
-const {setWallet, setPolls, setPoll, setContestants} = globalActions;
-const ContractAddress = address.address;
-const ContractAbi = abi.abi;
-let ethereum : any
-let tx:any
+const CONTRACT_ADDRESS = "0x0165878A594ca255338adfa4d48449f69242Eb8F";
+const CONTRACT_ABI = [
+  "function storeMultipleVoteCounts(string[] candidateIds, uint256 priority, uint256[] counts) public",
+  "function getVoteCounts(string candidateId) public view returns (uint256, uint256, uint256)",
+  "function getAllVoteCounts() public view returns (string[], uint256[], uint256[], uint256[])"
+];
 
-if(typeof window !== 'undefined'){
-    ethereum = (window as any).ethereum
-}
-
-const connectWallet = async () =>{
-    try {
-        if(!ethereum){
-            return reportError('please install metamask')
-        }
-        const accounts = await ethereum.request?.({method:'eth_requestAccounts'})
-        store.dispatch(setWallet(accounts?.[0]))
-    } catch (error) {
-        reportError(error)
-    }
-}
-
-const checkWallet = async () =>{
-    try {
-        if(!ethereum){
-            return reportError('please install metamask')
-        }
-        const accounts = await ethereum.request?.({method:'eth_accounts'})
-        
-        ethereum.on('chainChanged', async()=>{
-            window.location.reload()
-        })
-        ethereum.on('accountsChanged', async()=>{
-            store.dispatch(setWallet(accounts?.[0]))
-        })
-        
-        if(accounts?.length){
-            store.dispatch(setWallet(accounts?.[0]))
-        }else{
-            store.dispatch(setWallet(''))
-            reportError('please connect your wallet')
-        }
-
-    } catch (error) {
-        reportError(error)
-    }
-}
-
-const getEthereumContract = async () =>{
-    const accounts = await ethereum?.request?.({method:'eth_accounts'})
-    const provider = accounts?.[0]
-        ? new ethers.providers.Web3Provider(ethereum)
-        : new ethers.providers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL)
-
-    const wallet = accounts?.[0] ?null : ethers.Wallet.createRandom()
-    const signer = provider.getSigner(accounts?.[0] ? undefined : wallet?.address)
-
-    const contract = new ethers.Contract(ContractAddress,ContractAbi,signer)
-    return contract
-}
-
-const createPoll = async(data: PollParams) => {
-    if(!ethereum){
-        reportError('please install metamask')
-        return Promise.reject(new Error('Metamask not installed'))
-    }
-
-    try {
-        const contract = await getEthereumContract()
-        const {image,title,description,startsAt,endsAt} = data
-        tx = await contract.createPoll(image,title,description,startsAt,endsAt)
-
-        await tx.wait()
-
-        const polls = await contract.getPolls()
-        store.dispatch(setPolls(polls))
-
-        return Promise.resolve(tx)
-    }catch(error){
-        reportError(error)
-        return Promise.reject(error)
-    }
-}
-
-const updatePoll = async(id: number,data: PollParams) => {
-    if(!ethereum){
-        reportError('please install metamask')
-        return Promise.reject(new Error('Metamask not installed'))
-    }
-
-    try {
-        const contract = await getEthereumContract()
-        const {image,title,description,startsAt,endsAt} = data
-        const tx = await contract.updatePoll(id,image,title,description,startsAt,endsAt)
-
-        await tx.wait()
-        const poll = await getPoll(id)
-        store.dispatch(setPoll(poll))
-        return Promise.resolve(tx)
-    }catch(error){
-        reportError(error)
-        return Promise.reject(error)
-    }
-}
-
-const deletePoll = async(id: number) => {
-    if(!ethereum){
-        reportError('please install metamask')
-        return Promise.reject(new Error('Metamask not installed'))
-    }
-
-    try {
-        const contract = await getEthereumContract()
-        const tx = await contract.deletePoll(id)
-        await tx.wait()
-
-        return Promise.resolve(tx)
-    }catch(error){
-        reportError(error)
-        return Promise.reject(error)
-    }
-}
-
-const getPolls = async ():Promise<PollStruct[]> =>{
-    const contract = await getEthereumContract()
-    const polls = await contract.getPolls()
-    return structurePolls(polls)
-}
-
-const getPoll = async (id: number): Promise<PollStruct> => {
-    const contract = await getEthereumContract()
-    const poll = await contract.getPoll(id)
-    return structurePolls([poll])[0]
+export const storeResultsOnBlockchain = async (
+  candidateVotes: Record<string, number>,
+  priority: number
+): Promise<void> => {
+  if (!window.ethereum) {
+    alert("Please install MetaMask to use blockchain features.");
+    return;
   }
 
-  const contestPoll = async(id: number,name: string,image: string,party: string,nationalId: string,bio: string) => {
-    if(!ethereum){
-        reportError('please install metamask')
-        return Promise.reject(new Error('Metamask not installed'))
-    }
+  try {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const signer = provider.getSigner();
+    const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
-    try {
-        const contract = await getEthereumContract()
-        const tx = await contract.contest(id,name,image,party,nationalId,bio)
-        await tx.wait()
+    const candidateIds = Object.keys(candidateVotes);
+    const counts = Object.values(candidateVotes);
 
-        const poll = await getPoll(id)
-        store.dispatch(setPoll(poll))
+    const tx = await contract.storeMultipleVoteCounts(candidateIds, priority, counts);
+    await tx.wait();
+    console.log(`Stored votes for priority ${priority} in a single transaction`);
+  } catch (error) {
+    console.error("Failed to store multiple votes on blockchain:", error);
+  }
+};
 
-        const contestants = await getContestants(id)
-        store.dispatch(setContestants(contestants))
+export const getResultsFromBlockchain = async (
+  candidateId: string
+): Promise<{ priority1: number; priority2: number; priority3: number } | null> => {
+  if (!window.ethereum) {
+    alert("Please install MetaMask to use blockchain features.");
+    return null;
+  }
 
-        return Promise.resolve(tx)
-    }catch(error){
-        reportError(error)
-        return Promise.reject(error)
-    }
-}
+  try {
+    // Connect to MetaMask
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
 
-const voteCandidate = async(id: number,cid: number) => {
-    if(!ethereum){
-        reportError('please install metamask')
-        return Promise.reject(new Error('Metamask not installed'))
-    }
+    // Call the contract function
+    const [priority1, priority2, priority3] = await contract.getVoteCounts(candidateId);
+    return {
+      priority1: priority1.toNumber(),
+      priority2: priority2.toNumber(),
+      priority3: priority3.toNumber(),
+    };
+  } catch (error) {
+    console.error("Failed to retrieve votes from blockchain:", error);
+    return null;
+  }
+};
 
-    try {
-        const contract = await getEthereumContract()
-        const tx = await contract.vote(id,cid)
-        await tx.wait()
+export const getAllResultsFromBlockchain = async (): Promise<
+  { candidateId: string; priority1: number; priority2: number; priority3: number }[] | null
+> => {
+  if (!window.ethereum) {
+    alert("Please install MetaMask to use blockchain features.");
+    return null;
+  }
 
-        const poll = await getPoll(id)
-        store.dispatch(setPoll(poll))
+  try {
+    const provider = new ethers.providers.Web3Provider(window.ethereum);
+    const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
 
-        const contestants = await getContestants(id)
-        store.dispatch(setContestants(contestants))
-
-        return Promise.resolve(tx)
-    }catch(error){
-        reportError(error)
-        return Promise.reject(error)
-    }
-}
-
-const getContestants = async(id: number) : Promise<ContestantStruct[]> => {
-    const contract = await getEthereumContract()
-    const contestants = await contract.getContestants(id)
-    return structureContestants(contestants)
-}
-
-const structureContestants = (contestants:ContestantStruct[]):ContestantStruct[] =>
-    contestants.map((contestant)=>({
-        id:Number(contestant.id),
-        image:contestant.image,
-        name:contestant.name,
-        party:contestant.party,
-        nationalId:contestant.nationalId,
-        bio:contestant.bio,
-        voter:contestant.voter.toLowerCase(),
-        votes:Number(contestant.votes),
-        voters:contestant.voters.map((voter:string)=>voter.toLowerCase()),
-    }))
-    .sort((a,b)=>b.votes - a.votes)
-
-
-const structurePolls = (polls:PollStruct[]):PollStruct[] =>
-    polls.map((poll)=>({
-        id:Number(poll.id),
-        image:poll.image,
-        title:poll.title,
-        description:poll.description,
-        votes:Number(poll.votes),
-        contestants:Number(poll.contestants),
-        deleted:poll.deleted,
-        director:poll.director.toLowerCase(),
-        startsAt:Number(poll.startsAt),
-        endsAt:Number(poll.endsAt),
-        timestamp:Number(poll.timestamp),
-        voters:poll.voters.map((voter:string)=>voter.toLowerCase()),
-        avatars : poll.avatars
-
-    }))
-    .sort((a,b)=>b.timestamp - a.timestamp)
+    const [ids, p1Votes, p2Votes, p3Votes] = await contract.getAllVoteCounts();
     
+    const results = ids.map((id: string, index: number) => ({
+      candidateId: id,
+      priority1: p1Votes[index].toNumber(),
+      priority2: p2Votes[index].toNumber(),
+      priority3: p3Votes[index].toNumber(),
+    }));
 
-const reportError = (error:any) =>{
-    console.error(error)
-}
-
-export {connectWallet,checkWallet,createPoll,getPolls,getPoll, updatePoll,deletePoll,contestPoll,getContestants,voteCandidate}
+    return results;
+  } catch (error) {
+    console.error("Failed to retrieve all votes from blockchain:", error);
+    return null;
+  }
+};
