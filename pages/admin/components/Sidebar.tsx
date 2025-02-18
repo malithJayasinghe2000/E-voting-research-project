@@ -40,6 +40,16 @@ const navItems = [
     subLinks: [
       { href: "/admin/polingManagers/create", label: "Add Polling Manager" },
       { href: "/admin/polingManagers/manage", label: "Manage Polling Manager" },
+      { href: "/admin/polingManagers/results", label: "Results" },
+    ],
+  },
+  {
+    href: "/admin/manageResults",
+    label: "Results",
+    icon: Users,
+    subLinks: [
+      { href: "/admin/manageResults/release", label: "Release results" },
+      // { href: "/admin/voters/manage", label: "Manage Voters" },
     ],
   },
 
