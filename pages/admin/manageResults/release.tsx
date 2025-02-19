@@ -1,6 +1,5 @@
-// src/components/VoteCounts.tsx
 import { useEffect, useState } from 'react';
-import {fetchVoteCounts} from '../../api/Results/release';   
+import { getAllResultsFromBlockchain } from '../../../services/blockchain';
 
 interface VoteCountsProps {}
 
@@ -12,59 +11,39 @@ const VoteCounts: React.FC<VoteCountsProps> = () => {
 
   useEffect(() => {
     const fetchVotes = async () => {
-      const counts = await fetchVoteCounts();
-      console.log(counts);
-      setVoteCounts(counts);
+      const results = await getAllResultsFromBlockchain();
+      if (results) {
+        const counts = results.reduce((acc, { candidateId, priority1, priority2 }) => ({
+          ...acc,
+          [candidateId]: { 1: priority1, 2: priority2 }
+        }), {});
+        setVoteCounts(counts);
+      }
       setLoading(false);
     };
     fetchVotes();
   }, []);
 
-  const getTotalFirstPriorityVotes = () => {
-    let total = 0;
-    Object.values(voteCounts).forEach(votes => {
-      if (votes['1']) {
-        total += votes['1'];
-      }
-    });
-    return total;
-  };
+  const getTotalFirstPriorityVotes = () => Object.values(voteCounts).reduce((sum, v) => sum + (v['1'] || 0), 0);
+  const getMaxFirstPriorityVotes = () => Math.max(...Object.values(voteCounts).map(v => v['1'] || 0));
+  const getTopTwoCandidates = () => Object.entries(voteCounts)
+    .map(([id, v]) => ({ id, first: v['1'] || 0, second: v['2'] || 0 }))
+    .sort((a, b) => b.first - a.first)
+    .slice(0, 2);
 
-  const getMaxFirstPriorityVotes = () => {
-    let maxVotes = 0;
-    Object.values(voteCounts).forEach(votes => {
-      if (votes['1'] && votes['1'] > maxVotes) {
-        maxVotes = votes['1'];
-      }
-    });
-    return maxVotes;
-  };
-
-  const getTopTwoCandidates = () => {
-    const candidates = Object.entries(voteCounts).map(([candidateId, votes]) => ({
-      candidateId,
-      firstPriorityVotes: votes['1'] || 0,
-      secondPriorityVotes: votes['2'] || 0,
-    }));
-    candidates.sort((a, b) => b.firstPriorityVotes - a.firstPriorityVotes);
-    return candidates.slice(0, 2);
-  };
-
-  if (loading) {
-    return <p>Loading vote counts...</p>;
-  }
-
-  const totalFirstPriorityVotes = getTotalFirstPriorityVotes();
-  const maxFirstPriorityVotes = getMaxFirstPriorityVotes();
-  const maxVotesPercentage = (maxFirstPriorityVotes / totalFirstPriorityVotes) * 100;
-  const topTwoCandidates = getTopTwoCandidates();
+  const totalFirstVotes = getTotalFirstPriorityVotes();
+  const maxFirstVotes = getMaxFirstPriorityVotes();
+  const maxVotesPercentage = (maxFirstVotes / totalFirstVotes) * 100;
+  const topTwo = getTopTwoCandidates();
 
   const getFinalResult = () => {
-    const [first, second] = topTwoCandidates;
-    const firstTotalVotes = first.firstPriorityVotes + (showPriority2 ? first.secondPriorityVotes : 0);
-    const secondTotalVotes = second.firstPriorityVotes + (showPriority2 ? second.secondPriorityVotes : 0);
-    return firstTotalVotes > secondTotalVotes ? first.candidateId : second.candidateId;
+    const [first, second] = topTwo;
+    const firstTotal = first.first + (showPriority2 ? first.second : 0);
+    const secondTotal = second.first + (showPriority2 ? second.second : 0);
+    return firstTotal > secondTotal ? first.id : second.id;
   };
+
+  if (loading) return <p>Loading vote counts...</p>;
 
   return (
     <div className="p-4">
@@ -75,7 +54,7 @@ const VoteCounts: React.FC<VoteCountsProps> = () => {
         <>
           {maxVotesPercentage <= 51 && (
             <div className="mb-4">
-              <p>No candidate has more than 51% of the first priority votes.</p>
+              <p>No candidate has more than 51% of first-priority votes.</p>
               <button
                 className="px-4 py-2 bg-blue-500 text-white rounded"
                 onClick={() => setShowPriority2(true)}
@@ -85,14 +64,14 @@ const VoteCounts: React.FC<VoteCountsProps> = () => {
             </div>
           )}
           <ul className="space-y-4">
-            {Object.entries(voteCounts).map(([candidateId, votes]) => (
-              <li key={candidateId} className="p-3 border rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-2">Candidate: {candidateId}</h3>
+            {Object.entries(voteCounts).map(([id, v]) => (
+              <li key={id} className="p-3 border rounded-lg shadow">
+                <h3 className="text-lg font-semibold mb-2">Candidate: {id}</h3>
                 <ul>
-                  {Object.entries(votes).map(([priority, count]) => (
-                    (priority === '1' || (priority === '2' && showPriority2)) && (
-                      <li key={priority} className="flex justify-between">
-                        <span className="font-bold">{count} votes (Priority {priority})</span>
+                  {Object.entries(v).map(([p, c]) => (
+                    (p === '1' || (p === '2' && showPriority2)) && (
+                      <li key={p} className="flex justify-between">
+                        <span className="font-bold">{c} votes (Priority {p})</span>
                       </li>
                     )
                   ))}

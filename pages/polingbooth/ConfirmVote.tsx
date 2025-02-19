@@ -3,6 +3,7 @@ import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import { useTranslation } from "next-i18next";
 import Navbar from "./navbar";
 import { useRef, useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 
 // Fetch candidates from API
 const fetchCandidates = async () => {
@@ -25,6 +26,7 @@ const ConfirmVote = () => {
   const [isSpeakerEnabled, setSpeakerEnabled] = useState<boolean>(false);
   const [candidates, setCandidates] = useState<any[]>([]);
   const [parties, setParties] = useState<any[]>([]);
+  const { data: session } = useSession();
 
   const { candidates: selectedCandidateIds } = router.query;
   const selectedCandidates = selectedCandidateIds
@@ -104,24 +106,28 @@ const ConfirmVote = () => {
   const handleConfirm = async () => {
     try {
       // Create the 'votes' array with candidate IDs and priority (index + 1)
-      const votes = selectedCandidates.map((candidate, index) => ({
-        candidate_id: candidate, // This is just the candidate's ID (you might need to replace this with the candidate object if you need more details)
+      const votes = selectedCandidates.map((candidate:any, index:any) => ({
+        candidate_id: candidate, // Candidate ID
         priority: index + 1, // Assign priority based on selection order
       }));
-  
-      // Log the selected candidates with priority
+
+      const poll_manager_id = session?.user?._id; // Ensure this is properly set
+
+      // Log the selected candidates with priority and polling manager ID
       console.log("Selected Candidates with Priority: ", votes);
-  
+      console.log("Polling Manager ID: ", poll_manager_id);
+
       const response = await fetch("http://localhost:5000/api/vote/encrypt", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          votes, // Send both candidate_id and priority
+          votes, // Send votes array
+          poll_manager_id, // Send polling manager ID separately
         }),
       });
-  
+
       if (response.ok) {
         router.push("/polingbooth/Thankyou"); // Redirect after successful encryption
       } else {
@@ -131,6 +137,7 @@ const ConfirmVote = () => {
       console.error("Error sending votes:", error);
     }
   };
+
   
 
   const handleHoverButton = (buttonAction: string) => {
@@ -179,7 +186,7 @@ const ConfirmVote = () => {
               </tr>
             </thead>
             <tbody>
-              {displayedCandidates.map((candidate) => (
+              {displayedCandidates.map((candidate:any) => (
                 <tr key={candidate._id} className="hover:bg-gray-100 bg-white">
                   <td className="px-8 py-6 border text-center">
                     <img src={candidate.image} alt={candidate.name} className="w-20 h-20 object-cover rounded-full mx-auto" />

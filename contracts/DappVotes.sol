@@ -6,14 +6,16 @@ contract VoteStorage {
         uint256 priority1;
         uint256 priority2;
         uint256 priority3;
+        string pollingManagerId; // Store polling manager ID
     }
 
     mapping(string => VoteRecord) public voteCounts;
     string[] public candidateList;
 
-    event VotesStored(string[] candidateIds, uint256 priority, uint256[] counts);
+    event VotesStored(string pollingManagerId, string[] candidateIds, uint256 priority, uint256[] counts);
 
     function storeMultipleVoteCounts(
+        string memory pollingManagerId,
         string[] memory candidateIds,
         uint256 priority,
         uint256[] memory counts
@@ -29,6 +31,11 @@ contract VoteStorage {
                 voteCounts[candidateIds[i]].priority3 = counts[i];
             }
 
+            // Store polling manager ID only once
+            if (bytes(voteCounts[candidateIds[i]].pollingManagerId).length == 0) {
+                voteCounts[candidateIds[i]].pollingManagerId = pollingManagerId;
+            }
+
             // Add candidate if not exists
             bool exists = false;
             for (uint256 j = 0; j < candidateList.length; j++) {
@@ -42,7 +49,7 @@ contract VoteStorage {
             }
         }
 
-        emit VotesStored(candidateIds, priority, counts);
+        emit VotesStored(pollingManagerId, candidateIds, priority, counts);
     }
 
     function getVoteCounts(string memory candidateId) public view returns (uint256, uint256, uint256) {
