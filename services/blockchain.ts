@@ -1,13 +1,14 @@
 import { ethers } from "ethers";
 
-const CONTRACT_ADDRESS = "0x0165878A594ca255338adfa4d48449f69242Eb8F";
+const CONTRACT_ADDRESS = "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9";
 const CONTRACT_ABI = [
-  "function storeMultipleVoteCounts(string[] candidateIds, uint256 priority, uint256[] counts) public",
+  "function storeMultipleVoteCounts(string pollingManagerId, string[] candidateIds, uint256 priority, uint256[] counts) public",
   "function getVoteCounts(string candidateId) public view returns (uint256, uint256, uint256)",
   "function getAllVoteCounts() public view returns (string[], uint256[], uint256[], uint256[])"
 ];
 
 export const storeResultsOnBlockchain = async (
+  pollingManagerId: string,
   candidateVotes: Record<string, number>,
   priority: number
 ): Promise<void> => {
@@ -24,9 +25,9 @@ export const storeResultsOnBlockchain = async (
     const candidateIds = Object.keys(candidateVotes);
     const counts = Object.values(candidateVotes);
 
-    const tx = await contract.storeMultipleVoteCounts(candidateIds, priority, counts);
+    const tx = await contract.storeMultipleVoteCounts(pollingManagerId, candidateIds, priority, counts);
     await tx.wait();
-    console.log(`Stored votes for priority ${priority} in a single transaction`);
+    console.log(`Stored votes for priority ${priority} by Polling Manager: ${pollingManagerId}`);
   } catch (error) {
     console.error("Failed to store multiple votes on blockchain:", error);
   }
@@ -41,11 +42,9 @@ export const getResultsFromBlockchain = async (
   }
 
   try {
-    // Connect to MetaMask
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
 
-    // Call the contract function
     const [priority1, priority2, priority3] = await contract.getVoteCounts(candidateId);
     return {
       priority1: priority1.toNumber(),

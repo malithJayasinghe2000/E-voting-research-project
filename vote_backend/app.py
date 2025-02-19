@@ -32,11 +32,12 @@ def sign_vote(vote_data):
 def encrypt_vote_route():
     try:
         data = request.get_json()
-        
-        if not data or 'votes' not in data:
-            return jsonify({"error": "Invalid request, 'votes' are required"}), 400
+
+        if not data or 'votes' not in data or 'poll_manager_id' not in data:
+            return jsonify({"error": "Invalid request, 'votes' and 'poll_manager_id' are required"}), 400
 
         votes = data['votes']
+        poll_manager_id = data['poll_manager_id']
 
         if not isinstance(votes, list) or not votes:
             return jsonify({"error": "'votes' must be a non-empty list"}), 400
@@ -53,26 +54,29 @@ def encrypt_vote_route():
             except ValueError:
                 return jsonify({"error": "Priority must be a number"}), 400
 
-            # Encrypt only the priority and store candidate_id as a string
+            # Encrypt only the priority
             encrypted_priority = he.encrypt_vote(priority)
             encrypted_priority_serialized = base64.b64encode(encrypted_priority.serialize()).decode('utf-8')
 
-            # Check if the candidate already exists in the database
-            existing_vote = votes_collection.find_one({"candidate_id": candidate_id})
+            # Check if the candidate already has an entry **for this polling station**
+            # Check if the candidate already exists in the database for the same polling manager
+            existing_vote = votes_collection.find_one({"candidate_id": candidate_id, "poll_manager_id": poll_manager_id})
 
             if existing_vote:
-                # If the candidate exists, update the existing entry with the new priority
+                # If the candidate exists under the same polling manager, update the existing entry
                 votes_collection.update_one(
-                    {"candidate_id": candidate_id},
+                    {"candidate_id": candidate_id, "poll_manager_id": poll_manager_id},
                     {"$push": {"encrypted_priorities": encrypted_priority_serialized}}
                 )
             else:
-                # If the candidate does not exist, create a new entry with the first priority
+                # If the candidate does not exist under this polling manager, create a new entry
                 votes_collection.insert_one({
-                    "candidate_id": candidate_id,  # Store candidate_id as a string
-                    "encrypted_priorities": [encrypted_priority_serialized],  # Store first encrypted priority in array
+                    "candidate_id": candidate_id,
+                    "poll_manager_id": poll_manager_id,  # Store the polling manager ID
+                    "encrypted_priorities": [encrypted_priority_serialized],
                     "timestamp": datetime.utcnow().isoformat()
                 })
+
 
         return jsonify({"message": "Votes encrypted and stored securely"}), 200
 
@@ -87,6 +91,7 @@ def count_votes():
 
         for doc in votes_collection.find():
             candidate_id = doc["candidate_id"]
+            poll_manager_id = doc["poll_manager_id"]  # Include polling station
             encrypted_priorities = doc["encrypted_priorities"]
 
             priority_sums = {}  # Dictionary to store encrypted sums per priority
@@ -101,7 +106,11 @@ def count_votes():
                 else:
                     priority_sums[decrypted_priority] += 1  # Just add 1, not the priority value
 
-            vote_counts[candidate_id] = priority_sums  # Store structured priority-wise results
+            # Store results per polling station
+            if candidate_id not in vote_counts:
+                vote_counts[candidate_id] = {}
+
+            vote_counts[candidate_id][poll_manager_id] = priority_sums  # Store structured results by polling station
 
         return jsonify(vote_counts), 200
     except Exception as e:
