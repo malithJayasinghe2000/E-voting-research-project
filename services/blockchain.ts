@@ -1,6 +1,6 @@
 import { ethers } from "ethers";
 
-const CONTRACT_ADDRESS = "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9";
+const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 const CONTRACT_ABI = [
   "function storeMultipleVoteCounts(string pollingManagerId, string[] candidateIds, uint256 priority, uint256[] counts) public",
   "function getVoteCounts(string candidateId) public view returns (uint256, uint256, uint256)",
