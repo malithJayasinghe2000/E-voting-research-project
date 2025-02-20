@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { fetchVoteCounts } from '../../api/Results/release';
 import { storeResultsOnBlockchain, getResultsFromBlockchain, getAllResultsFromBlockchain } from '../../../services/blockchain';
 import { useSession } from "next-auth/react";
+import { set } from 'mongoose';
 
 interface VoteCountsProps {}
 
@@ -22,22 +23,10 @@ const VoteCounts: React.FC<VoteCountsProps> = () => {
   useEffect(() => {
     const fetchVotes = async () => {
       setLoading(true);
-      const response = await fetch("http://localhost:5000/api/vote/count");
+      const response = await fetch(`http://localhost:5000/api/vote/count?poll_manager_id=${pollingManagerId}`);
       const counts = await response.json();
-      
-      if (pollingManagerId) {
-        // Filter votes to show only those related to this Polling Manager's station
-        const filteredVotes = Object.entries(counts).reduce((acc, [candidateId, pollingStations]) => {
-          if (pollingStations[pollingManagerId]) { // Only include if matches pollingManagerId
-            acc[candidateId] = { [pollingManagerId]: pollingStations[pollingManagerId] };
-          }
-          return acc;
-        }, {} as Record<string, Record<string, number>>);
-
-        setVoteCounts(filteredVotes);
-      } else {
-        setVoteCounts({});
-      }
+      console.log(counts);
+      setVoteCounts(counts);
 
       setLoading(false);
     };
@@ -48,14 +37,19 @@ const VoteCounts: React.FC<VoteCountsProps> = () => {
   }, [pollingManagerId]);
 
   const handleStoreVotes = async (priority: number) => {
+    if (!pollingManagerId) {
+      console.error("Polling Manager ID is undefined");
+      return;
+    }
     const candidateVotes: Record<string, number> = {};
     for (const [candidateId, votes] of Object.entries(voteCounts)) {
-      const count = votes[pollingManagerId]?.[priority.toString()];
+      const count = votes[priority.toString()];
       if (count !== undefined) {
         candidateVotes[candidateId] = count;
       }
     }
-    await storeResultsOnBlockchain(pollingManagerId,candidateVotes, priority);
+    await storeResultsOnBlockchain(pollingManagerId, candidateVotes, priority);
+    console.log(candidateVotes);
   };
 
   const handleFetchResults = async (candidateId: string) => {
@@ -83,27 +77,21 @@ const VoteCounts: React.FC<VoteCountsProps> = () => {
         <p>No votes found for your polling station.</p>
       ) : (
         <>
-          <ul className="space-y-4">
-            {Object.entries(voteCounts).map(([candidateId, pollingStations]) => (
+            <ul className="space-y-4">
+            {Object.entries(voteCounts).map(([candidateId, votes]) => (
               <li key={candidateId} className="p-3 border rounded-lg shadow">
-                <h3 className="text-lg font-semibold mb-2">Candidate: {candidateId}</h3>
-                {Object.entries(pollingStations).map(([pollingStationId, votes]) => (
-                  <div key={pollingStationId} className="mb-4">
-                    <h4 className="text-md font-semibold mb-2">Polling Station: {pollingStationId}</h4>
-                    <ul>
-                      {Object.entries(votes).map(([priority, count]) => (
-                        (priority === '1' || (priority === '2' && showPriority2) || (priority === '3' && showPriority3)) && (
-                          <li key={priority} className="flex justify-between">
-                            <span className="font-bold">{count} votes (Priority {priority})</span>
-                          </li>
-                        )
-                      ))}
-                    </ul>
-                  </div>
-                ))}
+              <h3 className="text-lg font-semibold mb-2">Candidate: {candidateId}</h3>
+              {Object.entries(votes).map(([priority, count]) => (
+                (priority === '1' || (priority === '2' && showPriority2) || (priority === '3' && showPriority3)) && (
+                <div key={priority} className="mb-4">
+                  <h4 className="text-md font-semibold mb-2">(Priority: {priority})</h4>
+                  <p className="font-bold">{count} votes</p>
+                </div>
+                )
+              ))}
               </li>
             ))}
-          </ul>
+            </ul>
 
           {/* Buttons to Store Priority Votes on Blockchain */}
           <div className="mt-4">

@@ -87,11 +87,16 @@ def encrypt_vote_route():
 @app.route('/api/vote/count', methods=['GET'])
 def count_votes():
     try:
+        poll_manager_id = request.args.get("poll_manager_id")  # Get polling manager ID from query params
+
+        if not poll_manager_id:
+            return jsonify({"error": "Polling manager ID is required"}), 400
+
         vote_counts = {}
 
-        for doc in votes_collection.find():
+        # Query votes specific to the provided polling manager
+        for doc in votes_collection.find({"poll_manager_id": poll_manager_id}):
             candidate_id = doc["candidate_id"]
-            poll_manager_id = doc["poll_manager_id"]  # Include polling station
             encrypted_priorities = doc["encrypted_priorities"]
 
             priority_sums = {}  # Dictionary to store encrypted sums per priority
@@ -100,21 +105,18 @@ def count_votes():
                 encrypted_priority = ts.ckks_vector_from(he.context, base64.b64decode(encrypted_priority_serialized))
                 decrypted_priority = int(round(encrypted_priority.decrypt()[0]))  # Decrypt first to get priority level
 
-                # **Fix: Only count as one vote per occurrence**
                 if decrypted_priority not in priority_sums:
-                    priority_sums[decrypted_priority] = 1  # First vote in this priority
+                    priority_sums[decrypted_priority] = 1
                 else:
-                    priority_sums[decrypted_priority] += 1  # Just add 1, not the priority value
+                    priority_sums[decrypted_priority] += 1  # Count occurrences, not priority value
 
-            # Store results per polling station
-            if candidate_id not in vote_counts:
-                vote_counts[candidate_id] = {}
-
-            vote_counts[candidate_id][poll_manager_id] = priority_sums  # Store structured results by polling station
+            # Store results
+            vote_counts[candidate_id] = priority_sums
 
         return jsonify(vote_counts), 200
     except Exception as e:
         return jsonify({"error": f"Error counting votes: {str(e)}"}), 500
+
 
 
 if __name__ == '__main__':
