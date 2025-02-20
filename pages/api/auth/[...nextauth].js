@@ -13,7 +13,7 @@ export const authOptions = {
       clientSecret: process.env.GITHUB_SECRET,
       profile(profile) {
         console.log("profile github", profile);
-        console.log("email", profile.email);
+        console.log("it21233494@my.sliit.lk", profile.email);
 
         let userRole = "Github User";
         if (profile?.email === "shabry@knightowl.online") {
