@@ -6,18 +6,16 @@ import Navbar from "./navbar";
 
 // Simulate fetching candidate data from an API
 const fetchCandidates = async () => {
-  return [
-    { id: 23, name: { en: "Anura Kumara Dissanayake", si: "අනුර කුමාර දිසානායක", ta: "அநுர குமார திசாநாயக்க" }, party: "NPP", symbol: "🌱" },
-    { id: 17, name: { en: "Sajith Premadasa", si: "සජිත් ප්‍රේමදාස", ta: "சஜித் பிரேமதாச" }, party: "SJB", symbol: "🌟" },
-    { id: 34, name: { en: "Ranil Wickremesinghe", si: "රනිල් වික්‍රමසිංහ", ta: "ரணில் விக்ரமசிங்க" }, party: "UNP", symbol: "⚖️" },
-    { id: 14, name: { en: "Namal Rajapaksa", si: "නාමල් රාජපක්ෂ", ta: "நாமல் ராஜபக்ச" }, party: "SLPP", symbol: "🦁" },
-    { id: 66, name: { en: "P. Ariyanethiran", si: "පී. අරියනේතිරන්", ta: "பி. அரியநேதிரன்" }, party: "DHH", symbol: "🏠" },
-    { id: 36, name: { en: "Dilith Jayaweera", si: "දිලිත් ජයවීර", ta: "திலித் ஜயவீர" }, party: "FHH", symbol: "🏡" },
-    { id: 67, name: { en: "K. K. Piyadasa", si: "කේ. කේ. පියදාස", ta: "கே. கே. பியதாச" }, party: "YUU", symbol: "📚" },
-    { id: 8, name: { en: "D. M. Bandaranayake", si: "ඩී. එම්. බණ්ඩාරනායක", ta: "டி. எம். பண்டாரநாயக்க" }, party: "UII", symbol: "🌳" },
-    { id: 9, name: { en: "Sarath Fonseka", si: "සරත් ෆොන්සේකා", ta: "சரத் பொன்சேகா" }, party: "RTT", symbol: "⚔️" },
-    { id: 10, name: { en: "Wijeyadasa Rajapakshe", si: "විජයදාස රාජපක්ෂ", ta: "விஜயதாச ராஜபக்ச" }, party: "KNN", symbol: "🌊" },
-  ];
+  const response = await fetch("/api/Candidates/getCandidates");
+  const data = await response.json();
+  return data.candidates;
+};
+
+// Simulate fetching party data from an API
+const fetchParties = async () => {
+  const response = await fetch("/api/Parties/getParties");
+  const data = await response.json();
+  return data.parties;
 };
 
 const CandidateSelection = () => {
@@ -29,6 +27,7 @@ const CandidateSelection = () => {
   const [selectedCandidates, setSelectedCandidates] = useState<number[]>([]);
   const [isSpeakerEnabled, setSpeakerEnabled] = useState<boolean>(false);
   const audioRef = useRef<HTMLAudioElement | null>(null); // Ref for audio element to avoid conflicts
+  const [parties, setParties] = useState<any[]>([]);
 
   // Handle audio play function for different actions
   const playAudio = (type: string) => {
@@ -55,12 +54,15 @@ const CandidateSelection = () => {
     }
   }, []); 
 
-  // Fetch candidates data on page load
+  // Fetch candidates and parties data on page load
   useEffect(() => {
     // Fetch candidates data on page load
     const fetchData = async () => {
-      const data = await fetchCandidates();
-      setCandidates(data);
+      const candidatesData = await fetchCandidates();
+      setCandidates(candidatesData);
+
+      const partiesData = await fetchParties();
+      setParties(partiesData);
     };
     fetchData();
 
@@ -77,6 +79,8 @@ const CandidateSelection = () => {
       }
     };
   }, [locale, isSpeakerEnabled]);
+
+
 
   // Handle candidate selection (selection, deselection, max selection)
   const handleCandidateSelection = (candidateId: number) => {
@@ -99,7 +103,7 @@ const CandidateSelection = () => {
 
   // Handle submit
   const handleSubmit = () => {
-    if (selectedCandidates.length === 3) {
+    if (selectedCandidates.length > 0 && selectedCandidates.length <= 3) {
       if (isSpeakerEnabled) {
         playAudio("submit");
         if (audioRef.current) {
@@ -141,6 +145,12 @@ const CandidateSelection = () => {
     if (isSpeakerEnabled) playAudio("hover");
   };
 
+  // Get party logo by party ID
+  const getPartyLogo = (partyId: string) => {
+    const party = parties.find((p) => p._id === partyId);
+    return party ? party.logo : "";
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#F1F1F1] to-[#B0D0E6]">
       <Navbar />
@@ -159,31 +169,37 @@ const CandidateSelection = () => {
           <table className="table-auto w-full border-collapse text-left text-xl">
             <thead className="bg-[#003366] text-white font-semibold text-2xl">
               <tr>
-                <th className="px-8 py-6 border">{t("candidateNo")}</th>
+                <th className="px-8 py-6 border">{}</th>
                 <th className="px-8 py-6 border">{t("candidateName")}</th>
-                <th className="px-8 py-6 border">{t("partyName")}</th>
-                <th className="px-8 py-6 border">{t("symbol")}</th>
+                <th className="px-8 py-6 border">{t("party")}</th>
+                <th className="px-8 py-6 border">{t("symble")}</th>
+                <th className="px-8 py-6 border text-center">{t("candidateNo")}</th>
                 <th className="px-8 py-6 border text-center">{t("select")}</th>
               </tr>
             </thead>
             <tbody>
               {candidates.map((candidate) => (
-                <tr key={candidate.id} className="hover:bg-gray-100 bg-white">
-                  <td className="px-8 py-6 border text-center text-5xl">{candidate.id}</td>
-                  <td className="px-8 py-6 border">
-                    <div className="text-2xl font-bold">{candidate.name.en}</div>
-                    <div className="text-2xl font-bold">{candidate.name.si}</div>
-                    <div className="text-2xl font-bold">{candidate.name.ta}</div>
+                <tr key={candidate._id} className="hover:bg-gray-100 bg-white">
+                  <td className="px-8 py-6 border text-center">
+                    <img src={candidate.image} alt={candidate.name} className="w-20 h-20 object-cover rounded-full mx-auto" />
                   </td>
-                  <td className="px-8 py-6 border text-2xl font-bold">{candidate.party}</td>
-                  <td className="px-8 py-6 border text-center text-7xl">{candidate.symbol}</td>
+                  <td className="px-8 py-6 border">
+                    <div className="text-2xl font-bold">{candidate.name}</div>
+                  </td>
+                    <td className="px-8 py-6 border text-2xl font-bold">
+                    {parties.find((party) => party._id === candidate.party)?.short_name || candidate.party}
+                    </td>
+                  <td className="px-8 py-6 border text-center">
+                    <img src={getPartyLogo(candidate.party)} alt={candidate.party} className="w-20 h-20 object-cover rounded-full mx-auto" />
+                  </td>
+                  <td className="px-8 py-6 border text-center text-5xl">{candidate.no}</td>
                   <td className="px-8 py-6 border text-center">
                     <button
-                      className={`w-20 h-20 ${selectedCandidates.includes(candidate.id) ? "bg-blue-600 text-white" : "bg-transparent border-4 border-gray-400"} rounded-full text-4xl font-bold`}
-                      onClick={() => handleCandidateSelection(candidate.id)}
+                      className={`w-20 h-20 ${selectedCandidates.includes(candidate._id) ? "bg-blue-600 text-white" : "bg-transparent border-4 border-gray-400"} rounded-full text-4xl font-bold`}
+                      onClick={() => handleCandidateSelection(candidate._id)}
                     >
-                      {selectedCandidates.includes(candidate.id)
-                        ? selectedCandidates.indexOf(candidate.id) + 1
+                      {selectedCandidates.includes(candidate._id)
+                        ? selectedCandidates.indexOf(candidate._id) + 1
                         : ""}
                     </button>
                   </td>

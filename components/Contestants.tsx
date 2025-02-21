@@ -1,8 +1,11 @@
+import { voteCandidate } from '@/services/blockchain'
 import { truncate } from '@/utils/helper'
-import { ContestantStruct, PollStruct } from '@/utils/types'
+import { ContestantStruct, PollStruct, RootState } from '@/utils/types'
 import Image from 'next/image'
 import React from 'react'
 import { BiUpvote } from 'react-icons/bi'
+import { useSelector } from 'react-redux'
+import { toast } from 'react-toastify'
 
 const Contestants: React.FC<{ contestants: ContestantStruct[]; poll: PollStruct }> = ({
   contestants,
@@ -25,10 +28,27 @@ const Contestant: React.FC<{ contestant: ContestantStruct; poll: PollStruct }> =
   contestant,
   poll,
 }) => {
-  const wallet = '' // modify later
+  const {wallet} = useSelector((states:RootState)=>states.globalStates)
+
 
   const voteContestant = async () => {
-    console.log(poll, contestant)
+    // console.log(poll, contestant)
+    await toast.promise(
+      new Promise<void>((resolve,reject)=>{
+        voteCandidate(poll.id, contestant.id)
+        .then((tx) => {
+          console.log(tx)
+          resolve(tx)
+
+        })
+        .catch((error) => reject(error))
+        
+      }),
+      {
+        pending:'Voting to poll...',
+        success:'Voted contest successfully',
+        error:'Failed to vote'}
+    )
   }
   return (
     <div className="flex justify-start items-center space-x-2 md:space-x-8 mt-5 md:mx-auto">
@@ -60,9 +80,9 @@ const Contestant: React.FC<{ contestant: ContestantStruct; poll: PollStruct }> =
 
         <button
           onClick={voteContestant}
-          disabled={wallet ? contestant.voters.includes(wallet) : true}
+          disabled={wallet ? poll.voters.includes(wallet) || Date.now() < poll.startsAt || Date.now() >= poll.endsAt : true}
           className={`w-[158px] sm:w-[213px] h-[48px] rounded-[30.5px] ${
-            wallet && poll.voters.includes(wallet)
+            wallet && poll.voters.includes(wallet) || Date.now() < poll.startsAt || Date.now() >= poll.endsAt
               ? 'bg-[#B0BAC9] cursor-not-allowed'
               : 'bg-[#1B5CFE]'
           }`}

@@ -1,0 +1,306 @@
+{
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Ampara",
+          "province": "Eastern",
+          "population_2012": 648057
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Anuradhapura",
+          "province": "North Central",
+          "population_2012": 856232
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Badulla",
+          "province": "Uva",
+          "population_2012": 811758
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Batticaloa",
+          "province": "Eastern",
+          "population_2012": 525142
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Colombo",
+          "province": "Western",
+          "population_2012": 2309809
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Galle",
+          "province": "Southern",
+          "population_2012": 1058771
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Gampaha",
+          "province": "Western",
+          "population_2012": 2294641
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Hambantota",
+          "province": "Southern",
+          "population_2012": 596617
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Jaffna",
+          "province": "Northern",
+          "population_2012": 583378
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Kalutara",
+          "province": "Western",
+          "population_2012": 1217260
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Kandy",
+          "province": "Central",
+          "population_2012": 1369899
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Kegalle",
+          "province": "Sabaragamuwa",
+          "population_2012": 836603
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Kilinochchi",
+          "province": "Northern",
+          "population_2012": 112875
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Kurunegala",
+          "province": "North Western",
+          "population_2012": 1610299
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Mannar",
+          "province": "Northern",
+          "population_2012": 99051
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Matale",
+          "province": "Central",
+          "population_2012": 482229
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Matara",
+          "province": "Southern",
+          "population_2012": 809344
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Moneragala",
+          "province": "Uva",
+          "population_2012": 448142
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Mullaitivu",
+          "province": "Northern",
+          "population_2012": 91947
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Nuwara Eliya",
+          "province": "Central",
+          "population_2012": 403335
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Polonnaruwa",
+          "province": "North Central",
+          "population_2012": 759776
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Puttalam",
+          "province": "North Western",
+          "population_2012": 1082277
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Ratnapura",
+          "province": "Sabaragamuwa",
+          "population_2012": 1082277
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Trincomalee",
+          "province": "Eastern",
+          "population_2012": 378182
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      },
+      {
+        "type": "Feature",
+        "properties": {
+          "name": "Vavuniya",
+          "province": "Northern",
+          "population_2012": 171511
+        },
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": []
+        }
+      }
+    ]
+  }
+  
