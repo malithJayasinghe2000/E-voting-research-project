@@ -4,33 +4,47 @@ import { useTranslation } from "next-i18next";
 import Navbar from "./navbar";
 import { useRef, useEffect, useState } from "react";
 
-// Data for Candidates (this should match the candidate data in CandidateSelection)
-const candidates = [
-  { id: 23, name: { en: "Anura Kumara Dissanayake", si: "අනුර කුමාර දිසානායක", ta: "அனுர குமார திசாநாயக்க" }, party: "NPP", symbol: "🌱" },
-  { id: 17, name: { en: "Sajith Premadasa", si: "සජිත් ප්‍රේමදාස", ta: "சஜித் பிரேமதாச" }, party: "SJB", symbol: "🌟" },
-  { id: 34, name: { en: "Ranil Wickremesinghe", si: "රනිල් වික්‍රමසිංහ", ta: "ரணில் விக்ரமசிங்க" }, party: "UNP", symbol: "⚖️" },
-  { id: 14, name: { en: "Namal Rajapaksa", si: "නාමල් රාජපක්ෂ", ta: "நாமல் ராஜபக்ச" }, party: "SLPP", symbol: "🦁" },
-  { id: 66, name: { en: "P. Ariyanethiran", si: "පී. අරියනේතිරන්", ta: "பி. அரியநேதிரன்" }, party: "DHH", symbol: "🏠" },
-  { id: 36, name: { en: "Dilith Jayaweera", si: "දිලිත් ජයවීර", ta: "திலித் ஜயவீர" }, party: "FHH", symbol: "🏡" },
-  { id: 67, name: { en: "K. K. Piyadasa", si: "කේ. කේ. පියදාස", ta: "கே. கே. பியதாச" }, party: "YUU", symbol: "📚" },
-  { id: 8, name: { en: "D. M. Bandaranayake", si: "ඩී. එම්. බණ්ඩාරනායක", ta: "டி. எம். பண்டாரநாயக்க" }, party: "UII", symbol: "🌳" },
-  { id: 9, name: { en: "Sarath Fonseka", si: "සරත් ෆොන්සේකා", ta: "சரத் பொன்சேகா" }, party: "RTT", symbol: "⚔️" },
-  { id: 10, name: { en: "Wijeyadasa Rajapakshe", si: "විජයදාස රාජපක්ෂ", ta: "விஜயதாச ராஜபக்ச" }, party: "KNN", symbol: "🌊" },
-];
+// Fetch candidates from API
+const fetchCandidates = async () => {
+  const response = await fetch("/api/Candidates/getCandidates");
+  const data = await response.json();
+  return data.candidates;
+};
+
+// Fetch parties from API
+const fetchParties = async () => {
+  const response = await fetch("/api/Parties/getParties");
+  const data = await response.json();
+  return data.parties;
+};
 
 const ConfirmVote = () => {
   const router = useRouter();
   const { t } = useTranslation();
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isSpeakerEnabled, setSpeakerEnabled] = useState<boolean>(false);
+  const [candidates, setCandidates] = useState<any[]>([]);
+  const [parties, setParties] = useState<any[]>([]);
 
   const { candidates: selectedCandidateIds } = router.query;
   const selectedCandidates = selectedCandidateIds
     ? JSON.parse(selectedCandidateIds as string)
     : [];
-  const displayedCandidates = candidates.filter((candidate) =>
-    selectedCandidates.includes(candidate.id)
-  );
+  const displayedCandidates = selectedCandidates.map((id: string) =>
+    candidates.find((candidate) => candidate._id === id)
+  ).filter(Boolean);
+
+  // Fetch candidates and parties data on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      const candidatesData = await fetchCandidates();
+      setCandidates(candidatesData);
+
+      const partiesData = await fetchParties();
+      setParties(partiesData);
+    };
+    fetchData();
+  }, []);
 
   // Create the audio element once and reuse it
   useEffect(() => {
@@ -87,16 +101,37 @@ const ConfirmVote = () => {
     
   };
 
-  const handleConfirm = () => {
-    if (isSpeakerEnabled) {
-      playAudio("confirmSuccess", () => {
-        router.push("/polingbooth/Thankyou");
+  const handleConfirm = async () => {
+    try {
+      // Create the 'votes' array with candidate IDs and priority (index + 1)
+      const votes = selectedCandidates.map((candidate, index) => ({
+        candidate_id: candidate, // This is just the candidate's ID (you might need to replace this with the candidate object if you need more details)
+        priority: index + 1, // Assign priority based on selection order
+      }));
+  
+      // Log the selected candidates with priority
+      console.log("Selected Candidates with Priority: ", votes);
+  
+      const response = await fetch("http://localhost:5000/api/vote/encrypt", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          votes, // Send both candidate_id and priority
+        }),
       });
-    }else{
-      router.push("/polingbooth/Thankyou");
+  
+      if (response.ok) {
+        router.push("/polingbooth/Thankyou"); // Redirect after successful encryption
+      } else {
+        console.error("Error encrypting votes:", await response.text());
+      }
+    } catch (error) {
+      console.error("Error sending votes:", error);
     }
-   
   };
+  
 
   const handleHoverButton = (buttonAction: string) => {
     playAudio(buttonAction);
@@ -120,6 +155,11 @@ const ConfirmVote = () => {
     }
   }, [isSpeakerEnabled, router.locale]);
   
+  // Get party logo by party ID
+  const getPartyLogo = (partyId: string) => {
+    const party = parties.find((p) => p._id === partyId);
+    return party ? party.logo : "";
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#F1F1F1] to-[#B0D0E6]">
@@ -130,23 +170,30 @@ const ConfirmVote = () => {
           <table className="table-auto w-full border-collapse text-left text-lg">
             <thead className="bg-[#003366] text-white font-semibold text-xl">
               <tr>
-                <th className="px-8 py-6 border">{t("candidateNo")}</th>
+                <th className="px-8 py-6 border">{}</th>
                 <th className="px-8 py-6 border">{t("candidateName")}</th>
                 <th className="px-8 py-6 border">{t("partyName")}</th>
+                
+                <th className="px-8 py-6 border text-center">{t("candidateNo")}</th>
                 <th className="px-8 py-6 border">{t("symbol")}</th>
               </tr>
             </thead>
             <tbody>
-              {displayedCandidates.map((candidate, index) => (
-                <tr key={candidate.id} className="hover:bg-gray-100 bg-white">
-                  <td className="px-8 py-6 border text-center text-5xl">{index + 1}</td>
-                  <td className="px-8 py-6 border">
-                    <div className="text-2xl font-bold">{candidate.name.en}</div>
-                    <div className="text-2xl font-bold">{candidate.name.si}</div>
-                    <div className="text-2xl font-bold">{candidate.name.ta}</div>
+              {displayedCandidates.map((candidate) => (
+                <tr key={candidate._id} className="hover:bg-gray-100 bg-white">
+                  <td className="px-8 py-6 border text-center">
+                    <img src={candidate.image} alt={candidate.name} className="w-20 h-20 object-cover rounded-full mx-auto" />
                   </td>
-                  <td className="px-8 py-6 border text-2xl font-bold">{candidate.party}</td>
-                  <td className="px-8 py-6 border text-center text-7xl">{candidate.symbol}</td>
+                  <td className="px-8 py-6 border">
+                    <div className="text-2xl font-bold">{candidate.name}</div>
+                  </td>
+                  <td className="px-8 py-6 border text-2xl font-bold">
+                    {parties.find((party) => party._id === candidate.party)?.short_name || candidate.party}
+                  </td>
+                  <td className="px-8 py-6 border text-center text-5xl">{candidate.no}</td>
+                  <td className="px-8 py-6 border text-center">
+                    <img src={getPartyLogo(candidate.party)} alt={candidate.party} className="w-20 h-20 object-cover rounded-full mx-auto" />
+                  </td>
                 </tr>
               ))}
             </tbody>

@@ -1,8 +1,11 @@
 import { globalActions } from '@/store/globalSlices'
 import { PollParams, RootState } from '@/utils/types'
+import { create } from 'domain'
 import React, { ChangeEvent, FormEvent, useState } from 'react'
 import { FaTimes } from 'react-icons/fa'
 import { useDispatch, useSelector } from 'react-redux'
+import { toast } from 'react-toastify'
+import { createPoll } from '@/services/blockchain'
 
 const CreatePoll: React.FC = () => {
   const {createModal} = useSelector((states:RootState)=>states.globalStates)
@@ -26,8 +29,23 @@ const CreatePoll: React.FC = () => {
     poll.startsAt = new Date(poll.startsAt).getTime()
     poll.endsAt = new Date(poll.endsAt).getTime()
 
-    console.log(poll)
-    // closeModal()
+    await toast.promise(
+      new Promise<void>((resolve,reject)=>{
+        createPoll(poll)
+        .then((tx) => {
+          closeModal()
+          console.log(tx)
+          resolve(tx)
+
+        })
+        .catch((error) => reject(error))
+        
+      }),
+      {
+        pending:'Creating poll...',
+        success:'Poll created successfully',
+        error:'Failed to create poll'}
+    )
   }
 
   const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
