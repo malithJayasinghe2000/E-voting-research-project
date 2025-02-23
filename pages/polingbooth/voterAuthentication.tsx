@@ -3,6 +3,8 @@ import { useState, useEffect } from "react";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import { useTranslation } from "next-i18next";
 import Navbar from "./navbar";
+import WebcamCapture from "@/components/WebcamCapture";
+
 
 // Function to play audio and prevent conflicts
 const playAudio = (audioPath: string, audioInstance: HTMLAudioElement, onEnded: () => void) => {
@@ -174,6 +176,8 @@ const VoterAuthentication = () => {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#F1F1F1] to-[#B0D0E6]">
       <Navbar />
+
+      <WebcamCapture />
 
       <main className="flex flex-col items-center justify-center flex-grow px-6 py-12">
         <h2 className="text-center text-[#003366] text-5xl font-semibold mb-6">

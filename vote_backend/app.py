@@ -1,5 +1,9 @@
+import io
+from tkinter import Image
+import cv2
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import numpy as np
 from pymongo import MongoClient
 import base64
 import hashlib
@@ -7,6 +11,10 @@ import rsa
 from homomorphic_encryption import HomomorphicEncryption
 from datetime import datetime
 import tenseal as ts
+from deepface import DeepFace
+from gtts import gTTS
+import os
+from PIL import Image
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -18,6 +26,9 @@ he = HomomorphicEncryption()
 client = MongoClient("mongodb+srv://sandaru2:sandaru2@test.bgjabxi.mongodb.net/biznesAdverticerDB?retryWrites=true&w=majority")
 db = client["biznesAdverticerDB"]
 votes_collection = db["votes"]
+
+employees_collection = db["employees"]
+attendance_collection = db["attendance"]
 
 # Generate RSA Keys for Digital Signatures
 public_key, private_key = rsa.newkeys(512)
@@ -117,6 +128,87 @@ def count_votes():
     except Exception as e:
         return jsonify({"error": f"Error counting votes: {str(e)}"}), 500
 
+# Convert image from base64
+
+def decode_image(image_data):
+    image_bytes = base64.b64decode(image_data)
+    img = Image.open(io.BytesIO(image_bytes))
+    return cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+
+@app.route("/api/add_employee", methods=["POST"])
+def add_employee():
+    data = request.json
+    name = data.get("name")
+    image_data = data.get("image")
+    
+    if not name or not image_data:
+        return jsonify({"error": "Name and image are required"}), 400
+    
+    frame = decode_image(image_data)
+    embedding = get_face_embedding(frame)
+    if embedding is None:
+        return jsonify({"error": "Could not extract face embedding"}), 400
+    
+    embedding = get_face_embedding(frame)
+    if embedding is None:
+        return jsonify({"error": "Could not extract face embedding"}), 400
+
+    employees_collection.insert_one({"name": name, "encoding": embedding})
+    return jsonify({"message": f"{name} added successfully!"})
+
+@app.route("/api/recognize_employee", methods=["POST"])
+def recognize_employee():
+    data = request.json
+    image_data = data.get("image")
+    
+    if not image_data:
+        return jsonify({"error": "Image is required"}), 400
+    
+    frame = decode_image(image_data)
+    embedding = get_face_embedding(frame)
+    if embedding is None:
+        return jsonify({"error": "Could not extract face embedding"}), 400
+    
+    employees = employees_collection.find()
+    for employee in employees:
+        known_embedding = np.array(employee["encoding"], dtype=np.float32)
+        embedding = np.array(embedding, dtype=np.float32)
+
+        # Normalize both embeddings
+        known_embedding /= np.linalg.norm(known_embedding)
+        embedding /= np.linalg.norm(embedding)
+
+        # Compute distance
+        distance = np.linalg.norm(known_embedding - embedding)
+        print(f"Comparing with {employee['name']}, Distance: {distance}")  # Debug
+
+        if distance < 1:  # Reduce threshold for normalized embeddings
+            record_attendance(employee["_id"], employee["name"])
+            return jsonify({"message": f"Welcome {employee['name']}"})
+
+    
+    return jsonify({"error": "Employee not recognized"}), 404
+
+def get_face_embedding(img):
+    try:
+        return DeepFace.represent(img, model_name="Facenet", enforce_detection=False)[0]["embedding"]
+    except Exception as e:
+        print(f"Embedding error: {e}")
+        return None
+
+def record_attendance(employee_id, name):
+    attendance_collection.insert_one({
+        "employee_id": employee_id,
+        "type": "entry" if 5 <= datetime.now().hour < 17 else "exit",
+        "timestamp": datetime.now()
+    })
+    play_greeting(name)
+
+def play_greeting(name):
+    greeting = f"Welcome {name}"
+    tts = gTTS(greeting, lang='en')
+    tts.save("greeting.mp3")
+    os.system("greeting.mp3")
 
 
 if __name__ == '__main__':
