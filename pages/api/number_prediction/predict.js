@@ -1,46 +1,47 @@
-import { IncomingForm } from "formidable"
-import fs from "fs"
-import fetch from "node-fetch"
-import FormData from "form-data"
+import { IncomingForm } from "formidable";
+import fs from "fs";
+import fetch from "node-fetch";
+import FormData from "form-data";
+import { io } from "../../../utils/socket"; // Import the initialized WebSocket server
 
 export const config = {
   api: {
     bodyParser: false,
   },
-}
+};
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method Not Allowed" })
+    return res.status(405).json({ error: "Method Not Allowed" });
   }
 
-  const form = new IncomingForm()
+  const form = new IncomingForm();
 
   form.parse(req, async (err, fields, files) => {
     if (err) {
-      return res.status(500).json({ error: "Failed to parse form data" })
+      return res.status(500).json({ error: "Failed to parse form data" });
     }
 
     if (!files.image) {
-      return res.status(400).json({ error: "No image uploaded" })
+      return res.status(400).json({ error: "No image uploaded" });
     }
 
-    const imageFile = files.image[0] // Access the first file in the array
+    const imageFile = files.image[0]; // Access the first file in the array
 
-    const formData = new FormData()
+    const formData = new FormData();
     formData.append("image", fs.createReadStream(imageFile.filepath), {
       filename: imageFile.originalFilename,
       contentType: imageFile.mimetype,
-    })
+    });
 
     try {
-      const response = await fetch("http://127.0.0.1:5000/predict", {
+      const response = await fetch("http://127.0.0.1:5001/predict", {
         method: "POST",
         body: formData,
         headers: formData.getHeaders(),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
       console.log("Prediction Data:", data); // Display prediction in console
 
       // Combine consecutive predictions to form multi-digit numbers
@@ -56,16 +57,26 @@ export default async function handler(req, res) {
       const candidate = candidates.find(candidate => candidate.no === predictedNumber);
 
       if (candidate) {
-        console.log(`Predicted Number: ${predictedNumber}, Candidate Name: ${candidate.name}`);
-        return res.status(200).json({ predictedNumber, candidateName: candidate.name });
+        console.log(`Predicted Number: ${predictedNumber}, Candidate Name: ${candidate.name} , Candidate ID: ${candidate._id}`);
+        
+        // Emit prediction result to WebSocket clients
+        io.emit("prediction", { predictedNumber, candidateName: candidate.name, condidateId: candidate._id });
+        console.log("Emitted prediction:", { predictedNumber, candidateName: candidate.name, condidateId: candidate._id });
+
+        return res.status(200).json({ predictedNumber, candidateName: candidate.name ,  condidateId : candidate._id });
       } else {
         console.log(`Predicted Number: ${predictedNumber}`);
+        
+        // Emit prediction result to WebSocket clients
+        io.emit("prediction", { predictedNumber });
+        console.log("Emitted prediction:", { predictedNumber });
+
         return res.status(200).json({ predictedNumber });
       }
     } catch (error) {
-      console.error("Error:", error)
-      return res.status(500).json({ error: "Failed to fetch predictions" })
+      console.error("Error:", error);
+      return res.status(500).json({ error: "Failed to fetch predictions" });
     }
-  })
+  });
 }
 
