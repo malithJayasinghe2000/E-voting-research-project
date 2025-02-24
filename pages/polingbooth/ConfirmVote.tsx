@@ -4,6 +4,7 @@ import { useTranslation } from "next-i18next";
 import Navbar from "./navbar";
 import { useRef, useEffect, useState } from "react";
 import { io } from "socket.io-client";
+import { useSession } from "next-auth/react";
 
 // Fetch candidates from API
 const fetchCandidates = async () => {
@@ -28,6 +29,7 @@ const ConfirmVote = () => {
   const [parties, setParties] = useState<any[]>([]);
   const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
   const [realTimeCandidates, setRealTimeCandidates] = useState<any[]>([]);
+  const { data: session } = useSession();
 
   const { candidates: selectedCandidateIds } = router.query;
   const selectedCandidates = selectedCandidateIds
@@ -123,13 +125,19 @@ const ConfirmVote = () => {
       // Log the selected candidates with priority
       console.log("Selected Candidates with Priority: ", votes);
   
+      const poll_manager_id = session?.user?._id; // Ensure this is properly set
+  
+      // Log the selected candidates with priority and polling manager ID
+      console.log("Polling Manager ID: ", poll_manager_id);
+  
       const response = await fetch("http://127.0.0.1:5000/api/vote/encrypt", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          votes, // Send both candidate_id and priority
+          votes, // Send votes array
+          poll_manager_id, // Send polling manager ID separately
         }),
       });
   
@@ -216,7 +224,7 @@ const ConfirmVote = () => {
               </tr>
             </thead>
             <tbody>
-              {displayedCandidates.map((candidate) => (
+              {displayedCandidates.map((candidate:any) => (
                 <tr key={candidate._id} className="hover:bg-gray-100 bg-white">
                   <td className="px-8 py-6 border text-center">
                     <img src={candidate.image} alt={candidate.name} className="w-20 h-20 object-cover rounded-full mx-auto" />
