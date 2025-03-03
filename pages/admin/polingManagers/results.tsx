@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react';
-import { fetchVoteCounts } from '../../api/Results/release';
 import { storeResultsOnBlockchain, getResultsFromBlockchain, getAllResultsFromBlockchain } from '../../../services/blockchain';
 import { useSession } from "next-auth/react";
-import { set } from 'mongoose';
 
 interface VoteCountsProps {}
 
@@ -14,7 +12,7 @@ const VoteCounts: React.FC<VoteCountsProps> = () => {
   const [candidateId, setCandidateId] = useState("");
   const [results, setResults] = useState<{ priority1: number; priority2: number; priority3: number } | null>(null);
   const [allResults, setAllResults] = useState<
-    { candidateId: string; priority1: number; priority2: number; priority3: number }[] | null
+    { pollingManagerId: string; candidateId: string; priority1: number; priority2: number; priority3: number }[] | null
   >(null);
 
   const { data: session } = useSession();
@@ -52,12 +50,12 @@ const VoteCounts: React.FC<VoteCountsProps> = () => {
     console.log(candidateVotes);
   };
 
-  const handleFetchResults = async (candidateId: string) => {
-    setLoading(true);
-    const data = await getResultsFromBlockchain(candidateId);
-    setResults(data);
-    setLoading(false);
-  };
+  // const handleFetchResults = async (candidateId: string) => {
+  //   setLoading(true);
+  //   const data = await getResultsFromBlockchain(pollingManagerId, candidateId);
+  //   setResults(data);
+  //   setLoading(false);
+  // };
 
   const handleFetchAllResults = async () => {
     setLoading(true);
@@ -143,12 +141,12 @@ const VoteCounts: React.FC<VoteCountsProps> = () => {
           onChange={(e) => setCandidateId(e.target.value)}
           className="p-2 border rounded mr-2"
         />
-        <button
+        {/* <button
           onClick={() => handleFetchResults(candidateId)}
           className="px-4 py-2 bg-blue-500 text-white rounded"
         >
           Get Results
-        </button>
+        </button> */}
 
         {loading && <p>Loading...</p>}
 
@@ -178,8 +176,9 @@ const VoteCounts: React.FC<VoteCountsProps> = () => {
             {allResults.length === 0 ? (
               <p>No votes found.</p>
             ) : (
-              allResults.map(({ candidateId, priority1, priority2, priority3 }) => (
-                <li key={candidateId} className="p-3 border rounded-lg shadow">
+              allResults.map(({ pollingManagerId, candidateId, priority1, priority2, priority3 }) => (
+                <li key={`${pollingManagerId}-${candidateId}`} className="p-3 border rounded-lg shadow">
+                  <h3 className="text-lg font-semibold mb-2">Polling Manager: {pollingManagerId}</h3>
                   <h3 className="text-lg font-semibold mb-2">Candidate: {candidateId}</h3>
                   <p><strong>Priority 1 Votes:</strong> {priority1}</p>
                   <p><strong>Priority 2 Votes:</strong> {priority2}</p>
