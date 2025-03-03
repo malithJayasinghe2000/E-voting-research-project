@@ -3,8 +3,8 @@ import { ethers } from "ethers";
 const CONTRACT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 const CONTRACT_ABI = [
   "function storeMultipleVoteCounts(string pollingManagerId, string[] candidateIds, uint256 priority, uint256[] counts) public",
-  "function getVoteCounts(string candidateId) public view returns (uint256, uint256, uint256)",
-  "function getAllVoteCounts() public view returns (string[], uint256[], uint256[], uint256[])"
+  "function getVoteCounts(string pollingManagerId, string candidateId) public view returns (uint256, uint256, uint256)",
+  "function getAllVoteCounts() public view returns (string[], string[], uint256[], uint256[], uint256[])"
 ];
 
 export const storeResultsOnBlockchain = async (
@@ -27,6 +27,7 @@ export const storeResultsOnBlockchain = async (
 
     const tx = await contract.storeMultipleVoteCounts(pollingManagerId, candidateIds, priority, counts);
     await tx.wait();
+    alert(`Stored votes for priority ${priority} by Polling Manager: ${pollingManagerId}`)
     console.log(`Stored votes for priority ${priority} by Polling Manager: ${pollingManagerId}`);
   } catch (error) {
     console.error("Failed to store multiple votes on blockchain:", error);
@@ -34,6 +35,7 @@ export const storeResultsOnBlockchain = async (
 };
 
 export const getResultsFromBlockchain = async (
+  pollingManagerId: string,
   candidateId: string
 ): Promise<{ priority1: number; priority2: number; priority3: number } | null> => {
   if (!window.ethereum) {
@@ -45,7 +47,7 @@ export const getResultsFromBlockchain = async (
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
 
-    const [priority1, priority2, priority3] = await contract.getVoteCounts(candidateId);
+    const [priority1, priority2, priority3] = await contract.getVoteCounts(pollingManagerId, candidateId);
     return {
       priority1: priority1.toNumber(),
       priority2: priority2.toNumber(),
@@ -58,7 +60,7 @@ export const getResultsFromBlockchain = async (
 };
 
 export const getAllResultsFromBlockchain = async (): Promise<
-  { candidateId: string; priority1: number; priority2: number; priority3: number }[] | null
+  { pollingManagerId: string; candidateId: string; priority1: number; priority2: number; priority3: number }[] | null
 > => {
   if (!window.ethereum) {
     alert("Please install MetaMask to use blockchain features.");
@@ -69,10 +71,11 @@ export const getAllResultsFromBlockchain = async (): Promise<
     const provider = new ethers.providers.Web3Provider(window.ethereum);
     const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
 
-    const [ids, p1Votes, p2Votes, p3Votes] = await contract.getAllVoteCounts();
+    const [pollingManagerIds, candidateIds, p1Votes, p2Votes, p3Votes] = await contract.getAllVoteCounts();
     
-    const results = ids.map((id: string, index: number) => ({
-      candidateId: id,
+    const results = pollingManagerIds.map((pollingManagerId: string, index: number) => ({
+      pollingManagerId: pollingManagerId,
+      candidateId: candidateIds[index],
       priority1: p1Votes[index].toNumber(),
       priority2: p2Votes[index].toNumber(),
       priority3: p3Votes[index].toNumber(),
