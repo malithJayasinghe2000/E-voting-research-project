@@ -205,10 +205,13 @@ def record_attendance(employee_id, name):
 
 def play_greeting(name):
     greeting = f"Welcome {name}"
-    tts = gTTS(greeting, lang='en')
-    tts.save("greeting.mp3")
-    os.system("greeting.mp3")
+    print(greeting)  # Print the greeting instead of playing audio
 
+# def play_greeting(name):
+#     greeting = f"Welcome {name}"
+#     tts = gTTS(greeting, lang='en')
+#     tts.save("greeting.mp3")
+#     os.system("greeting.mp3")
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
