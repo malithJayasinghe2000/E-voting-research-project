@@ -57,7 +57,10 @@ export default async function handler(req, res) {
             }
 
 
-            else if (session.user.role === "admin" && userData.role === "polling_manager") {
+            else if (session.user.role === "plk" && userData.role === "polling_manager") {
+                userData.addedBy = loggedInUser._id;
+
+                
                 
             }
             // PLK creating `gsw`

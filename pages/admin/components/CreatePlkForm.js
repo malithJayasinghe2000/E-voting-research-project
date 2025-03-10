@@ -11,11 +11,10 @@ const CreatePlkForm = () => {
         name: "",
         email: "",
         role: "plk",
+        district: "",
+        local_council: "",
         password: "",
-        council: "",
         phone: "",
-        address: "",
-        dob: "",
         nationalId: "",
     })
 
@@ -55,7 +54,6 @@ const CreatePlkForm = () => {
                     autoClose: 5000
                 })
                 router.refresh()
-                router.push("/")
             }
         } catch (error) {
             toast.update(toastId, {
@@ -140,16 +138,17 @@ const CreatePlkForm = () => {
                         />
                     </div>
                     <div>
-                        <label htmlFor="council" className="block text-sm font-medium text-gray-700">
+                        <label htmlFor="local_council" className="block text-sm font-medium text-gray-700">
                             The Local Council
                         </label>
                         <input
-                            id="council"
+                            id="local_council"
                             type="text"
-                            name="council"
+                            name="local_council"
                             placeholder="Enter local council"
                             onChange={handleChange}
-                            value={formData.council}
+                            value={formData.local_council}
+                            required
                             className="w-full mt-2 px-4 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         />
                     </div>
@@ -168,32 +167,21 @@ const CreatePlkForm = () => {
                         />
                     </div>
                     <div>
-                        <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-                            Address
+                        <label htmlFor="district" className="block text-sm font-medium text-gray-700">
+                            District
                         </label>
                         <input
-                            id="address"
+                            id="district"
                             type="text"
-                            name="address"
+                            name="district"
                             placeholder="Enter address"
                             onChange={handleChange}
-                            value={formData.address}
+                            value={formData.district}
+                            required
                             className="w-full mt-2 px-4 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                         />
                     </div>
-                    <div>
-                        <label htmlFor="dob" className="block text-sm font-medium text-gray-700">
-                            Date of Birth
-                        </label>
-                        <input
-                            id="dob"
-                            type="date"
-                            name="dob"
-                            onChange={handleChange}
-                            value={formData.dob}
-                            className="w-full mt-2 px-4 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                        />
-                    </div>
+                    
                     <div>
                         <label
                             htmlFor="nationalId"
