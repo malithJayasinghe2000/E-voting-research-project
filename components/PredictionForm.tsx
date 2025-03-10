@@ -13,20 +13,26 @@ const TweetCollectionForm: React.FC = () => {
   const [generalKeywords, setGeneralKeywords] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<string>("");
+  const [newCandidate, setNewCandidate] = useState<string>("");
 
-  // Handles input change for candidate keywords
   const handleCandidateKeywordChange = (candidate: string, value: string) => {
     setCandidateKeywords((prev) => ({ ...prev, [candidate]: value }));
   };
 
-  // Handles form submission
+  const handleAddCandidate = () => {
+    if (newCandidate.trim() && !candidateKeywords[newCandidate]) {
+      setCandidateKeywords((prev) => ({ ...prev, [newCandidate]: "" }));
+      setNewCandidate("");
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setLoading(true);
     setMessage("");
 
     try {
-      const response = await axios.post("http://localhost:5000/collect-tweets", {
+      await axios.post("http://localhost:5000/collect-tweets", {
         start_date: startDate,
         end_date: endDate,
         candidate_keywords: candidateKeywords,
@@ -45,9 +51,7 @@ const TweetCollectionForm: React.FC = () => {
   return (
     <div className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-md">
       <h2 className="text-xl font-semibold text-gray-800 mb-4">Collect Tweets</h2>
-
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Date Range Selection */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Start Date:</label>
           <input
@@ -58,7 +62,6 @@ const TweetCollectionForm: React.FC = () => {
             required
           />
         </div>
-
         <div>
           <label className="block text-sm font-medium text-gray-700">End Date:</label>
           <input
@@ -69,8 +72,6 @@ const TweetCollectionForm: React.FC = () => {
             required
           />
         </div>
-
-        {/* Candidate Keywords */}
         <div>
           <label className="block text-sm font-medium text-gray-700">Candidate Keywords:</label>
           <div className="space-y-2">
@@ -87,9 +88,23 @@ const TweetCollectionForm: React.FC = () => {
               </div>
             ))}
           </div>
+          <div className="mt-2 flex items-center space-x-2">
+            <input
+              type="text"
+              value={newCandidate}
+              onChange={(e) => setNewCandidate(e.target.value)}
+              placeholder="Enter new candidate name"
+              className="px-3 py-2 border rounded-md shadow-sm w-full"
+            />
+            <button
+              type="button"
+              onClick={handleAddCandidate}
+              className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600"
+            >
+              Add
+            </button>
+          </div>
         </div>
-
-        {/* General Keywords */}
         <div>
           <label className="block text-sm font-medium text-gray-700">General Keywords:</label>
           <textarea
@@ -100,8 +115,6 @@ const TweetCollectionForm: React.FC = () => {
             className="mt-1 block w-full px-3 py-2 border rounded-md shadow-sm"
           />
         </div>
-
-        {/* Submit Button */}
         <button
           type="submit"
           disabled={loading}
@@ -110,8 +123,6 @@ const TweetCollectionForm: React.FC = () => {
           {loading ? "Collecting..." : "Start Collecting"}
         </button>
       </form>
-
-      {/* Status Message */}
       {message && (
         <div className={`mt-4 p-2 text-center rounded-md ${message.includes("success") ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800"}`}>
           {message}
