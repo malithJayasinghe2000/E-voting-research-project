@@ -1,8 +1,10 @@
 import { useRouter } from "next/router";
 import { useTranslation } from "next-i18next";
-import { useEffect, useState } from "react";
+import { useEffect, useState , useRef } from "react";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import Navbar from "./navbar";
+import { getSocket } from "../../components/SocketSingleton"; // Import the singleton socket instance
+import { detectTimeSpentOnTask } from "../../components/InteractionMonitor";
 
 // Audio utility for controlling playback
 let currentAudio: HTMLAudioElement | null = null;
@@ -34,6 +36,10 @@ const LanguageSelection = () => {
   const { i18n } = useTranslation();
   const [audioPlayed, setAudioPlayed] = useState(false);
   const [isSpeakerEnabled, setSpeakerEnabled] = useState(false); // Speaker is initially off
+  const sinhalaButtonRef = useRef<HTMLButtonElement>(null);
+  const tamilButtonRef = useRef<HTMLButtonElement>(null);
+  const englishButtonRef = useRef<HTMLButtonElement>(null);
+  const [buttonStyles, setButtonStyles] = useState({});
 
   // Save speaker state to localStorage whenever it changes
   useEffect(() => {
@@ -143,6 +149,36 @@ const LanguageSelection = () => {
     });
   };
 
+  useEffect(() => {
+      const socket = getSocket(); // Use the singleton socket instance
+  
+      socket.on('connect', () => {});
+  
+      socket.on('help_response', (response : any) => {
+        if (response.highlightButton) {
+          setButtonStyles(response.buttonStyles || {}); // Update button styles
+        }
+      });
+  
+      socket.on('disconnect', () => {});
+  
+      return () => {
+        socket.off('help_response'); // Clean up the event listener
+      };
+    }, []);
+  
+    useEffect(() => {
+      if (sinhalaButtonRef.current) {
+        detectTimeSpentOnTask(sinhalaButtonRef, 5000, (data : any) => {}, "sinhala");
+      }
+      if (tamilButtonRef.current) {
+        detectTimeSpentOnTask(tamilButtonRef, 5000, (data : any) => {}, "tamil");
+      }
+      if (englishButtonRef.current) {
+        detectTimeSpentOnTask(englishButtonRef, 5000, (data : any) => {}, "english");
+      }
+    }, []);
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#F1F1F1] to-[#B0D0E6]">
       <Navbar />
@@ -160,25 +196,28 @@ const LanguageSelection = () => {
           </div>
         </h2>
 
-        <div className="space-y-6 space-x-8">
+        <div className="space-y-6 space-x-[100px]">
           <button
+          ref={sinhalaButtonRef}
             onClick={() => handleLanguageChange("si")}
             onMouseEnter={() => handleHoverAudio("si")}
-            className="w-80 bg-[#800000] text-white py-6 rounded-full shadow-lg text-2xl font-bold hover:bg-[#660000] hover:scale-105 transition-transform duration-300"
+            className="w-80 bg-[#800000] text-white py-6 rounded-full shadow-lg text-2xl font-bold "
           >
             සිංහල
           </button>
           <button
+          ref={tamilButtonRef}
             onClick={() => handleLanguageChange("ta")}
             onMouseEnter={() => handleHoverAudio("ta")}
-            className="w-80 bg-[#006400] text-white py-6 rounded-full shadow-lg text-2xl font-bold hover:bg-[#228B22] hover:scale-105 transition-transform duration-300"
+            className="w-80 bg-[#006400] text-white py-6 rounded-full shadow-lg text-2xl font-bold "
           >
             தமிழ்
           </button>
           <button
+          ref={englishButtonRef}
             onClick={() => handleLanguageChange("en")}
             onMouseEnter={() => handleHoverAudio("en")}
-            className="w-80 bg-[#003366] text-white py-6 rounded-full shadow-lg text-2xl font-bold hover:bg-[#005B8D] hover:scale-105 transition-transform duration-300"
+            className="w-80 bg-[#003366] text-white py-6 rounded-full shadow-lg text-2xl font-bold "
           >
             English
           </button>

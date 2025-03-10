@@ -1,10 +1,11 @@
 import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
+import { useState, useEffect , useRef} from "react";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import { useTranslation } from "next-i18next";
 import Navbar from "./navbar";
 import WebcamCapture from "@/components/WebcamCapture";
-
+import { getSocket } from "../../components/SocketSingleton"; // Import the singleton socket instance
+import { detectTimeSpentOnTask } from "../../components/InteractionMonitor";
 
 // Function to play audio and prevent conflicts
 const playAudio = (audioPath: string, audioInstance: HTMLAudioElement, onEnded: () => void) => {
@@ -29,6 +30,9 @@ const VoterAuthentication = () => {
   const [isLoading, setLoading] = useState<boolean>(false); // To manage loading state for camera
   const [audioInstance, setAudioInstance] = useState<HTMLAudioElement | null>(null);
   const [isSpeakerEnabled, setSpeakerEnabled] = useState<boolean>(false); // Default speaker state
+
+  const startButtonRef = useRef<HTMLButtonElement>(null);
+  const [buttonStyles, setButtonStyles] = useState({});
 
   // Create audio instance only on client-side
   useEffect(() => {
@@ -173,6 +177,32 @@ const VoterAuthentication = () => {
     }
   };
 
+  useEffect(() => {
+      const socket = getSocket(); // Use the singleton socket instance
+  
+      socket.on('connect', () => {});
+  
+      socket.on('help_response', (response : any) => {
+        if (response.highlightButton) {
+          setButtonStyles(response.buttonStyles || {}); // Update button styles
+        }
+      });
+  
+      socket.on('disconnect', () => {});
+  
+      return () => {
+        socket.off('help_response'); // Clean up the event listener
+      };
+    }, []);
+  
+    useEffect(() => {
+      if (startButtonRef.current) {
+        detectTimeSpentOnTask(startButtonRef, 5000, (data : any) => {}, "start");
+      }
+
+    }, []);
+  
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#F1F1F1] to-[#B0D0E6]">
       <Navbar />
@@ -195,8 +225,9 @@ const VoterAuthentication = () => {
         </div>
 
         <button
+           ref={startButtonRef}
           onClick={startCamera}
-          className={`w-80 ${isLoading ? 'bg-gray-400' : 'bg-[#006400]'} text-white py-6 rounded-full shadow-lg text-2xl font-bold hover:bg-[#228B22] hover:scale-105 transition-transform duration-300 mt-6 focus:ring-4 focus:ring-[#FFD700]`}
+          className={`w-80 ${isLoading ? 'bg-gray-400' : 'bg-[#006400]'} text-white py-6 rounded-full shadow-lg text-2xl font-bold ]`}
           disabled={isLoading}
           onMouseEnter={playButtonHoverAudio} // Play hover audio on button hover
         >
