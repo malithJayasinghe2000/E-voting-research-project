@@ -1,0 +1,33 @@
+{
+  "electionTitle": "2024 Presidential Election",
+  "authInstruction": "Please look at the camera to authenticate your identity.",
+  "startButton": "Start",
+
+  "candidateSelectionRulesTitle": "Voting Rules for Candidate Selection",
+  "select3CandidatesRule": "Select exactly 3 candidates.",
+  "clickToSelectCandidate": "Click the button next to a candidate's name to select them.",
+  "votePreferenceInstructions": "Mark preferences by indicating 1 for your first choice, 2 for your second choice, and 3 for your third choice. Only valid if exactly 3 candidates are selected.",
+  "candidateNo": "Candidate No.",
+  "candidateName": "Candidate Name",
+  "partyName": "Party Name",
+  "symbol": "Symbol",
+  "select": "Select",
+  "submitVoteButton": "Submit Vote",
+  "maxCandidatesAlert": "You can only select up to 3 candidates.",
+  "selectExactly3Alert": "You must select exactly 3 candidates.",
+
+
+  "voteSubmitted": "your vote is success fully submitted",
+  "backButton": "Back",
+  "confirmButton": "Confirm",
+
+  
+  
+    "thankYouTitle": "Thank You!"
+    
+   
+  
+   
+  
+
+}

@@ -1,0 +1,32 @@
+{
+  "electionTitle": "2024 ජනාධිපතිවරණය",
+  "authInstruction": "කරුණාකර කැමරාව දෙස බලන්න.",
+  "startButton": "අආරම්භ කරන්න",
+
+  
+  "candidateSelectionRulesTitle": "බෝතුවැඩිය සඳහා අපේක්ෂක තේරීමේ නියමයන්",
+  "select3CandidatesRule": "නිවැරදිව 3 අපේක්ෂකවලට පමණක් තෝරා ගන්න.",
+  "clickToSelectCandidate": "අපේක්ෂකයාගේ නාමය අසල ඇති බොත්තම ක්ලික් කර ඔබේ තේරීම කරන්න.",
+  "votePreferenceInstructions": "ඔබේ ප්‍රථම, දෙවන සහ තුන්වෙනි තේරීම් සඳහා 1, 2 සහ 3 ලෙස පෙළගැස්වීමෙන් ව්‍යාපෘති තෝරාගන්න. මෙය පමණක් ක්‍රියාත්මක වන අතර ඔබ නිවැරදිව 3 අපේක්ෂකවලට පමණක් තෝරා ගත්තේ නම්.",
+  "candidateNo": "අපේක්ෂක අංකය",
+  "candidateName": "අපේක්ෂක නාමය",
+  "partyName": "කඩෙයිය නාමය",
+  "symbol": "ලකුණ",
+  "select": "තෝරන්න",
+  "submitVoteButton": "ඉදිරිපත් කරන්න",
+  "maxCandidatesAlert": "ඔබට එක් මට්ටමෙන් 3 අපේක්ෂකයන් පමණක් තෝරාගත හැක.",
+  "selectExactly3Alert": "ඔබට නිවැරදිව 3 අපේක්ෂකයන් තෝරාගත යුතුය.",
+
+
+
+  "voteSubmitted": "ඔබගේ ඡන්දය සාර්ථකව ඉදිරිපත් කරන ලදී!",
+  "backButton": "පසු ගොස්",
+  "confirmButton": "තහවුරු කරන්න",
+
+  
+    "thankYouTitle": "ස්තුතියි!"
+    
+   
+  
+  
+}

@@ -71,12 +71,13 @@ export default function Home({ pollsData }: { pollsData: PollStruct[] }) {
           before:blur-sm before:z-[-1] before:bg-no-repeat before:bg-cover"
         />
 
-<section className="relative flex flex-col min-h-[calc(100vh-160px)] px-5 py-10 space-y-16 text-white sm:p-10">
-          <HomeNavbar
+        <section className="relative px-5 py-10 space-y-16 text-white sm:p-10">
+          {/* <HomeNavbar
             onResultDashboardClick={() => setCurrentView('resultDashboard')}
             onPredictionDashboardClick={() => setCurrentView('predictionDashboard')} // Add handler
             onHomeClick={() => setCurrentView('home')}
-          />
+          /> */}
+          <Navbar />
           {currentView === 'home' && (
             <>
               <HomeBanner />

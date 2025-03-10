@@ -1,4 +1,4 @@
-import { contestPoll } from '@/services/blockchain'
+// import { contestPoll } from '@/services/blockchain'
 import { globalActions } from '@/store/globalSlices'
 import { PollStruct, RootState } from '@/utils/types'
 import { BadgeInfo } from 'lucide-react'
@@ -73,7 +73,7 @@ const AddCandidates: React.FC<{ poll: PollStruct }> = ({ poll }) => {
           // resolve(tx)
 
         })
-        .catch((error) => reject(error))
+        .catch((error:any) => reject(error))
         
       }),
       {
