@@ -5,6 +5,8 @@ import Navbar from "./navbar";
 import { useRef, useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { useSession } from "next-auth/react";
+import { getSocket } from "../../components/SocketSingleton"; // Import the singleton socket instance
+import { detectTimeSpentOnTask } from "../../components/InteractionMonitor"; // Import the interaction monitor
 
 // Fetch candidates from API
 const fetchCandidates = async () => {
@@ -30,6 +32,9 @@ const ConfirmVote = () => {
   const [selectedCandidate, setSelectedCandidate] = useState<any>(null);
   const [realTimeCandidates, setRealTimeCandidates] = useState<any[]>([]);
   const { data: session } = useSession();
+  const confirmButtonRef = useRef<HTMLButtonElement>(null);
+  const backButtonRef = useRef<HTMLButtonElement>(null);
+  const [buttonStyles, setButtonStyles] = useState({});
 
   const { candidates: selectedCandidateIds } = router.query;
   const selectedCandidates = selectedCandidateIds
@@ -94,7 +99,6 @@ const ConfirmVote = () => {
       return newState;
     });
   };
-  
 
   const handleBack = () => {
     if (isSpeakerEnabled) {
@@ -150,7 +154,11 @@ const ConfirmVote = () => {
       }
     } catch (error) {
       console.error("Error sending votes:", error);
-      alert(`Error sending votes: ${error.message}`);
+      if (error instanceof Error) {
+        alert(`Error sending votes: ${error.message}`);
+      } else {
+        alert('An unknown error occurred');
+      }
     }
   };
   
@@ -207,6 +215,33 @@ const ConfirmVote = () => {
     };
   }, [candidates]);
 
+  useEffect(() => {
+    const socket = getSocket(); // Use the singleton socket instance
+
+    socket.on('connect', () => {});
+
+    socket.on('help_response', (response : any) => {
+      if (response.highlightButton) {
+        setButtonStyles(response.buttonStyles || {}); // Update button styles
+      }
+    });
+
+    socket.on('disconnect', () => {});
+
+    return () => {
+      socket.off('help_response'); // Clean up the event listener
+    };
+  }, []);
+
+  useEffect(() => {
+    if (confirmButtonRef.current) {
+      detectTimeSpentOnTask(confirmButtonRef, 5000, (data : any) => {}, "confirm");
+    }
+    if (backButtonRef.current) {
+      detectTimeSpentOnTask(backButtonRef, 5000, (data : any) => {}, "back");
+    }
+  }, []);
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#F1F1F1] to-[#B0D0E6]">
       <Navbar />
@@ -262,18 +297,20 @@ const ConfirmVote = () => {
           </table>
         </div>
 
-        <div className="mt-6 flex gap-4">
+        <div className="mt-[60px] flex gap-[110px]">
           <button
+            ref={backButtonRef}
             onClick={handleBack}
             onMouseEnter={() => handleHoverButton("backHover")}
-            className="w-80 bg-[#800000] text-white py-6 rounded-full shadow-lg text-2xl font-bold hover:bg-[#660000] hover:scale-105 transition-transform duration-300"
+            className={`w-80 bg-[#800000] text-white py-6 rounded-full shadow-lg text-2xl font-bold transition-transform duration-300 `}
           >
             {t("backButton")}
           </button>
           <button
+            ref={confirmButtonRef}
             onClick={handleConfirm}
             onMouseEnter={() => handleHoverButton("confirmHover")}
-            className="w-80 bg-[#006400] text-white py-6 rounded-full shadow-lg text-2xl font-bold hover:bg-[#228B22] hover:scale-105 transition-transform duration-300"
+            className={`w-80 bg-[#006400] text-white py-6 rounded-full shadow-lg text-2xl font-bold transition-transform duration-300 `}
           >
             {t("confirmButton")}
           </button>

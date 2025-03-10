@@ -3,6 +3,8 @@ import { useState, useEffect, useRef } from "react";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import { useTranslation } from "next-i18next";
 import Navbar from "./navbar";
+import { getSocket } from "../../components/SocketSingleton"; // Import the singleton socket instance
+import { detectTimeSpentOnTask } from "../../components/InteractionMonitor";
 
 // Simulate fetching candidate data from an API
 const fetchCandidates = async () => {
@@ -28,6 +30,8 @@ const CandidateSelection = () => {
   const [isSpeakerEnabled, setSpeakerEnabled] = useState<boolean>(false);
   const audioRef = useRef<HTMLAudioElement | null>(null); // Ref for audio element to avoid conflicts
   const [parties, setParties] = useState<any[]>([]);
+  const submitButtonRef = useRef<HTMLButtonElement>(null);
+    const [buttonStyles, setButtonStyles] = useState({});
 
   // Handle audio play function for different actions
   const playAudio = (type: string) => {
@@ -151,6 +155,30 @@ const CandidateSelection = () => {
     return party ? party.logo : "";
   };
 
+  useEffect(() => {
+      const socket = getSocket(); // Use the singleton socket instance
+  
+      socket.on('connect', () => {});
+  
+      socket.on('help_response', (response : any) => {
+        if (response.highlightButton) {
+          setButtonStyles(response.buttonStyles || {}); // Update button styles
+        }
+      });
+  
+      socket.on('disconnect', () => {});
+  
+      return () => {
+        socket.off('help_response'); // Clean up the event listener
+      };
+    }, []);
+  
+    useEffect(() => {
+      if (submitButtonRef.current) {
+        detectTimeSpentOnTask(submitButtonRef, 5000, (data : any) => {}, "submit");
+      }
+    }, []);
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#F1F1F1] to-[#B0D0E6]">
       <Navbar />
@@ -210,9 +238,10 @@ const CandidateSelection = () => {
         </div>
 
         <button
+          ref={submitButtonRef}
           onClick={handleSubmit}
           onMouseEnter={handleHoverSubmitButton} // Trigger hover audio
-          className="w-96 bg-[#003366] text-white py-8 rounded-full shadow-lg text-3xl font-bold hover:bg-[#005B8D] hover:scale-105 transition-transform duration-300 mt-12 mb-12"
+          className="w-96 bg-[#003366] text-white py-8 rounded-full shadow-lg text-3xl font-bold mt-20 mb-20"
         >
           {t("submitVoteButton")}
         </button>
