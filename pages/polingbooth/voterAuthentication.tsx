@@ -30,6 +30,8 @@ const VoterAuthentication = () => {
   const [audioInstance, setAudioInstance] = useState<HTMLAudioElement | null>(null);
   const [isSpeakerEnabled, setSpeakerEnabled] = useState<boolean>(false); // Default speaker state
 
+  const [maskDetected, setMaskDetected] = useState<boolean | null>(null);
+
   // Create audio instance only on client-side
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -43,6 +45,30 @@ const VoterAuthentication = () => {
       }
     }
   }, []); // Empty dependency array to run once on mount
+
+  useEffect(() => {
+    const checkMask = async () => {
+      try {
+        const response = await fetch("http://127.0.0.1:5000/api/detect_mask");
+        const data = await response.json();
+        console.log(data);
+
+        if (data.mask_detected) {
+          setMaskDetected(true);
+          alert("Please remove your mask for verification.");
+        } else {
+          setMaskDetected(false);
+        }
+      } catch (error) {
+        console.error("Error fetching mask detection:", error);
+      }
+    };
+
+    // Call the function every 5 seconds
+    const interval = setInterval(checkMask, 5000);
+
+    return () => clearInterval(interval); // Cleanup interval on unmount
+  }, []);
 
   // Function to handle sequential audio playback
   const playSequentialAudio = (audioPaths: string[], onComplete: () => void) => {
@@ -176,8 +202,8 @@ const VoterAuthentication = () => {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#F1F1F1] to-[#B0D0E6]">
       <Navbar />
-
-      <WebcamCapture />
+      <p>{maskDetected === null ? "Checking..." : maskDetected ? "Mask detected!" : "No mask detected."}</p>
+      {/* <WebcamCapture /> */}
 
       <main className="flex flex-col items-center justify-center flex-grow px-6 py-12">
         <h2 className="text-center text-[#003366] text-5xl font-semibold mb-6">
