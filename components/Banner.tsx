@@ -8,7 +8,6 @@ const Banner = () => {
   const dispatch = useDispatch()
   const {setCreateModal} = globalActions
 
-  const isAdmin = session?.user?.role === 'admin'
 
   return (
     <main className="mx-auto text-center space-y-8">
