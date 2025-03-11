@@ -54,12 +54,12 @@ const navItems = [
   },
 
   {
-    href: "/admin/dd",
-    label: "Add Voters",
+    href: "/admin/voters",
+    label: "Voters",
     icon: Users,
     subLinks: [
-      { href: "/admin/dd/create", label: "Add Polling Manager" },
-      { href: "/admin/ded/manage", label: "Manage Polling Manager" },
+      { href: "/admin/voters/create", label: "Add Voters" },
+      { href: "/admin/voters/manage", label: "Manage Voter" },
     ],
   },
 
