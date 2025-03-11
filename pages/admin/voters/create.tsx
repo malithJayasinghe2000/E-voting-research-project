@@ -2,7 +2,7 @@
 
 import React, { useRef, useState } from "react";
 import Webcam from "react-webcam";
-import { addEmployee, recognizeEmployee } from "../utils/api";
+import { addEmployee, recognizeEmployee } from "../../../utils/api";
 
 const WebcamCapture: React.FC = () => {
   const webcamRef = useRef<Webcam>(null);
@@ -32,21 +32,21 @@ const WebcamCapture: React.FC = () => {
     <div className="flex flex-col items-center">
       <Webcam ref={webcamRef} screenshotFormat="image/jpeg" className="border rounded-lg" />
       
-      {/* <input
+      <input
         type="text"
         placeholder="Enter name"
         value={name}
         onChange={(e) => setName(e.target.value)}
         className="mt-2 p-2 border rounded-md"
-      /> */}
+      />
       
       <div className="flex gap-2 mt-3">
-        {/* <button onClick={() => capture("add")} className="bg-blue-500 text-white px-4 py-2 rounded">
-          Add Employee
-        </button> */}
-        <button onClick={() => capture("recognize")} className="bg-green-500 text-white px-4 py-2 rounded">
-          Recognize Voter
+        <button onClick={() => capture("add")} className="bg-blue-500 text-white px-4 py-2 rounded">
+          Add Voter
         </button>
+        {/* <button onClick={() => capture("recognize")} className="bg-green-500 text-white px-4 py-2 rounded">
+          Recognize Employee
+        </button> */}
       </div>
 
       {message && <p className="mt-3 text-gray-700">{message}</p>}
