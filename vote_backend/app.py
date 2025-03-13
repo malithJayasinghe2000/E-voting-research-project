@@ -1,6 +1,6 @@
 import io
 from tkinter import Image
-import cv2 
+import cv2
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import numpy as np
@@ -15,11 +15,6 @@ from deepface import DeepFace
 from gtts import gTTS
 import os
 from PIL import Image
-from werkzeug.utils import secure_filename
-import tensorflow as tf
-from tensorflow import keras
-
-from tensorflow.keras.models import load_model
 
 app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
@@ -37,9 +32,6 @@ attendance_collection = db["attendance"]
 
 # Generate RSA Keys for Digital Signatures
 public_key, private_key = rsa.newkeys(512)
-
-model = keras.models.load_model('models/mnist_data2.h5', compile=False)
-
 
 # Sign function
 def sign_vote(vote_data):
@@ -77,7 +69,6 @@ def encrypt_vote_route():
             encrypted_priority = he.encrypt_vote(priority)
             encrypted_priority_serialized = base64.b64encode(encrypted_priority.serialize()).decode('utf-8')
 
-            # Check if the candidate already has an entry **for this polling station**
             # Check if the candidate already exists in the database for the same polling manager
             existing_vote = votes_collection.find_one({"candidate_id": candidate_id, "poll_manager_id": poll_manager_id})
 
@@ -190,7 +181,7 @@ def recognize_employee():
         distance = np.linalg.norm(known_embedding - embedding)
         print(f"Comparing with {employee['name']}, Distance: {distance}")  # Debug
 
-        if distance < 1:  # Reduce threshold for normalized embeddings
+        if distance < 0.5:  # Reduce threshold for normalized embeddings
             record_attendance(employee["_id"], employee["name"])
             return jsonify({"message": f"Welcome {employee['name']}"})
 
@@ -214,56 +205,13 @@ def record_attendance(employee_id, name):
 
 def play_greeting(name):
     greeting = f"Welcome {name}"
-    tts = gTTS(greeting, lang='en')
-    tts.save("greeting.mp3")
-    os.system("greeting.mp3")
-# Load the pre-trained model
+    print(greeting)  # Print the greeting instead of playing audio
 
-UPLOAD_FOLDER = "uploads"
-UPLOAD_FOLDER = "uploads"
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
-
-@app.route("/api/predict", methods=["POST"])
-def predict():
-    print("Received request headers:", request.headers)  # Debugging
-    print("Received request files:", request.files)  # Debugging
-
-    if "image" not in request.files:
-        return jsonify({"error": "No image uploaded"}), 400
-
-    file = request.files["image"]
-    filename = secure_filename(file.filename)
-    filepath = os.path.join(UPLOAD_FOLDER, filename)
-    file.save(filepath)
-
-    # Process the image
-    image = cv2.imread(filepath, cv2.IMREAD_COLOR)
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    _, th = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-
-    contours = cv2.findContours(th, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)[0]
-    
-    # Sort contours from left to right
-    contours = sorted(contours, key=lambda c: cv2.boundingRect(c)[0])  
-
-    predictions = []
-    for cnt in contours:
-        x, y, w, h = cv2.boundingRect(cnt)
-        digit = th[y:y + h, x:x + w]
-        resized_digit = cv2.resize(digit, (18, 18))
-        padded_digit = np.pad(resized_digit, ((5, 5), (5, 5)), "constant", constant_values=0)
-
-        digit = padded_digit.reshape(1, 28, 28, 1).astype("float32") / 255.0
-        pred = model.predict([digit])[0]
-        final_pred = np.argmax(pred)
-        predictions.append({"digit": int(final_pred), "confidence": float(max(pred))})
-
-    os.remove(filepath)  # Clean up after processing
-    return jsonify({"predictions": predictions})
-
-
-
+# def play_greeting(name):
+#     greeting = f"Welcome {name}"
+#     tts = gTTS(greeting, lang='en')
+#     tts.save("greeting.mp3")
+#     os.system("greeting.mp3")
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

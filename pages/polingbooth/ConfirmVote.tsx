@@ -390,12 +390,12 @@ const ConfirmVote = () => {
           )}
           
           <motion.div
-            whileHover={{ scale: 1.2 }}
-            whileTap={{ scale: 0.9 }}
-            className="w-24 h-24 bg-blue-600 text-white flex items-center justify-center rounded-full shadow-lg"
-          >
-            🤖
-          </motion.div>
+          whileHover={{ scale: 1.2 }}
+          whileTap={{ scale: 0.9 }}
+          className="w-24 h-24 bg-green-600 text-[30px] text-white flex items-center justify-center rounded-full shadow-lg font-bold"
+        >
+          HELP
+        </motion.div>
         </motion.div>
 
         {/* Only render GuideOverlay when mounted */}
