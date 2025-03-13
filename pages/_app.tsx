@@ -6,6 +6,7 @@ import { ToastContainer } from 'react-toastify';
 import { appWithTranslation } from "next-i18next";
 import { UserConfig } from "next-i18next";
 import nextI18NextConfig from "../next-i18next.config.js";
+import { HelpProvider } from '../context/HelpContext';
 
 import '@/styles/global.css';
 import 'react-toastify/dist/ReactToastify.css';
@@ -21,19 +22,21 @@ function MyApp({ Component, pageProps: { session, ...pageProps } }: AppProps) {
   return (
     <SessionProvider session={session}>
       <Provider store={store}>
-        <Component {...pageProps} />
-        <ToastContainer
-          position="bottom-center"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="dark"
-        />
+        <HelpProvider>
+          <Component {...pageProps} />
+          <ToastContainer
+            position="bottom-center"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="dark"
+          />
+        </HelpProvider>
       </Provider>
     </SessionProvider>
   );

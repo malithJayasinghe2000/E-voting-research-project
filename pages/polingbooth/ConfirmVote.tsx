@@ -6,7 +6,10 @@ import { useRef, useEffect, useState } from "react";
 import { io } from "socket.io-client";
 import { useSession } from "next-auth/react";
 import { getSocket } from "../../components/SocketSingleton"; // Import the singleton socket instance
-import { detectTimeSpentOnTask } from "../../components/InteractionMonitor"; // Import the interaction monitor
+import { detectTimeSpentOnTask , detectInactivity , trackNavigation } from "../../components/InteractionMonitor"; // Import the interaction monitor
+import GuideOverlay from "./GuideOverlay"; // Import GuideOverlay component
+import { motion } from "framer-motion"; // Import framer-motion for animations
+import { useHelp } from "../../context/HelpContext"; // Import useHelp hook
 
 // Fetch candidates from API
 const fetchCandidates = async () => {
@@ -35,6 +38,11 @@ const ConfirmVote = () => {
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
   const backButtonRef = useRef<HTMLButtonElement>(null);
   const [buttonStyles, setButtonStyles] = useState({});
+  const [showGuide, setShowGuide] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [currentScreen, setCurrentScreen] = useState(4); // Set the current screen number for guidance
+  const { showHelpButton, setShowHelpButton } = useHelp(); // Use useHelp hook
+  const [needHelpInactive, setneedHelpInactive] = useState(false); 
 
   const { candidates: selectedCandidateIds } = router.query;
   const selectedCandidates = selectedCandidateIds
@@ -104,8 +112,10 @@ const ConfirmVote = () => {
     if (isSpeakerEnabled) {
       playAudio("backHover");
       router.push("/polingbooth/CandidateSelection");
+      trackNavigation("CandidateSelection");
     }else{
       router.push("/polingbooth/CandidateSelection");
+      trackNavigation("CandidateSelection");
     }
     
   };
@@ -216,13 +226,23 @@ const ConfirmVote = () => {
   }, [candidates]);
 
   useEffect(() => {
+    setIsMounted(true);
     const socket = getSocket(); // Use the singleton socket instance
 
     socket.on('connect', () => {});
 
     socket.on('help_response', (response : any) => {
+      console.log("Received help_response:", response); // Add this line for debugging
       if (response.highlightButton) {
         setButtonStyles(response.buttonStyles || {}); // Update button styles
+      }
+      if (response.startGuide) {
+        console.log("Setting showHelpButton to true"); // Add this line for debugging
+        setneedHelpInactive(true); // Show "Need Help?" text
+      }
+      if (response.startGuide && response.navigation) {
+        console.log("Setting showHelpButton to true"); 
+        setShowHelpButton(true); 
       }
     });
 
@@ -234,6 +254,10 @@ const ConfirmVote = () => {
   }, []);
 
   useEffect(() => {
+    detectInactivity(10000, () => {
+      console.log("User is inactive")
+    });  
+
     if (confirmButtonRef.current) {
       detectTimeSpentOnTask(confirmButtonRef, 5000, (data : any) => {}, "confirm");
     }
@@ -241,6 +265,24 @@ const ConfirmVote = () => {
       detectTimeSpentOnTask(backButtonRef, 5000, (data : any) => {}, "back");
     }
   }, []);
+
+  useEffect(() => {
+    console.log("showHelpButton state updated:", showHelpButton); // Add this line for debugging
+  }, [showHelpButton]);
+
+  const handleGuideComplete = () => {
+    setShowGuide(false);
+     // Hide the text after the guide is completed
+
+    setneedHelpInactive(false);
+  };
+
+  const startGuide = () => {
+    setShowGuide(true); // Trigger guide display when the user clicks the "Need Help?" button
+     // Hide the text when the guide starts
+
+    setneedHelpInactive(false);//this is for guidance
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#F1F1F1] to-[#B0D0E6]">
@@ -302,7 +344,7 @@ const ConfirmVote = () => {
             ref={backButtonRef}
             onClick={handleBack}
             onMouseEnter={() => handleHoverButton("backHover")}
-            className={`w-80 bg-[#800000] text-white py-6 rounded-full shadow-lg text-2xl font-bold transition-transform duration-300 `}
+            className={`w-80 bg-[#800000] text-white py-6 rounded-full shadow-lg text-2xl font-bold transition-transform duration-300 back`}
           >
             {t("backButton")}
           </button>
@@ -310,7 +352,7 @@ const ConfirmVote = () => {
             ref={confirmButtonRef}
             onClick={handleConfirm}
             onMouseEnter={() => handleHoverButton("confirmHover")}
-            className={`w-80 bg-[#006400] text-white py-6 rounded-full shadow-lg text-2xl font-bold transition-transform duration-300 `}
+            className={`w-80 bg-[#006400] text-white py-6 rounded-full shadow-lg text-2xl font-bold transition-transform duration-300 confirm`}
           >
             {t("confirmButton")}
           </button>
@@ -318,7 +360,7 @@ const ConfirmVote = () => {
 
         <div
           onClick={toggleSpeaker}
-          className="fixed bottom-20 right-14 w-24 h-24 border-4 rounded-full flex items-center justify-center cursor-pointer hover:shadow-xl bg-transparent"
+          className="fixed bottom-40 right-14 w-24 h-24 border-4 rounded-full flex items-center justify-center cursor-pointer hover:shadow-xl bg-transparent volume-control"
           title={isSpeakerEnabled ? "Disable Audio" : "Enable Audio"}
         >
           <img
@@ -327,6 +369,37 @@ const ConfirmVote = () => {
             className="w-20 h-20"
           />
         </div>
+
+        {/* Always show robot icon, but only show the text when startGuide is true */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.5 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+          className="fixed bottom-12 right-14 flex items-center space-x-4 cursor-pointer"
+          onClick={startGuide}
+        >
+          {needHelpInactive && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="bg-white text-gray-700 px-10 py-6 rounded-lg shadow-lg text-xl font-semibold"
+            >
+              Need help? Click me!
+            </motion.div>
+          )}
+          
+          <motion.div
+            whileHover={{ scale: 1.2 }}
+            whileTap={{ scale: 0.9 }}
+            className="w-24 h-24 bg-blue-600 text-white flex items-center justify-center rounded-full shadow-lg"
+          >
+            🤖
+          </motion.div>
+        </motion.div>
+
+        {/* Only render GuideOverlay when mounted */}
+        {isMounted && <GuideOverlay isActive={showGuide} onComplete={handleGuideComplete} currentScreen={currentScreen} />}
       </main>
     </div>
   );
