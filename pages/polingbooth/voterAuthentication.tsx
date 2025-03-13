@@ -5,7 +5,9 @@ import { useTranslation } from "next-i18next";
 import Navbar from "./navbar";
 import WebcamCapture from "@/components/WebcamCapture";
 import { getSocket } from "../../components/SocketSingleton"; // Import the singleton socket instance
-import { detectTimeSpentOnTask } from "../../components/InteractionMonitor";
+import { detectTimeSpentOnTask , detectInactivity } from "../../components/InteractionMonitor";
+import GuideOverlay from "./GuideOverlay"; // Import GuideOverlay
+import { motion } from "framer-motion"; // Import motion from framer-motion
 
 // Function to play audio and prevent conflicts
 const playAudio = (audioPath: string, audioInstance: HTMLAudioElement, onEnded: () => void) => {
@@ -33,6 +35,10 @@ const VoterAuthentication = () => {
 
   const startButtonRef = useRef<HTMLButtonElement>(null);
   const [buttonStyles, setButtonStyles] = useState({});
+  const [showGuide, setShowGuide] = useState(false); // State to control guide visibility
+  const [isMounted, setIsMounted] = useState(false); // State to check if component is mounted
+  const [currentScreen, setCurrentScreen] = useState(2); // Set current screen for guide
+  const [needHelpInactive, setneedHelpInactive] = useState(false); 
 
   // Create audio instance only on client-side
   useEffect(() => {
@@ -178,6 +184,7 @@ const VoterAuthentication = () => {
   };
 
   useEffect(() => {
+    setIsMounted(true);
       const socket = getSocket(); // Use the singleton socket instance
   
       socket.on('connect', () => {});
@@ -185,6 +192,9 @@ const VoterAuthentication = () => {
       socket.on('help_response', (response : any) => {
         if (response.highlightButton) {
           setButtonStyles(response.buttonStyles || {}); // Update button styles
+        }
+        if (response.startGuide) {
+          setneedHelpInactive(true); // Show "Need Help?" text
         }
       });
   
@@ -196,12 +206,28 @@ const VoterAuthentication = () => {
     }, []);
   
     useEffect(() => {
+      
+
+      detectInactivity(10000, () => {
+        console.log("User is inactive")
+      });  
+
+
       if (startButtonRef.current) {
         detectTimeSpentOnTask(startButtonRef, 5000, (data : any) => {}, "start");
       }
 
     }, []);
   
+    const handleGuideComplete = () => {
+      setShowGuide(false);
+      setneedHelpInactive(false);
+    };
+  
+    const startGuide = () => {
+      setShowGuide(true); // Trigger guide display when the user clicks the "Need Help?" button
+      setneedHelpInactive(false);
+    };
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#F1F1F1] to-[#B0D0E6]">
@@ -214,7 +240,7 @@ const VoterAuthentication = () => {
           {t("authInstruction")}
         </h2>
 
-        <div className="relative w-[80vw] h-[80vw] max-w-[500px] max-h-[500px] bg-[#e0e0e0] rounded-full mb-6 flex justify-center items-center border-4 border-[#003366]">
+        <div className="relative w-[80vw] h-[80vw] max-w-[500px] max-h-[500px] bg-[#e0e0e0] rounded-full mb-6 flex justify-center items-center border-4 border-[#003366] camera-space">
           {isLoading ? (
             <div className="text-center text-2xl text-[#003366]">Initializing Camera...</div>
           ) : (
@@ -227,7 +253,7 @@ const VoterAuthentication = () => {
         <button
            ref={startButtonRef}
           onClick={startCamera}
-          className={`w-80 ${isLoading ? 'bg-gray-400' : 'bg-[#006400]'} text-white py-6 rounded-full shadow-lg text-2xl font-bold ]`}
+          className={`w-80 ${isLoading ? 'bg-gray-400' : 'bg-[#006400]'} text-white py-6 rounded-full shadow-lg text-2xl font-bold start-button`}
           disabled={isLoading}
           onMouseEnter={playButtonHoverAudio} // Play hover audio on button hover
         >
@@ -237,7 +263,7 @@ const VoterAuthentication = () => {
         {/* Speaker Toggle Button */}
         <div
   onClick={toggleSpeaker}
-  className="fixed bottom-20 right-14 w-24 h-24 border-4   rounded-full flex items-center justify-center cursor-pointer hover:shadow-xl bg-transparent"
+  className="fixed bottom-40 right-14 w-24 h-24 border-4   rounded-full flex items-center justify-center cursor-pointer hover:shadow-xl bg-transparent volume-control"
   title={isSpeakerEnabled ? "Disable Audio" : "Enable Audio"}
 >
   <img
@@ -246,6 +272,37 @@ const VoterAuthentication = () => {
     className="w-20 h-20"
   />
 </div>
+
+{/* Always show robot icon, but only show the text when startGuide is true */}
+<motion.div
+  initial={{ opacity: 0, scale: 0.5 }}
+  animate={{ opacity: 1, scale: 1 }}
+  transition={{ duration: 0.5 }}
+  className="fixed bottom-12 right-14 flex items-center space-x-4 cursor-pointer"
+  onClick={startGuide}
+>
+  {needHelpInactive && (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3 }}
+      className="bg-white text-gray-700 px-10 py-6 rounded-lg shadow-lg text-xl font-semibold"
+    >
+      Need help? Click me!
+    </motion.div>
+  )}
+  
+  <motion.div
+    whileHover={{ scale: 1.2 }}
+    whileTap={{ scale: 0.9 }}
+    className="w-24 h-24 bg-blue-600 text-white flex items-center justify-center rounded-full shadow-lg"
+  >
+    🤖
+  </motion.div>
+</motion.div>
+
+{/* Only render GuideOverlay when mounted */}
+{isMounted && <GuideOverlay isActive={showGuide} onComplete={handleGuideComplete} currentScreen={currentScreen} />}
       </main>
     </div>
   );

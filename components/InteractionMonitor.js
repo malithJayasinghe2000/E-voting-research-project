@@ -6,7 +6,9 @@ const socket = getSocket(); // Use the singleton socket instance
 // Helper function to send interaction data to the backend
 const sendInteractionData = (data) => {
     if (socket.connected) {
-        socket.emit('user_interaction', data, (ack) => {});
+        socket.emit('user_interaction', data, (ack) => {
+            console.log("Interaction data sent:", data); // Add this line for debugging
+        });
     } else {
         console.warn('Socket connection not established.');
     }
@@ -51,3 +53,75 @@ export const detectTimeSpentOnTask = (elementRef, threshold, callback, buttonTyp
         element.classList.remove('transform', 'scale-125', 'text-5xl');
     });
 };
+
+// Inactivity detection and socket interaction
+export const detectInactivity = (timeout, callback) => {
+    if (!Number.isFinite(timeout) || timeout <= 0) {
+        throw new Error('Timeout should be a positive number.');
+    }
+    if (typeof callback !== 'function') {
+        throw new Error('Callback must be a function.');
+    }
+
+    let inactivityTimer;
+
+    const resetTimer = () => {
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(() => {
+            const data = { type: 'inactivity_detected' };
+            callback(data);
+            sendInteractionData(data);
+        }, timeout);
+    };
+
+    ['mousemove', 'keydown', 'scroll'].forEach(event =>
+        window.addEventListener(event, resetTimer)
+    );
+
+    resetTimer();
+
+    return () => {
+        ['mousemove', 'keydown', 'scroll'].forEach(event =>
+            window.removeEventListener(event, resetTimer)
+        );
+        clearTimeout(inactivityTimer);
+    };
+};
+
+// 3. Back-and-Forth Navigation Detection
+const navigationHistory = [];
+const MAX_HISTORY = 6; // Keep track of the last 6 screens
+
+export const trackNavigation = (currentScreen) => {
+    navigationHistory.push(currentScreen);
+    console.log('Navigation History:', navigationHistory); // Log navigation history
+
+    // Keep history within limits
+    if (navigationHistory.length > MAX_HISTORY) {
+        navigationHistory.shift(); 
+    }
+
+    // Check for back-and-forth pattern
+    if (detectBackAndForth(navigationHistory)) {
+        console.log('Back-and-forth pattern detected'); // Log detection
+        const data = { type: 'repetitive_navigation', history: [...navigationHistory] };
+        sendInteractionData(data);
+    }
+};
+
+const detectBackAndForth = (history) => {
+    if (history.length < 4) return false; // We need at least 4 steps to detect a pattern
+
+    const lastFour = history.slice(-4); // Get the last 4 navigation states
+
+    // Check if it's an exact alternating pattern
+    return (
+        lastFour[0] === "ConfirmVote" &&
+        lastFour[1] === "CandidateSelection" &&
+        lastFour[2] === "ConfirmVote" &&
+        lastFour[3] === "CandidateSelection"
+    );
+};
+
+
+//other functions

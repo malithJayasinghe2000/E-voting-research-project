@@ -26,6 +26,8 @@ io.on('connection', (socket) => {
 
     // Listen for user interaction data
     socket.on('user_interaction', (data, callback) => {
+        console.log("Received user interaction data:", data); // Log interaction data
+
         // Store interaction data (optional)
         if (!userInteractionLogs[socket.id]) {
             userInteractionLogs[socket.id] = [];
@@ -34,6 +36,7 @@ io.on('connection', (socket) => {
 
         // Analyze the interaction data and send appropriate help if needed
         const response = analyzeUserInteraction(data);
+        console.log("Analyzed response:", response); // Log the response
 
         // If an issue is detected, send feedback to the client
         if (response.issueDetected) {
@@ -70,13 +73,30 @@ function analyzeUserInteraction(data) {
         };
     }
 
-    // Other conditions for user struggles...
+    if (data.type === 'inactivity_detected') {
+        response = {
+            issueDetected: true,
+            suggestion: 'You seem inactive. Do you need help choosing a language?',
+            startGuide: true,  // This will trigger the Joyride guide in the frontend
+            
+        };
+    }
 
+    if (data.type === 'repetitive_navigation') {
+        response = {
+            issueDetected: true,
+            suggestion: "You seem to be switching screens repeatedly. Do you need assistance?",
+            startGuide: true, // Trigger frontend guide/help message
+            navigation:true
+        };
+    }
+
+    console.log("Analyzed response:", response); // Add this line for debugging
     return response;
 }
 
 // Start the server on a given port
 const PORT = 4000;
 server.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log('Server is running on port ${PORT}');
 });
