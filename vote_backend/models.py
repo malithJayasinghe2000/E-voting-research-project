@@ -1,12 +1,19 @@
 import cv2
 import numpy as np
-from fastapi import FastAPI, WebSocket
+from fastapi import FastAPI, WebSocket, File, UploadFile, HTTPException, Depends
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from keras.preprocessing.image import img_to_array
 from keras.applications.mobilenet_v2 import preprocess_input
 from tensorflow.keras.models import load_model
-from fastapi.middleware.cors import CORSMiddleware
+from motor.motor_asyncio import AsyncIOMotorClient
+import base64
+import io
+from datetime import datetime
+from PIL import Image
+from deepface import DeepFace
 import asyncio
+from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -19,14 +26,92 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Load the trained model
+# Load models
 model = load_model("mask_detector.h5")
 
-# Load face detector
 face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
+# MongoDB connection
+MONGO_URI = "mongodb+srv://sandaru2:sandaru2@test.bgjabxi.mongodb.net/biznesAdverticerDB?retryWrites=true&w=majority"
+client = AsyncIOMotorClient(MONGO_URI)
+db = client["biznesAdverticerDB"]
+employees_collection = db["employees"]
+attendance_collection = db["attendance"]
+
 # Open webcam
-cap = cv2.VideoCapture(0)  # Use '0' for the default webcam
+cap = cv2.VideoCapture(0)
+
+
+def decode_image(image_data: str):
+    """ Decode base64 image and convert to OpenCV format """
+    image_bytes = base64.b64decode(image_data)
+    img = Image.open(io.BytesIO(image_bytes))
+    return cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+
+
+async def get_face_embedding(img):
+    """ Extract face embedding using DeepFace """
+    try:
+        embedding = await asyncio.to_thread(
+            DeepFace.represent, img, model_name="Facenet", enforce_detection=False
+        )
+        return embedding[0]["embedding"] if embedding else None
+    except Exception as e:
+        print(f"Embedding error: {e}")
+        return None
+
+
+async def record_attendance(employee_id, name):
+    """ Log employee attendance """
+    await attendance_collection.insert_one({
+        "employee_id": employee_id,
+        "type": "entry" if 5 <= datetime.now().hour < 17 else "exit",
+        "timestamp": datetime.now()
+    })
+
+
+# @app.post("/api/add_employee")
+# async def add_employee(name: str, image: str):
+#     """ Add employee to database with face encoding """
+#     frame = decode_image(image)
+#     embedding = await get_face_embedding(frame)
+
+#     if embedding is None:
+#         raise HTTPException(status_code=400, detail="Could not extract face embedding")
+
+#     await employees_collection.insert_one({"name": name, "encoding": embedding})
+#     return {"message": f"{name} added successfully!"}
+
+
+class ImageRequest(BaseModel):
+    image: str  # Ensure 'image' is a string (Base64-encoded)
+
+@app.post("/api/recognize_employee")
+async def recognize_employee(data: ImageRequest):
+    """ Recognize employee and record attendance """
+    frame = decode_image(data.image)  # Access 'image' correctly
+    embedding = await get_face_embedding(frame)
+
+    if embedding is None:
+        raise HTTPException(status_code=400, detail="Could not extract face embedding")
+
+    employees = employees_collection.find()
+    async for employee in employees:
+        known_embedding = np.array(employee["encoding"], dtype=np.float32)
+        embedding = np.array(embedding, dtype=np.float32)
+
+        # Normalize embeddings
+        known_embedding /= np.linalg.norm(known_embedding)
+        embedding /= np.linalg.norm(embedding)
+
+        # Compute similarity
+        distance = np.linalg.norm(known_embedding - embedding)
+
+        if distance < 0.5:
+            await record_attendance(employee["_id"], employee["name"])
+            return {"message": f"Welcome {employee['name']}"}
+
+    raise HTTPException(status_code=404, detail="Employee not recognized")
 
 
 @app.get("/api/detect_mask")
@@ -44,25 +129,15 @@ async def detect_mask():
 
     for (x, y, w, h) in faces:
         face = frame[y:y + h, x:x + w]
-
-        # Preprocess the face
         face = cv2.resize(face, (224, 224))
         face = img_to_array(face)
         face = preprocess_input(face)
         face = np.expand_dims(face, axis=0)
 
-        # Predict mask or no mask
         pred = model.predict(face)
+        mask, without_mask = pred[0] if pred.shape[1] == 2 else (1 - pred[0][0], pred[0][0])
 
-        if pred.shape[1] == 1:
-            without_mask = pred[0][0]
-            mask = 1 - without_mask
-        else:
-            mask, without_mask = pred[0]
-
-        mask_detected = mask > without_mask
-
-        return {"mask_detected": bool(mask_detected)}
+        return {"mask_detected": bool(mask > without_mask)}
 
     return {"message": "Face detected but no mask result"}
 
@@ -72,9 +147,9 @@ async def detect_mask(ws: WebSocket):
     """ WebSocket endpoint for real-time mask detection """
     await ws.accept()
 
-    global cap  # Use global to ensure proper handling
-    cap.release()  # Release the camera if it was in use
-    cap = cv2.VideoCapture(0)  # Reinitialize the camera
+    global cap
+    cap.release()
+    cap = cv2.VideoCapture(0)
 
     try:
         while True:
@@ -88,37 +163,26 @@ async def detect_mask(ws: WebSocket):
 
             if len(faces) == 0:
                 await ws.send_json({"mask_detected": None, "message": "No face detected"})
-                await asyncio.sleep(1)  # Prevent overloading
+                await asyncio.sleep(1)
                 continue
 
             for (x, y, w, h) in faces:
                 face = frame[y:y + h, x:x + w]
-
-                # Preprocess the face
                 face = cv2.resize(face, (224, 224))
                 face = img_to_array(face)
                 face = preprocess_input(face)
                 face = np.expand_dims(face, axis=0)
 
-                # Predict mask or no mask
                 pred = model.predict(face)
+                mask, without_mask = pred[0] if pred.shape[1] == 2 else (1 - pred[0][0], pred[0][0])
 
-                if pred.shape[1] == 1:
-                    without_mask = pred[0][0]
-                    mask = 1 - without_mask
-                else:
-                    mask, without_mask = pred[0]
-
-                mask_detected = mask > without_mask
-
-                await ws.send_json({"mask_detected": bool(mask_detected)})
-                await asyncio.sleep(1)  # Limit detection frequency
+                await ws.send_json({"mask_detected": bool(mask > without_mask)})
+                await asyncio.sleep(1)
     except Exception as e:
         print(f"WebSocket Error: {e}")
     finally:
-        cap.release()  # Ensure camera is released when WebSocket closes
+        cap.release()
         print("Camera released on WebSocket close")
-
 
 
 if __name__ == "__main__":
