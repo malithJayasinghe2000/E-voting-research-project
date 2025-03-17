@@ -17,7 +17,7 @@ import { PortfolioItem } from '@/types/PortfolioItem';
 export default function Home({ pollsData }: { pollsData: PollStruct[] }) {
   const [currentView, setCurrentView] = useState('home'); // State to toggle views
   //const { search } = router.query;
-  
+  const [selectedPortfolioItem, setSelectedPortfolioItem] = useState<PortfolioItem | null>(null);
 
   const portfolioItems = [
     {
@@ -45,7 +45,13 @@ export default function Home({ pollsData }: { pollsData: PollStruct[] }) {
         date: '2024-09-10',
       },
   ];
-
+  const handleViewProfile = (id: string) => {
+    const selectedItem = portfolioItems.find(item => item.id === id);
+    if (selectedItem) {
+      setSelectedPortfolioItem(selectedItem);
+      setCurrentView('profile');
+    }
+  };
 
   return (
     <>
@@ -76,7 +82,7 @@ export default function Home({ pollsData }: { pollsData: PollStruct[] }) {
             <>
               <HomeBanner />
               <About />
-              <Portfolio portfolioItems={portfolioItems}  />
+              <Portfolio portfolioItems={portfolioItems} onViewProfile={handleViewProfile} />
             </>
           )}
           {currentView === 'resultDashboard' && <ResultDashboard />}
