@@ -18,7 +18,7 @@ import HomeNavbar from "@/components/Home-Navbar";
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 
-export default function CandidatePortfolio() {
+const CandidatePortfolio: React.FC = () => {
   const linkedinUrl = "https://www.linkedin.com/in/creative-programmer";
   const githubUrl = "https://www.github.com/ahmedmujtaba1";
   const twitterUrl = "https://twitter.com/Ahmed_Mujtaba69";
@@ -113,15 +113,9 @@ const portfolioData = [
     
 
   return (
-    <div id="about" className="w-fill md:h-screen p-2 items-center">
-        <section className="relative px-5 py-10 space-y-16 text-white sm:p-10">
-        <HomeNavbar
-            onResultDashboardClick={() => setCurrentView('resultDashboard')}
-            onPredictionDashboardClick={() => setCurrentView('predictionDashboard')} // Add handler
-            onHomeClick={() => setCurrentView('home')}
-          />
-
-        </section>
+    <div id="about" style={{ padding: "20px" }}>
+      
+      {/* <div className="overflow-auto max-h-[calc(100vh-160px)]  "> */}
       <div className="max-w-[1240px] m-auto md:grid grid-cols-3 gap-8">
         <div className="col-span-2">
           <h1 className="text-4xl font-bold mb-4 ">Hello, I’m Namal Perera </h1>
@@ -202,7 +196,7 @@ const portfolioData = [
           {/* Project 1 - Bio Data */}
           <div className="rounded-xl shadow-xl hover:scale-105 ease-in duration-300">
             <div className="p-4 bg-white rounded-b-xl">
-              <h3 className="text-xl font-semibold">Bio Data</h3>
+              <h3 className="text-xl font-bold text-black">Bio Data</h3>
               <ul className="text-gray-600 mt-2 space-y-2">
                 <li><strong>Date of Birth:</strong> January 1, 1990</li>
                 <li><strong>Nationality:</strong> Sri Lankan</li>
@@ -216,7 +210,7 @@ const portfolioData = [
           {/* Project 2 - Education Qualifications */}
           <div className="rounded-xl shadow-xl hover:scale-105 ease-in duration-300">
             <div className="p-4 bg-white rounded-b-xl">
-              <h3 className="text-xl font-semibold">Education Qualifications</h3>
+              <h3 className="text-xl font-bold text-black">Education Qualifications</h3>
               <ul className="text-gray-600 mt-2 space-y-2">
                 <li><strong>Bachelor's Degree:</strong> B.Sc. in Computer Science, XYZ University, 2012</li>
                 <li><strong>Master's Degree:</strong> M.Sc. in Data Science, ABC University, 2015</li>
@@ -229,7 +223,7 @@ const portfolioData = [
           {/* Project 3 - Professional Experience */}
           <div className="rounded-xl shadow-xl hover:scale-105 ease-in duration-300">
             <div className="p-4 bg-white rounded-b-xl">
-              <h3 className="text-xl font-semibold">Professional Experience</h3>
+              <h3 className="text-xl font-bold text-black">Professional Experience</h3>
               <ul className="text-gray-600 mt-2 space-y-2">
                 <li><strong>Software Developer:</strong> XYZ Tech Solutions, 2015–2018</li>
                 <li><strong>Data Analyst:</strong> ABC Data Labs, 2018–2020</li>
@@ -244,21 +238,29 @@ const portfolioData = [
 
 
       {/* Line Graph Section */}
-      <section className="max-w-[1240px] m-auto py-16">
-        <h2 className="text-3xl font-bold text-center mb-8">Voting History</h2>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div className="rounded-xl shadow-xl p-4">
-            <h3 className="text-xl font-semibold text-center mb-4">Presidential</h3>
-            <Line data={lineChartData1} />
+        {/* Line Graph Section */}
+        <section className="max-w-[1240px] m-auto py-16">
+          <h2 className="text-3xl font-bold text-center mb-8">Voting History</h2>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div
+              className="rounded-xl shadow-xl p-4"
+              style={{ backgroundColor: "#ffffff" }} // Set background color to white
+            >
+              <h3 className="text-xl font-semibold text-center text-black mb-4">Presidential</h3>
+              <Line data={lineChartData1} />
+            </div>
+            <div
+              className="rounded-xl shadow-xl p-4"
+              style={{ backgroundColor: "#ffffff" }} // Set background color to white
+            >
+              <h3 className="text-xl font-semibold text-center text-black mb-4">Parliament</h3>
+              <Line data={lineChartData2} />
+            </div>
           </div>
-          <div className="rounded-xl shadow-xl p-4">
-            <h3 className="text-xl font-semibold text-center mb-4">Parliament</h3>
-            <Line data={lineChartData2} />
-          </div>
-        </div>
-      </section>
+        </section>
+
       <div  ref={commentSectionRef} className="max-w-[1240px] m-auto py-16 mt-10 rounded-xl shadow-xl p-4 bg-gray-100">
-        <h2 className="text-2xl font-bold mb-4">Reviews </h2>
+        <h2 className="text-2xl font-bold mb-4 text-black">Reviews </h2>
         {/* Comment Input */}
         <div className="flex items-center gap-4 mb-6">
             <input
@@ -297,7 +299,8 @@ const portfolioData = [
         </div>
 
         </div>
-
-    </div>
+</div>
+    // </div>
   );
 }
+export default CandidatePortfolio;

@@ -6,8 +6,8 @@ import Navbar from "./navbar";
 import WebcamCapture from "@/components/WebcamCapture";
 import { getSocket } from "../../components/SocketSingleton"; // Import the singleton socket instance
 import { detectTimeSpentOnTask , detectInactivity } from "../../components/InteractionMonitor";
-import GuideOverlay from "./GuideOverlay"; 
-import { motion } from "framer-motion"; 
+import GuideOverlay from "./GuideOverlay"; // Import GuideOverlay
+import { motion } from "framer-motion"; // Import motion from framer-motion
 
 // Function to play audio and prevent conflicts
 const playAudio = (audioPath: string, audioInstance: HTMLAudioElement, onEnded: () => void) => {
