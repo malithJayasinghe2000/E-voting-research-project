@@ -1,15 +1,33 @@
-import { results } from "@/data/candidateResults";
-import { CandidateResult } from "@/types/candidateResults";
-import React from "react";
-
+import React, { useEffect, useState } from "react";
+import { ElectionResult } from "@/types/predictionCandidate";
 
 const PresidentialElectionResults: React.FC = () => {
+  const [results, setResults] = useState<ElectionResult[]>([]);
+
+  useEffect(() => {
+    const fetchResults = async () => {
+      try {
+        const response = await fetch("/api/Candidates/getLatestPrediction");
+        const data = await response.json();
+        if (data.success) {
+          setResults(data.results);
+        } else {
+          console.error("Error fetching results:", data.message);
+        }
+      } catch (error) {
+        console.error("Error fetching results:", error);
+      }
+    };
+
+    fetchResults();
+  }, []);
+
   return (
     <div style={{ width: "100%", padding: "20px", background: "#F5F5F5" }}>
       <h3 style={{ textAlign: "center", color: "#333", marginBottom: "20px" }}>
         ALL ISLAND RESULTS - FINAL
       </h3>
-      <div style={{ display: "flex", flexDirection: "column", gap: "15px" , padding: "20px"}}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "15px", padding: "20px" }}>
         {results.map((result, index) => (
           <div
             key={index}
@@ -20,7 +38,7 @@ const PresidentialElectionResults: React.FC = () => {
               background: "#FFFFFF",
               borderRadius: "8px",
               boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
-              width:"100%"
+              width: "100%",
             }}
           >
             {/* Candidate Details Section */}
@@ -56,7 +74,7 @@ const PresidentialElectionResults: React.FC = () => {
                   {result.candidateName}
                 </div>
                 <div style={{ fontSize: "14px", color: "#666" }}>
-                  {result.partyName}
+                  {result.party}
                 </div>
               </div>
 
@@ -68,7 +86,7 @@ const PresidentialElectionResults: React.FC = () => {
                   color: "#333",
                 }}
               >
-                {result.voteCount.toLocaleString()}
+                {result.percentage}
               </div>
             </div>
 
@@ -86,7 +104,7 @@ const PresidentialElectionResults: React.FC = () => {
                 style={{
                   height: "100%",
                   width: `${result.percentage}%`, // Dynamic width based on percentage
-                  background: result.color, // Color representing the party
+                  background: result.color, // Color representing the candidate
                   position: "absolute",
                   top: 0,
                   left: 0,

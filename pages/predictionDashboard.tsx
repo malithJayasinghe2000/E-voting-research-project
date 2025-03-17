@@ -1,8 +1,10 @@
 import React from "react";
-import SriLankaMap from "@/components/map";
+import { useEffect, useState } from "react";
+//import SriLankaMap from "@/components/map";
 import ElectionResults from '@/components/partyResult';
 import { Cell, Legend, Pie, PieChart, Tooltip, LineChart, Line, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts";
 import { results } from "@/data/candidateResults";
+import { ElectionResult } from "@/types/predictionCandidate";
 
 // Example predicted vote count data
 const predictedVoteData = [
@@ -21,7 +23,46 @@ const predictedVoteData = [
   ];
   
 
+
 const ResultDashboard: React.FC = () => {
+  const [voteData, setVoteData] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [results, setResults] = useState<ElectionResult[]>([]);
+
+  useEffect(() => {
+    const fetchResults = async () => {
+      try {
+        const response = await fetch("/api/Candidates/getLatestPrediction");
+        const data = await response.json();
+        if (data.success) {
+          setResults(data.results);
+        } else {
+          console.error("Error fetching results:", data.message);
+        }
+      } catch (error) {
+        console.error("Error fetching results:", error);
+      }
+    };
+
+    fetchResults();
+  }, []);
+
+  useEffect(() => {
+    const fetchPredictions = async () => {
+      try {
+        const response = await fetch("/api/Candidates/getPredictionMonthly");
+        const data = await response.json();
+        setVoteData(data);
+      } catch (error) {
+        console.error("Error fetching predictions:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPredictions();
+  }, []);
+
   return (
     <div style={{ padding: "20px" }}>
       {/* Page Title */}
@@ -53,7 +94,7 @@ const ResultDashboard: React.FC = () => {
             width: "100%", // Full-width container
           }}
         >
-          {/* District Results (Sri Lanka Map) */}
+          {/* District Results (Sri Lanka Map)
           <div
             style={{
               flex: 2,
@@ -70,7 +111,7 @@ const ResultDashboard: React.FC = () => {
             }}
           >
             <SriLankaMap />
-          </div>
+          </div> */}
 
           {/* Sidebar (Election Results) */}
           <div
@@ -81,6 +122,7 @@ const ResultDashboard: React.FC = () => {
               borderRadius: "8px",
               boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
               padding: "15px",
+              margin:"20px",
               display: "flex",
               flexDirection: "column",
               minWidth: "300px",
@@ -89,13 +131,46 @@ const ResultDashboard: React.FC = () => {
           >
             <ElectionResults />
           </div>
+          <div style={{ flex: 2, background: "#ffffff",
+              border: "1px solid #eaeaea",
+              borderRadius: "8px",
+              boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
+              padding: "15px",
+              display: "flex",
+              flexDirection: "column",
+              alignItems:"center",
+              minWidth: "300px",
+              width: "100%",textAlign: "center" }}>
+            <h2 style={{ marginBottom: "20px", fontSize: "18px", color: "#333", fontWeight: "bold" }}>
+                Party-wise Vote Distribution
+            </h2>
+            <ResponsiveContainer width="75%" height="75%">
+            <PieChart>
+              <Pie
+                data={results}
+                dataKey="voteCount"
+                nameKey="candidateName"
+                cx="50%"
+                cy="50%"
+                outerRadius="80%" // Adjust dynamically based on container size
+                label={(entry) => `${entry.candidateName}: ${entry.percentage.toFixed(1)}%`}
+              >
+                {results.map((candidate, index) => (
+                  <Cell key={`cell-${index}`} fill={candidate.color} />
+                ))}
+              </Pie>
+              <Tooltip />
+              <Legend />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
         </div>
       </div>
 
       {/* Charts Section */}
       <div style={{ display: "flex", justifyContent: "space-between", gap: "20px", marginTop: "20px" }}>
         {/* Pie Chart Section */}
-        <div style={{ flex: 2, background: "#ffffff",
+        {/* <div style={{ flex: 2, background: "#ffffff",
               border: "1px solid #eaeaea",
               borderRadius: "8px",
               boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
@@ -126,14 +201,14 @@ const ResultDashboard: React.FC = () => {
             <Tooltip />
             <Legend />
           </PieChart>
-        </div>
+        </div> */}
 
         {/* Line Chart Section */}
         <div style={{ flex: 3 ,background: "#ffffff",
               border: "1px solid #eaeaea",
               borderRadius: "8px",
               boxShadow: "0px 2px 5px rgba(0, 0, 0, 0.1)",
-              padding: "15px",
+              padding: "50px",
               display: "flex",
               flexDirection: "column",
               minWidth: "300px",
@@ -144,7 +219,7 @@ const ResultDashboard: React.FC = () => {
         </h2>
           <ResponsiveContainer width="100%" height={400}>
             <LineChart
-              data={predictedVoteData}
+              data={voteData}
               margin={{ top: 5, right: 20, bottom: 5, left: 15 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
@@ -152,11 +227,18 @@ const ResultDashboard: React.FC = () => {
               <YAxis />
               <Tooltip />
               <Legend />
-              <Line type="monotone" dataKey="NPP" stroke="#E63946" name="NPP" />
-              <Line type="monotone" dataKey="SJB" stroke="#FFD166" name="SJB" />
-              <Line type="monotone" dataKey="IND16" stroke="#06D6A0" name="IND16" />
-              <Line type="monotone" dataKey="SLPP" stroke="#D7263D" name="SLPP" />
-              <Line type="monotone" dataKey="IND9" stroke="#9E9E9E" name="IND9" />
+              {voteData.length > 0 &&
+              Object.keys(voteData[0])
+                .filter((key) => key !== "month")
+                .map((candidate, index) => (
+                  <Line
+                    key={candidate}
+                    type="monotone"
+                    dataKey={candidate}
+                    stroke={`hsl(${(index * 60) % 360}, 70%, 50%)`}
+                    name={candidate}
+                  />
+                ))}
             </LineChart>
           </ResponsiveContainer>
         </div>
