@@ -1,43 +1,40 @@
-import axios from "axios";
+import axios from 'axios';
 
-const API_URL = "http://localhost:5000"; // Adjust if hosted elsewhere
+const API_URL = "http://localhost:8000"; // Update to FastAPI's port
 
 export const addEmployee = async (name: string, image: string) => {
-    try {
-      const response = await fetch("http://localhost:5000/api/add_employee", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, image }),
-      });
-  
-      const result = await response.json();
-      console.log(result);
-      return result;
-    } catch (error) {
-      console.error("Error adding employee:", error);
-      throw new Error("Failed to add employee.");
+  try {
+    const response = await fetch(`http://localhost:5000/api/add_employee`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, image }),
+    });
+
+    const result = await response.json();
+    console.log("Add Employee Response:", result);
+    return result;
+  } catch (error) {
+    console.error("Error adding employee:", error);
+    throw new Error("Failed to add employee.");
+  }
+};
+
+interface RecognizeEmployeeResponse {
+  message: string;
+}
+
+export const recognizeEmployee = async (imageData: string): Promise<RecognizeEmployeeResponse> => {
+  try {
+    const response = await axios.post('http://127.0.0.1:8000/api/recognize_employee', {
+      image: imageData
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error.response && error.response.data) {
+      throw new Error(error.response.data.error || "Failed to recognize employee");
+    } else {
+      throw new Error("Network error or server unavailable");
     }
-  };
-  
-  
-  export const recognizeEmployee = async (imageBase64: string) => {
-    try {
-      console.log("Sending image length:", imageBase64.length);
-  
-      const response = await fetch("http://localhost:5000/api/recognize_employee", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ image: imageBase64 }),
-      });
-  
-      const data = await response.json();
-      console.log("Recognition response:", data);
-      return data;
-    } catch (error) {
-      console.error("Error recognizing employee:", error);
-    }
-  };
-  
-  
+  }
+};
+
