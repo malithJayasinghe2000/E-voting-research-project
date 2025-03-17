@@ -14,7 +14,6 @@ const electionSchema = new mongoose.Schema(
         },
         image: {
             type: String,
-            required: true,
             trim: true,
         },
         startsAt: {

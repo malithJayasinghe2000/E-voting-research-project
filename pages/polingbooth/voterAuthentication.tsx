@@ -39,6 +39,10 @@ const VoterAuthentication = () => {
   const [isMounted, setIsMounted] = useState(false); // State to check if component is mounted
   const [currentScreen, setCurrentScreen] = useState(2); // Set current screen for guide
   const [needHelpInactive, setneedHelpInactive] = useState(false); 
+  const [maskDetected, setMaskDetected] = useState<boolean | null>(null);
+  const [ws, setWs] = useState<WebSocket | null>(null);
+  const [startRecognition, setStartRecognition] = useState(false); // Track face recognition start
+  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
 
   // Create audio instance only on client-side
   useEffect(() => {
@@ -53,6 +57,51 @@ const VoterAuthentication = () => {
       }
     }
   }, []); // Empty dependency array to run once on mount
+
+  useEffect(() => {
+    if (startRecognition) return; // Stop WebSocket if recognition starts
+  
+    const websocket = new WebSocket("ws://127.0.0.1:8000/ws/detect");
+  
+    websocket.onopen = () => console.log("WebSocket Connected!");
+  
+    websocket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log("Mask Detection Response:", data);
+  
+        if (data.error) {
+          console.error("Mask Detection Error:", data.error);
+          websocket.close(); // Close WebSocket on error
+          return;
+        }
+  
+        if (data.mask_detected === null) {
+          setMaskDetected(null);
+        } else if (data.mask_detected) {
+          setMaskDetected(true);
+          alert("Please remove your mask for verification.");
+        } else {
+          setMaskDetected(false);
+          setStartRecognition(true); // Start face recognition after mask detection
+          websocket.close(); // Stop WebSocket after mask check
+        }
+      } catch (error) {
+        console.error("Error parsing WebSocket message:", error);
+      }
+    };
+  
+    websocket.onerror = (error) => console.error("WebSocket Error:", error);
+  
+    websocket.onclose = () => {
+      console.log("WebSocket Disconnected.");
+    };
+  
+    return () => {
+      websocket.close();
+    };
+  }, [startRecognition]);
+  
 
   // Function to handle sequential audio playback
   const playSequentialAudio = (audioPaths: string[], onComplete: () => void) => {
@@ -232,8 +281,15 @@ const VoterAuthentication = () => {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#F1F1F1] to-[#B0D0E6]">
       <Navbar />
-
-      <WebcamCapture />
+      <p>
+        Status:{" "}
+        {maskDetected === null
+          ? "Detecting..."
+          : maskDetected
+          ? "Mask Detected 😷"
+          : "No Mask 🙂"}
+      </p>
+      {startRecognition && <WebcamCapture />}
 
       <main className="flex flex-col items-center justify-center flex-grow px-6 py-12">
         <h2 className="text-center text-[#003366] text-5xl font-semibold mb-6">

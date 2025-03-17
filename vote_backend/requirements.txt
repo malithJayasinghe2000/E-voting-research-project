@@ -1,0 +1,10 @@
+flask
+flask-cors
+opencv-python-headless
+numpy
+pymongo
+rsa
+tenseal
+deepface
+gtts
+pillow
