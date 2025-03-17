@@ -5,15 +5,24 @@ import axios from 'axios';
 interface VoteCountsProps {}
 
 const VoteCounts: React.FC<VoteCountsProps> = () => {
-  const [voteCounts, setVoteCounts] = useState<Record<string, Record<string, Record<string, number>>>>({});
+  const [groupedPollingManagers, setGroupedPollingManagers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showPriority2, setShowPriority2] = useState(false);
-  const [showPriority3, setShowPriority3] = useState(false);
-  const [showFinalResult, setShowFinalResult] = useState(false);
-  const [finalResults, setFinalResults] = useState<Record<string, number>>({});
-  const [priority1Results, setPriority1Results] = useState<Record<string, number>>({});
-  const [priority2Results, setPriority2Results] = useState<Record<string, number>>({});
-  const [priority3Results, setPriority3Results] = useState<Record<string, number>>({});
+  const [voteCounts, setVoteCounts] = useState<Record<string, Record<string, Record<string, number>>>>({});
+
+  useEffect(() => {
+    const fetchPollingManagers = async () => {
+      try {
+        const response = await axios.get('/api/pollingManagers/groupByPlk');
+        setGroupedPollingManagers(response.data);
+      } catch (error) {
+        console.error("Error fetching polling managers:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPollingManagers();
+  }, []);
 
   useEffect(() => {
     const fetchVotes = async () => {
@@ -38,156 +47,98 @@ const VoteCounts: React.FC<VoteCountsProps> = () => {
     fetchVotes();
   }, []);
 
-  const getTotalVotes = (priority: number) => Object.values(voteCounts).reduce((sum, managerVotes) => {
-    return sum + Object.values(managerVotes).reduce((managerSum, v) => managerSum + (v[priority] || 0), 0);
-  }, 0);
-
-  const getTopTwoCandidates = (priority: number) => {
-    const candidateTotals: Record<string, number> = {};
-    Object.values(voteCounts).forEach(managerVotes => {
-      Object.entries(managerVotes).forEach(([candidateId, votes]) => {
-        if (!candidateTotals[candidateId]) {
-          candidateTotals[candidateId] = 0;
-        }
-        candidateTotals[candidateId] += votes[priority] || 0;
-      });
-    });
-    return Object.entries(candidateTotals)
-      .map(([id, total]) => ({ id, total }))
-      .sort((a, b) => b.total - a.total)
-      .slice(0, 2);
-  };
-
-  const handlePublishResults = async (pollingManagerId: string) => {
+  const handlePublishResults = async (plkUser: string) => {
     try {
       const resultsToPublish = {
-        pollingManagerId,
-        votes: Object.entries(voteCounts[pollingManagerId]).map(([candidateId, counts]) => ({
-          candidateId,
-          priority1: Number(counts["1"]) || 0,
-          priority2: Number(counts["2"]) || 0,
-          priority3: Number(counts["3"]) || 0,
-        })),
+        plkUser, 
+        pollingManagers: groupedPollingManagers
+          .find(group => group.plkUser === plkUser)
+          ?.pollingManagers.map((pollingManager: any) => ({
+            pollingManagerId: pollingManager._id,
+            votes: Object.entries(voteCounts[pollingManager._id] || {}).map(([candidateId, counts]) => ({
+              candidateId,
+              priority1: Number(counts["1"]) || 0,
+              priority2: Number(counts["2"]) || 0,
+              priority3: Number(counts["3"]) || 0,
+            })),
+          })) || []
       };
   
       await axios.post('/api/vote/publish', resultsToPublish);
-      alert(`Results for polling manager ${pollingManagerId} published successfully!`);
+      console.log(resultsToPublish)
+      alert(`Results for PLK user ${plkUser} published successfully!`);
     } catch (error) {
       console.error("Failed to publish results:", error);
       alert("Failed to publish results.");
     }
   };
-
-  const handleCountResults = (priority: number) => {
-    const counts: Record<string, number> = {};
-    Object.values(voteCounts).forEach(managerVotes => {
-      Object.entries(managerVotes).forEach(([candidateId, votes]) => {
-        if (!counts[candidateId]) {
-          counts[candidateId] = 0;
-        }
-        counts[candidateId] += votes[priority] || 0;
-      });
-    });
-    if (priority === 1) setPriority1Results(counts);
-    if (priority === 2) setPriority2Results(counts);
-    if (priority === 3) setPriority3Results(counts);
-  };
-
-  if (loading) return <p>Loading vote counts...</p>;
+  
 
   return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Vote Counts</h2>
-      {Object.keys(voteCounts).length === 0 ? (
-        <p>No votes found.</p>
-      ) : (
-        <>
-          <div className="mb-4">
-            <button
-              className="px-4 py-2 bg-yellow-500 text-white rounded"
-              onClick={() => handleCountResults(1)}
-            >
-              Count Priority 1 Votes
-            </button>
-            <button
-              className="px-4 py-2 bg-blue-500 text-white rounded ml-2"
-              onClick={() => handleCountResults(2)}
-            >
-              Count Priority 2 Votes
-            </button>
-            <button
-              className="px-4 py-2 bg-purple-500 text-white rounded ml-2"
-              onClick={() => handleCountResults(3)}
-            >
-              Count Priority 3 Votes
-            </button>
+    <div className="min-h-screen bg-gray-100 p-6">
+      <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <h2 className="text-2xl font-bold text-gray-800 mb-4">Vote Results Management</h2>
+        {loading ? (
+          <div className="flex justify-center items-center h-40">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
           </div>
-          {Object.entries(voteCounts).map(([managerId, managerVotes]) => (
-            <div key={managerId} className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">Polling Manager: {managerId}</h3>
-              <ul className="space-y-4">
-                {Object.entries(managerVotes).map(([candidateId, votes]) => (
-                  <li key={candidateId} className="p-3 border rounded-lg shadow">
-                    <h4 className="text-md font-semibold mb-2">Candidate: {candidateId}</h4>
-                    <ul>
-                      {Object.entries(votes).map(([priority, count]) => (
-                        <li key={priority} className="flex justify-between">
-                          <span className="font-bold">{count} votes (Priority {priority})</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </li>
-                ))}
-              </ul>
-              <button
-                className="px-4 py-2 bg-red-500 text-white rounded mt-4"
-                onClick={() => handlePublishResults(managerId)}
-              >
-                Publish Results for {managerId}
-              </button>
-            </div>
-          ))}
-          {Object.keys(priority1Results).length > 0 && (
-            <div className="mt-4">
-              <h3 className="text-lg font-bold">Priority 1 Results:</h3>
-              <ul className="space-y-2">
-                {Object.entries(priority1Results).map(([candidateId, totalVotes]) => (
-                  <li key={candidateId} className="flex justify-between">
-                    <span>{candidateId}</span>
-                    <span>{totalVotes} votes</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {Object.keys(priority2Results).length > 0 && (
-            <div className="mt-4">
-              <h3 className="text-lg font-bold">Priority 2 Results:</h3>
-              <ul className="space-y-2">
-                {Object.entries(priority2Results).map(([candidateId, totalVotes]) => (
-                  <li key={candidateId} className="flex justify-between">
-                    <span>{candidateId}</span>
-                    <span>{totalVotes} votes</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-          {Object.keys(priority3Results).length > 0 && (
-            <div className="mt-4">
-              <h3 className="text-lg font-bold">Priority 3 Results:</h3>
-              <ul className="space-y-2">
-                {Object.entries(priority3Results).map(([candidateId, totalVotes]) => (
-                  <li key={candidateId} className="flex justify-between">
-                    <span>{candidateId}</span>
-                    <span>{totalVotes} votes</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </>
-      )}
+        ) : groupedPollingManagers.length === 0 ? (
+          <div className="text-center p-6 bg-gray-50 rounded-lg">
+            <p className="text-lg text-gray-600">No polling managers found.</p>
+          </div>
+        ) : (
+          <div className="space-y-8">
+            {groupedPollingManagers.map(({ plkUser, pollingManagers }) => (
+              <div key={plkUser} className="border border-gray-200 rounded-lg p-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-xl font-semibold text-blue-700">Devision: {plkUser}</h3>
+                  <button
+                    className="px-4 py-2 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-lg shadow hover:from-red-600 hover:to-pink-700 transition-all duration-300 flex items-center space-x-2"
+                    onClick={() => handlePublishResults(plkUser)}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                    <span>Publish Results</span>
+                  </button>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {pollingManagers.map((pollingManager: any) => (
+                    <div key={pollingManager._id} className="bg-gray-50 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-300">
+                      <h4 className="text-lg font-medium text-gray-700 mb-3">
+                        <span className="text-gray-500">Manager:</span> {pollingManager.email}
+                      </h4>
+                      {voteCounts[pollingManager._id] ? (
+                        <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
+                          {Object.entries(voteCounts[pollingManager._id]).map(([candidateId, votes]) => (
+                            <div key={candidateId} className="bg-white p-3 rounded-lg border border-gray-200">
+                              <h5 className="font-medium text-gray-800 mb-2 pb-2 border-b border-gray-100">
+                                Candidate: {candidateId}
+                              </h5>
+                              <div className="space-y-1">
+                                {Object.entries(votes).map(([priority, count]) => (
+                                  <div key={priority} className="flex justify-between items-center">
+                                    <span className="text-gray-600">Priority {priority}:</span>
+                                    <span className="font-semibold bg-blue-100 text-blue-800 py-1 px-2 rounded-full text-sm">
+                                      {count} votes
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className="text-gray-500 italic">No votes recorded</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 };
