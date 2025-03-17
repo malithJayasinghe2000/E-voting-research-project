@@ -4,10 +4,12 @@ import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import { useTranslation } from "next-i18next";
 import Navbar from "./navbar";
 import { getSocket } from "../../components/SocketSingleton"; // Import the singleton socket instance
-import { detectTimeSpentOnTask ,detectInactivity , trackNavigation } from "../../components/InteractionMonitor";
+import { detectTimeSpentOnTask ,detectInactivity , trackNavigation, detectRepeatedClicks } from "../../components/InteractionMonitor";
 import GuideOverlay from "./GuideOverlay"; // Import GuideOverlay
 import { motion } from "framer-motion"; // Import motion from framer-motion
 import { useHelp } from "../../context/HelpContext"; // Import useHelp hook
+import { ToastContainer, toast } from "react-toastify"; // Import ToastContainer and toast
+import "react-toastify/dist/ReactToastify.css"; // Import toastify CSS
 
 // Simulate fetching candidate data from an API
 const fetchCandidates = async () => {
@@ -28,6 +30,7 @@ const CandidateSelection = () => {
   const { locale } = router;
   const { t } = useTranslation();
   const { showHelpButton, setShowHelpButton } = useHelp(); // Use useHelp hook
+  const [showHelpRepeat, setShowHelpRepeat ]= useState(false)
 
   const [candidates, setCandidates] = useState<any[]>([]);
   const [selectedCandidates, setSelectedCandidates] = useState<number[]>([]);
@@ -40,6 +43,8 @@ const CandidateSelection = () => {
   const [isMounted, setIsMounted] = useState(false); // State to check if component is mounted
   const [currentScreen, setCurrentScreen] = useState(3); // Set current screen for guide
   const [needHelpInactive, setneedHelpInactive] = useState(false); 
+
+
 
   // Handle audio play function for different actions
   const playAudio = (type: string) => {
@@ -136,7 +141,7 @@ const CandidateSelection = () => {
         trackNavigation("ConfirmVote"); // Add this line
       }
     } else {
-      alert(t("selectExactly3Alert"));
+     
     }
   };
   
@@ -176,15 +181,21 @@ const CandidateSelection = () => {
       if (response.highlightButton) {
         setButtonStyles(response.buttonStyles || {}); // Update button styles
       }
-      if (response.startGuide && !showHelpButton) {
-        console.log("Setting showHelpButton to true"); // Add this line for debugging
-        setneedHelpInactive(true); // Show "Need Help?" text
+      if (response.startGuide) {
+        if (response.repeatedClicks) {
+          setShowHelpRepeat(true);
+          setShowHelpButton(false);
+          setneedHelpInactive(false);
+        } else if (response.navigation) {
+          setShowHelpButton(true);
+          setShowHelpRepeat(false);
+          setneedHelpInactive(false);
+        } else {
+          setneedHelpInactive(true);
+          setShowHelpButton(false);
+          setShowHelpRepeat(false);
+        }
       }
-      if ((response.startGuide && response.navigation)) {
-        console.log("Setting showHelpButton to true"); // Add this line for debugging
-        setShowHelpButton(true); // Show "Need Help?" text
-      }
-      
     });
 
     socket.on('disconnect', () => {});
@@ -201,6 +212,7 @@ const CandidateSelection = () => {
 
     if (submitButtonRef.current) {
       detectTimeSpentOnTask(submitButtonRef, 5000, (data : any) => {}, "submit");
+      detectRepeatedClicks(submitButtonRef, 5000, (data : any) => {}, "submit"); // Add this line
     }
     
   }, []);
@@ -212,14 +224,14 @@ const CandidateSelection = () => {
   const handleGuideComplete = () => {
     setShowGuide(false);
     setShowHelpButton(false); // Hide the text after the guide is completed
-
+    setShowHelpRepeat(false);
     setneedHelpInactive(false);
   };
 
   const startGuide = () => {
     setShowGuide(true); // Trigger guide display when the user clicks the "Need Help?" button
     setShowHelpButton(false); // Hide the text when the guide starts
-
+    setShowHelpRepeat(false);
     setneedHelpInactive(false);//this is for guidance
   };
 
@@ -227,6 +239,8 @@ const CandidateSelection = () => {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#F1F1F1] to-[#B0D0E6]">
       <Navbar />
+      {/* Add ToastContainer for toast messages */}
+     
 
       <div className="p-6 bg-gradient-to-b from-[#F1F1F1] to-[#B0D0E6] text-[#003366] text-xl font-semibold rules">
         <h2 className="mb-4 text-4xl">{t("candidateSelectionRulesTitle")}</h2>
@@ -313,6 +327,16 @@ const CandidateSelection = () => {
         className="fixed bottom-12 right-14 flex items-center space-x-4 cursor-pointer"
         onClick={startGuide}
       >
+        {showHelpRepeat && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white text-gray-700 px-10 py-6 rounded-lg shadow-lg text-xl font-semibold"
+          >
+            You have clicked the button repeatedly.Let me help!
+          </motion.div>
+        )}
         {showHelpButton && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -333,6 +357,8 @@ const CandidateSelection = () => {
             Need help? Click me!
           </motion.div>
         )}
+
+
         
         <motion.div
           whileHover={{ scale: 1.2 }}

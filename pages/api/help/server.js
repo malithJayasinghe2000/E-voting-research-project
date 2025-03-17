@@ -91,6 +91,16 @@ function analyzeUserInteraction(data) {
         };
     }
 
+    if (data.type === 'repeated_clicks') {
+        response = {
+            issueDetected: true,
+            suggestion: "You have clicked the button repeatedly. Is there an issue you're encountering?",
+            startGuide: true, // Trigger frontend guide/help message
+            repeatedClicks: true
+            
+        };
+    }
+
     console.log("Analyzed response:", response); // Add this line for debugging
     return response;
 }

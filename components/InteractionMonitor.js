@@ -123,5 +123,39 @@ const detectBackAndForth = (history) => {
     );
 };
 
+// Track repeated button clicks
+export const detectRepeatedClicks = (elementRef, threshold, callback, buttonType) => {
+    if (!(elementRef.current instanceof HTMLElement)) {
+        throw new Error('Invalid elementRef provided.');
+    }
+    if (!Number.isFinite(threshold) || threshold <= 0) {
+        throw new Error('Threshold should be a positive number.');
+    }
+    if (typeof callback !== 'function') {
+        throw new Error('Callback must be a function.');
+    }
+
+    let lastClickTime = 0;
+    let clickCount = 0;
+
+    const element = elementRef.current;
+
+    element.addEventListener('click', () => {
+        const currentTime = Date.now();
+        if (currentTime - lastClickTime < threshold) {
+            clickCount++;
+        } else {
+            clickCount = 1; // reset on first click after threshold
+        }
+        lastClickTime = currentTime;
+
+        if (clickCount >= 3) {
+            const data = { type: 'repeated_clicks', button: buttonType, clickCount };
+            callback(data);
+            sendInteractionData(data);
+        }
+    });
+};
+
 
 //other functions

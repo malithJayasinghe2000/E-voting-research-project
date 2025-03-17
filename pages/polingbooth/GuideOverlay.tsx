@@ -66,30 +66,41 @@ const GuideOverlay: React.FC<GuideOverlayProps> = ({ isActive, onComplete, curre
     3: [
       {
         target: ".rules4",
-        content: "Here are the rules for selecting candidates. Please read them carefully.",
+        content: "Please review the rules carefully before proceeding with the candidate selection process.",
         placement: "top",
       },
       {
         target: ".rules",
-        content: "Here are the rules for selecting candidates. Please read them carefully.",
+        content: "Here are the rules for selecting candidates. Make sure to read and follow them closely.",
         placement: "top",
       },
       {
         target: "tbody > tr:nth-child(1)",
-        content: "You can select your preferred candidate from this list.",
+        content: "This is your list of available candidates. Select your preferred candidate based on priority.",
         placement: "top",
       },      
       {
         target: "tbody > tr:nth-child(1) .selection button",
-        content: "Click here to select candidates in order of priority.",
+        content: "Click this button to select your **Priority 1** candidate. This is your most preferred choice.",
+        placement: "top",
+      },
+      {
+        target: "tbody > tr:nth-child(2) .selection button",
+        content: "Next, select your **Priority 2** candidate. This is your second preferred choice.",
+        placement: "top",
+      },
+      {
+        target: "tbody > tr:nth-child(3) .selection button",
+        content: "Lastly, select your **Priority 3** candidate. This is your third preferred choice.",
         placement: "top",
       },
       {
         target: ".submit-button",
-        content: "Click here to submit your vote after selecting the candidates.",
+        content: "Once you've selected your candidates in priority order, click here to submit your vote.",
         placement: "top",
       },
     ],
+    
     4: [
       {
         target: "thead5",
