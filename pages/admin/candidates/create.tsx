@@ -103,16 +103,18 @@ const AddCandidateForm: React.FC = () => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleNestedChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    section: "socialLinks" | "bio"
-  ) => {
+  const handleNestedChange = (e: React.ChangeEvent<HTMLInputElement>, parentKey: keyof typeof formData) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [section]: { ...prev[section], [name]: value },
+    setFormData((prevData) => ({
+      ...prevData,
+      [parentKey]: {
+        ...(prevData[parentKey] as Record<string, string>),  // Ensure it's treated as an object
+        [name]: value,
+      },
     }));
   };
+  
+  
 
   const handleArrayChange = (
     index: number,
@@ -280,7 +282,13 @@ const AddCandidateForm: React.FC = () => {
         {["dob", "nationality", "religion", "maritalStatus", "netWorth"].map((bioField) => (
           <div key={bioField} className="mb-2">
             <label className="block capitalize mb-1">{bioField}</label>
-            <input type="text" name={bioField} value={formData.bio[bioField as keyof typeof formData.bio]} onChange={(e) => handleNestedChange(e, "bio")} className="w-full border rounded p-2" />
+            <input
+              type="text"
+              name={bioField}
+              value={formData.bio[bioField as keyof typeof formData.bio]}  // Ensure safe access
+              onChange={(e) => handleNestedChange(e, "bio")}
+              className="w-full border rounded p-2"
+            />
           </div>
         ))}
 

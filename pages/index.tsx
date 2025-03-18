@@ -31,6 +31,26 @@ export default function Home({ pollsData }: { pollsData: PollStruct[] }) {
           party: candidate.party,
           image: candidate.image || '/assets/images/default.jpg', // fallback image
           date: candidate.date || 'TBD', // optional fallback
+          name: candidate.name,
+          slogan: candidate.slogan,
+          no: candidate.no, // Added
+          nationalId: candidate.nationalId, // Added
+          socialLinks: {
+            linkedin: "",
+            github: "",
+            twitter: "",
+            whatsapp: "",
+          },
+          bio: {
+            dob: candidate.bio?.dob,
+            nationality: candidate.bio?.nationality,
+            religion: candidate.bio?.religion,
+            maritalStatus: candidate.bio?.maritalStatus,
+            netWorth: candidate.bio?.netWorth,
+          },
+          education: candidate.education,
+          experience: candidate.experience,
+          electionId: candidate.electionId,
         }));
 
         setPortfolioItems(mappedItems);

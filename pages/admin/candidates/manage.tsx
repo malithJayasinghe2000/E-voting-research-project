@@ -188,7 +188,7 @@ export default function ManageCandidates() {
                 <h1 className="text-xl font-bold mt-2">{candidate.name}</h1>
                 <p className="text-gray-500">{candidate.party}</p>
                 <p className="text-gray-500">{candidate.nationalId}</p>
-                <p className="text-gray-500">{candidate.bio.nationality}</p>
+                <p className="text-gray-500">{candidate.bio?.nationality}</p>
                 <p className="text-gray-500">{candidate.slogan}</p>
                 <button onClick={() => toggleActiveStatus(candidate._id, candidate.is_active)} className="mt-2 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
                   {candidate.is_active ? "Deactivate" : "Activate"}

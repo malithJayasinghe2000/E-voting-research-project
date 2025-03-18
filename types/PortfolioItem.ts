@@ -23,8 +23,10 @@ export interface PortfolioItem
         maritalStatus: string;
         netWorth: string;
       };
-      education: string[];
-      experience: string[];
+      education: [];
+      experience: [];
       voteDataPresidential: number[];
       voteDataParliament: number[];
+      nationalId:string,
+      electionId:string
     }

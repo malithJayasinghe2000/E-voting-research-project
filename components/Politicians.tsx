@@ -7,11 +7,28 @@ import Image from 'next/image';
 
 interface PortfolioItem {
   id?: string;
-  title?: string;
-  description?: string;
-  image?: string;
-  party?: string;
-  date?: string;
+  name: string,
+  party: string,
+  slogan: string,
+  image: string,
+  no: number, // Added
+  nationalId: string, // Added
+  socialLinks: {
+    linkedin: string,
+    github: string,
+    twitter: string,
+    whatsapp: string,
+  },
+  bio: {
+    dob: string,
+    nationality: string,
+    religion: string,
+    maritalStatus: string,
+    netWorth: string,
+  },
+  education: [],
+  experience: [],
+  electionId: string,
 }
 
 const Portfolio: React.FC<{ portfolioItems: PortfolioItem[]; onViewProfile: (id: string) => void }> = ({ portfolioItems, onViewProfile }) => {
@@ -42,11 +59,11 @@ const PortfolioCard: React.FC<{ item: PortfolioItem; onViewProfile: (id: string)
   return (
     <div className="rounded-xl shadow-xl hover:scale-105 ease-in duration-300 bg-white bg-opacity-70">
       <div className="w-full h-[400px] mx-auto overflow-hidden rounded-t-xl">
-        <Image src={item.image || ""} alt={item.title|| ""} width={200} height={150} className="object-cover w-full h-full" />
+        <Image src={item.image || ""} alt={item.name|| ""} width={200} height={150} className="object-cover w-full h-full" />
       </div>
 
       <div className="p-2 bg-white rounded-b-xl align-center">
-        <h3 className="text-3xl font-bold mb-4 text-black text-center">{item.title}</h3>
+        <h3 className="text-3xl font-bold mb-4 text-black text-center">{item.name}</h3>
         <h2 className="text-xl font-bold mb-4 text-black text-center">{item.party}</h2>
       </div>
 

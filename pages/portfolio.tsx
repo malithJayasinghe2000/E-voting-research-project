@@ -8,6 +8,7 @@ import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 interface Candidate {
+  id:string,
   name: string;
   no: number;
   party: string;
@@ -61,7 +62,7 @@ const CandidatePortfolio: FC<CandidatePortfolioProps> = ({ candidate }) => {
     datasets: [
       {
         label: "Presidential Election Votes",
-        data: candidate.voteDataPresidential,
+        data: [65, 59, 80, 81, 56, 55, 40, 85, 92, 78, 110, 130],
         borderColor: "rgba(75, 192, 192, 1)",
         backgroundColor: "rgba(75, 192, 192, 0.2)",
         fill: true,
@@ -74,7 +75,7 @@ const CandidatePortfolio: FC<CandidatePortfolioProps> = ({ candidate }) => {
     datasets: [
       {
         label: "Parliament Election Votes",
-        data: candidate.voteDataParliament,
+        data:[150, 120, 100, 170, 130, 110, 140, 160, 180, 190, 210, 230],
         borderColor: "rgba(255, 99, 132, 1)",
         backgroundColor: "rgba(255, 99, 132, 0.2)",
         fill: true,
@@ -151,16 +152,17 @@ const CandidatePortfolio: FC<CandidatePortfolioProps> = ({ candidate }) => {
           <div className="rounded-xl shadow-xl p-4 bg-white">
             <h3 className="text-xl font-bold text-black">Education</h3>
             <ul className="text-gray-600 mt-2 space-y-2">
-              {candidate.education.map((edu, idx) => (
-                <li key={idx}>{edu}</li>
-              ))}
+                {(candidate.education || []).map((edu, idx) => (
+                  <li key={idx}>{edu}</li>
+                ))}
             </ul>
+
           </div>
 
           <div className="rounded-xl shadow-xl p-4 bg-white">
             <h3 className="text-xl font-bold text-black">Experience</h3>
             <ul className="text-gray-600 mt-2 space-y-2">
-              {candidate.experience.map((exp, idx) => (
+              {(candidate.experience || []).map((exp, idx) => (
                 <li key={idx}>{exp}</li>
               ))}
             </ul>
