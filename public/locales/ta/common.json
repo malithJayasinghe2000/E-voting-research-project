@@ -3,6 +3,25 @@
   "authInstruction": "தயவுசெய்து கேமராவைப் பார்க்கவும்.",
   "startButton": "தொடங்கு",
 
+  "voterAuthentication" : "வாக்காளர் அங்கீகாரம்",
+  "Start" : "தொடங்குகிறது",
+  "Mask Check" : "மாஸ்க் சரிபார்ப்பு",
+  "Face Recognition" : "முகம் சரிபார்ப்பு",
+  "Please wait, starting" : "தயவுசெய்து காத்திருக்கவும்",
+  "Mask Detected" : "மாஸ்க் கண்டறியப்பட்டது",
+  "Please remove your mask" : "தயவுசெய்து உங்கள் மாஸ்கை அகற்றவும்",
+  "No Mask Detected" : " மாஸ்க் கண்டறியப்படவில்லை",
+  "Proceeding to face recognition" : "முகம் அடையாளம் காணும் செயல்முறையைத் தொடர்கிறது...",
+  "Camera Active" : "கேமரா செயலிக்கிறது",
+  "Please look directly at the camera for verification" : "சரிபார்ப்பிற்காக காமிராவை நேரிடையாகப் பாருங்கள்",
+ "Please wait" : "மாஸ்க் சரிபார்க்கும் போது தயவுசெய்து காத்திருங்கள்...",
+ "Scanning": "மாஸ்க் சோதனை செய்யப்படுகிறது...",
+ "Error detecting mask": "மாஸ்க் கண்டறிய முடியவில்லை. மீண்டும் முயற்சிக்கவும்.",
+ "No mask detected": "மாஸ்க் கண்டறியப்படவில்லை. முகம் அடையாளம் காண்பதில் தொடர்கின்றது...",
+ "Starting authentication": "அங்கீகார செயல்முறையை தொடங்குகிறது...",
+ "Authentication will start": "அங்கீகாரம் தொடங்குகிறது",
+ "Position your": "உங்கள் முகத்தை கோணத்தில் இடம் பொருத்தவும்",
+
   
   "candidateSelectionRulesTitle": "தேர்தல் விதிகள் மற்றும் வேட்பாளர் தேர்வு",
   "select3CandidatesRule": "சரி-சரி 3 வேட்பாளர்களைத் தேர்வு செய்யவும்.",
@@ -24,10 +43,10 @@
   "confirmButton": "உறுதிப்படுத்தவும்",
 
   
-    "thankYouTitle": "நன்றி!"
+    "thankYouTitle": "நன்றி!",
      
    
   
-  
+  "help" : "உதவி"
  
 }

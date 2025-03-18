@@ -1,13 +1,13 @@
 import { useRouter } from "next/router";
-import { useState, useEffect , useRef} from "react";
+import { useState, useEffect } from "react";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import { useTranslation } from "next-i18next";
 import Navbar from "./navbar";
-import WebcamCapture from "@/components/WebcamCapture";
-import { getSocket } from "../../components/SocketSingleton"; // Import the singleton socket instance
-import { detectTimeSpentOnTask , detectInactivity } from "../../components/InteractionMonitor";
+import AutomaticWebcamCapture from "@/components/AutomaticWebcamCapture";
+import { FiCheckCircle, FiX, FiAlertCircle, FiUser, FiVideo, FiVolume2, FiVolumeX } from "react-icons/fi";
 import GuideOverlay from "./GuideOverlay"; // Import GuideOverlay
-import { motion } from "framer-motion"; // Import motion from framer-motion
+import { motion } from "framer-motion";
+
 
 // Function to play audio and prevent conflicts
 const playAudio = (audioPath: string, audioInstance: HTMLAudioElement, onEnded: () => void) => {
@@ -28,21 +28,20 @@ const VoterAuthentication = () => {
   const { locale } = router;
   const { t } = useTranslation(); // Using the useTranslation hook
 
+  // State management
+  const [currentStep, setCurrentStep] = useState<"initial" | "mask-detection" | "face-recognition">("initial");
   const [isCameraActive, setCameraActive] = useState<boolean>(false);
-  const [isLoading, setLoading] = useState<boolean>(false); // To manage loading state for camera
+  const [isLoading, setLoading] = useState<boolean>(false);
   const [audioInstance, setAudioInstance] = useState<HTMLAudioElement | null>(null);
-  const [isSpeakerEnabled, setSpeakerEnabled] = useState<boolean>(false); // Default speaker state
-
-  const startButtonRef = useRef<HTMLButtonElement>(null);
-  const [buttonStyles, setButtonStyles] = useState({});
-  const [showGuide, setShowGuide] = useState(false); // State to control guide visibility
-  const [isMounted, setIsMounted] = useState(false); // State to check if component is mounted
-  const [currentScreen, setCurrentScreen] = useState(2); // Set current screen for guide
-  const [needHelpInactive, setneedHelpInactive] = useState(false); 
+  const [isSpeakerEnabled, setSpeakerEnabled] = useState<boolean>(false);
   const [maskDetected, setMaskDetected] = useState<boolean | null>(null);
   const [ws, setWs] = useState<WebSocket | null>(null);
-  const [startRecognition, setStartRecognition] = useState(false); // Track face recognition start
-  const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
+  const [statusMessage, setStatusMessage] = useState<string>("");
+  const [showGuide, setShowGuide] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const [currentScreen, setCurrentScreen] = useState(2);
+  const [needHelpInactive, setNeedHelpInactive] = useState(false);
+
 
   // Create audio instance only on client-side
   useEffect(() => {
@@ -58,12 +57,19 @@ const VoterAuthentication = () => {
     }
   }, []); // Empty dependency array to run once on mount
 
+  // WebSocket for mask detection
   useEffect(() => {
-    if (startRecognition) return; // Stop WebSocket if recognition starts
-  
+    if (currentStep !== "mask-detection") return;
+    
+    setStatusMessage(t("Please wait, starting"));
+
+    
     const websocket = new WebSocket("ws://127.0.0.1:8000/ws/detect");
   
-    websocket.onopen = () => console.log("WebSocket Connected!");
+    websocket.onopen = () => {
+      console.log("WebSocket Connected!");
+      setStatusMessage(t("Scanning"));
+    };
   
     websocket.onmessage = (event) => {
       try {
@@ -72,40 +78,62 @@ const VoterAuthentication = () => {
   
         if (data.error) {
           console.error("Mask Detection Error:", data.error);
-          websocket.close(); // Close WebSocket on error
+          setStatusMessage(t("Error detecting mask"));
           return;
         }
   
         if (data.mask_detected === null) {
           setMaskDetected(null);
+          setStatusMessage(t("Position your face in the frame"));
         } else if (data.mask_detected) {
           setMaskDetected(true);
-          alert("Please remove your mask for verification.");
+          setStatusMessage("Please remove your mask for verification");
+          
+          if (audioInstance && isSpeakerEnabled) {
+            const audioPath = locale === "si" ? "/audio/remove_mask_si.mp3" : 
+                           locale === "ta" ? "/audio/remove_mask_ta.mp3" : 
+                           "/audio/remove_mask_en.mp3";
+            audioInstance.src = audioPath;
+            audioInstance.play();
+          }
         } else {
           setMaskDetected(false);
-          setStartRecognition(true); // Start face recognition after mask detection
-          websocket.close(); // Stop WebSocket after mask check
+          setStatusMessage(t("No mask detected"));
+          websocket.close();
+          
+          // Automatically proceed to face recognition step after a short delay
+          setTimeout(() => {
+            setCurrentStep("face-recognition");
+          }, 1500);
         }
       } catch (error) {
         console.error("Error parsing WebSocket message:", error);
       }
     };
   
-    websocket.onerror = (error) => console.error("WebSocket Error:", error);
+    websocket.onerror = (error) => {
+      console.error("WebSocket Error:", error);
+      setStatusMessage("Connection error. Please try again.");
+    };
   
     websocket.onclose = () => {
       console.log("WebSocket Disconnected.");
     };
   
+    setWs(websocket);
+    
     return () => {
       websocket.close();
+      setWs(null);
     };
-  }, [startRecognition]);
-  
+  }, [currentStep, locale, audioInstance, isSpeakerEnabled]);
 
   // Function to handle sequential audio playback
   const playSequentialAudio = (audioPaths: string[], onComplete: () => void) => {
-    if (!audioInstance || !isSpeakerEnabled) return;
+    if (!audioInstance || !isSpeakerEnabled) {
+      onComplete();
+      return;
+    }
 
     let currentIndex = 0;
 
@@ -122,54 +150,53 @@ const VoterAuthentication = () => {
     playNext();
   };
 
-  // Start Camera Simulation
-  const startCamera = () => {
-    setLoading(true); // Start loading animation
-    setCameraActive(true);
+  // Start authentication flow automatically after a short delay when page loads
+  useEffect(() => {
+    if (currentStep === "initial") {
+      // Automatically start the authentication process after the welcome audio or 2 seconds
+      const timer = setTimeout(() => startAuthentication(), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [currentStep, isSpeakerEnabled]);
 
-    // Play audio for camera initialization and subsequent steps
-    if (audioInstance) {
+  // Start Camera Simulation
+  const startAuthentication = () => {
+    setLoading(true);
+    setCameraActive(true);
+    setStatusMessage(t("Starting authentication"));
+
+    // Play audio for camera initialization
+    if (audioInstance && isSpeakerEnabled) {
       let audioPaths: string[] = [];
 
       // Add audio paths based on language
       switch (locale) {
         case "si":
-          audioPaths = [
-            "/audio/auth_start_camera_si.mp3",
-            "/audio/auth_success_si.mp3",
-          ];
+          audioPaths = ["/audio/auth_start_camera_si.mp3"];
           break;
         case "ta":
-          audioPaths = [
-            "/audio/auth_start_camera_ta.mp3",
-            "/audio/auth_success_ta.mp3",
-          ];
+          audioPaths = ["/audio/auth_start_camera_ta.mp3"];
           break;
         case "en":
         default:
-          audioPaths = [
-            "/audio/auth_start_camera_en.mp3",
-            "/audio/auth_success_en.mp3",
-          ];
+          audioPaths = ["/audio/auth_start_camera_en.mp3"];
           break;
       }
 
-      // Play the audio sequence only if speaker is enabled
-      if (isSpeakerEnabled) {
-        playSequentialAudio(audioPaths, () => {
-          // Redirect to the next page after the last audio finishes
-          router.push("/polingbooth/CandidateSelection");
-        });
-      } else {
-        // Directly navigate if speaker is disabled
-        router.push("/polingbooth/CandidateSelection");
-      }
+      // Play the audio sequence
+      playSequentialAudio(audioPaths, () => {
+        setLoading(false);
+        setCurrentStep("mask-detection");
+      });
+    } else {
+      setLoading(false);
+      setCurrentStep("mask-detection");
     }
   };
 
-  // Play the welcome message when the page loads
+  // Play welcome message when the page loads
   useEffect(() => {
-    if (audioInstance && isSpeakerEnabled) {
+    if (audioInstance && isSpeakerEnabled && currentStep === "initial") {
       let welcomeAudioPaths: string[] = [];
 
       // Add welcome message based on language
@@ -186,12 +213,10 @@ const VoterAuthentication = () => {
           break;
       }
 
-      // Play the welcome message first
-      playSequentialAudio(welcomeAudioPaths, () => {
-        // Optionally, you can add any callback here after the welcome message finishes.
-      });
+      // Play the welcome message
+      playSequentialAudio(welcomeAudioPaths, () => {});
     }
-  }, [locale, audioInstance, isSpeakerEnabled]); // Depend on locale, audioInstance, and speaker state
+  }, [locale, audioInstance, isSpeakerEnabled, currentStep]);
 
   const toggleSpeaker = () => {
     setSpeakerEnabled((prev) => {
@@ -204,162 +229,264 @@ const VoterAuthentication = () => {
         console.error("Error saving speaker state:", error);
       }
 
+      // Stop the audio if the speaker is turned off
+      if (!newState && audioInstance) {
+        audioInstance.pause();
+        audioInstance.currentTime = 0;
+      }
+
+      // Restart the process if the speaker is turned on
+      if (newState) {
+        setCurrentStep("initial");
+      }
+
       return newState;
     });
   };
 
-  // Function to handle button hover sound
-  const playButtonHoverAudio = () => {
+  // Handle successful authentication
+  const handleSuccessfulAuth = () => {
     if (audioInstance && isSpeakerEnabled) {
-      let hoverAudioPaths: string[] = [];
-
-      // Add hover audio path based on language
+      let successAudioPaths: string[] = [];
+      
       switch (locale) {
         case "si":
-          hoverAudioPaths = ["/audio/auth_hover_start_si.mp3"];
+          successAudioPaths = ["/audio/auth_success_si.mp3"];
           break;
         case "ta":
-          hoverAudioPaths = ["/audio/auth_hover_start_ta.mp3"];
+          successAudioPaths = ["/audio/auth_success_ta.mp3"];
           break;
         case "en":
         default:
-          hoverAudioPaths = ["/audio/auth_hover_start_en.mp3"];
+          successAudioPaths = ["/audio/auth_success_en.mp3"];
           break;
       }
-
-      // Play the hover sound
-      playSequentialAudio(hoverAudioPaths, () => {});
+      
+      playSequentialAudio(successAudioPaths, () => {
+        router.push("/polingbooth/CandidateSelection");
+      });
+    } else {
+      router.push("/polingbooth/CandidateSelection");
     }
   };
 
   useEffect(() => {
     setIsMounted(true);
-      const socket = getSocket(); // Use the singleton socket instance
-  
-      socket.on('connect', () => {});
-  
-      socket.on('help_response', (response : any) => {
-        if (response.highlightButton) {
-          setButtonStyles(response.buttonStyles || {}); // Update button styles
-        }
-        if (response.startGuide) {
-          setneedHelpInactive(true); // Show "Need Help?" text
-        }
-      });
-  
-      socket.on('disconnect', () => {});
-  
-      return () => {
-        socket.off('help_response'); // Clean up the event listener
-      };
-    }, []);
-  
-    useEffect(() => {
-      
+  }, []);
 
-      detectInactivity(10000, () => {
-        console.log("User is inactive")
-      });  
+  const handleGuideComplete = () => {
+    setShowGuide(false);
+    setNeedHelpInactive(false);
+    // Resume the authentication process
+    if (currentStep === "initial") {
+      startAuthentication();
+    } else if (currentStep === "mask-detection") {
+      setCurrentStep("mask-detection");
+    } else if (currentStep === "face-recognition") {
+      setCurrentStep("face-recognition");
+    }
+  };
 
+  const startGuide = () => {
+    setShowGuide(true);
+    setNeedHelpInactive(false);
+    setStatusMessage(t("Help is on the way. Please wait..."));
 
-      if (startButtonRef.current) {
-        detectTimeSpentOnTask(startButtonRef, 5000, (data : any) => {}, "start");
-      }
+    // Pause WebSocket connection if active
+    if (ws) {
+      ws.close();
+      setWs(null);
+    }
 
-    }, []);
-  
-    const handleGuideComplete = () => {
-      setShowGuide(false);
-      setneedHelpInactive(false);
-    };
-  
-    const startGuide = () => {
-      setShowGuide(true); // Trigger guide display when the user clicks the "Need Help?" button
-      setneedHelpInactive(false);
-    };
+    // Pause audio if playing
+    if (audioInstance) {
+      audioInstance.pause();
+      audioInstance.currentTime = 0;
+    }
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#F1F1F1] to-[#B0D0E6]">
       <Navbar />
-      <p>
-        Status:{" "}
-        {maskDetected === null
-          ? "Detecting..."
-          : maskDetected
-          ? "Mask Detected 😷"
-          : "No Mask 🙂"}
-      </p>
-      {startRecognition && <WebcamCapture />}
-
+      
       <main className="flex flex-col items-center justify-center flex-grow px-6 py-12">
-        <h2 className="text-center text-[#003366] text-5xl font-semibold mb-6">
-          {t("authInstruction")}
-        </h2>
-
-        <div className="relative w-[80vw] h-[80vw] max-w-[500px] max-h-[500px] bg-[#e0e0e0] rounded-full mb-6 flex justify-center items-center border-4 border-[#003366] camera-space">
-          {isLoading ? (
-            <div className="text-center text-2xl text-[#003366]">Initializing Camera...</div>
-          ) : (
-            <div className="text-center text-xl text-[#003366]">
-              <span>Place your face inside the circle</span>
+        <div className="w-full max-w-4xl bg-white shadow-xl rounded-2xl overflow-hidden">
+          <div className="bg-[#003366] text-white p-6 flex items-center justify-between">
+            <h2 className="text-2xl font-bold flex items-center">
+              <FiUser className="mr-3" size={24} /> 
+              {t("voterAuthentication")}
+            </h2>
+          </div>
+          
+          <div className="p-8">
+            {/* Progress Indicator */}
+            <div className="flex justify-center mb-8 progress-indicator">
+              <div className="flex items-center w-full max-w-lg">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  currentStep === "initial" ? "bg-blue-500 text-white" : "bg-green-500 text-white"
+                } circle-indicator`}>
+                  1
+                </div>
+                <div className={`h-1 flex-1 ${
+                  currentStep === "initial" ? "bg-gray-300" : "bg-green-500"
+                }`}></div>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  currentStep === "mask-detection" ? "bg-blue-500 text-white" : 
+                  currentStep === "face-recognition" ? "bg-green-500 text-white" : 
+                  "bg-gray-300 text-gray-700"
+                } circle-indicator`}>
+                  2
+                </div>
+                <div className={`h-1 flex-1 ${
+                  currentStep === "face-recognition" ? "bg-green-500" : "bg-gray-300"
+                }`}></div>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  currentStep === "face-recognition" ? "bg-blue-500 text-white" : "bg-gray-300 text-gray-700"
+                } circle-indicator`}>
+                  3
+                </div>
+              </div>
             </div>
-          )}
+            
+            {/* Step Labels */}
+            <div className="flex justify-center mb-8">
+              <div className="grid grid-cols-3 w-full max-w-lg text-center text-sm">
+                <div className={`${currentStep === "initial" ? "text-blue-500 font-bold" : "text-gray-700"}`}>
+                  {t("Start")}
+                </div>
+                <div className={`${currentStep === "mask-detection" ? "text-blue-500 font-bold" : "text-gray-700"}`}>
+                  {t("Mask Check")}
+                </div>
+                <div className={`${currentStep === "face-recognition" ? "text-blue-500 font-bold" : "text-gray-700"}`}>
+                  {t("Face Recognition")}
+                </div>
+              </div>
+            </div>
+            
+            {/* Status Message */}
+            <div className="text-center mb-6">
+              <p className={`text-lg ${
+                maskDetected === true ? "text-red-600 font-bold" :
+                maskDetected === false ? "text-green-600 font-bold" :
+                "text-gray-700"
+              }`}>
+                {statusMessage || t("Please wait, starting authentication")}
+              </p>
+            </div>
+            
+            {/* Main Content Area */}
+            <div className="flex flex-col items-center justify-center camera-space">
+              {currentStep === "initial" && (
+                <div className="flex flex-col items-center ">
+                  <div className="w-64 h-64 bg-gray-100 rounded-full mb-8 flex items-center justify-center animate-pulse ">
+                    <FiVideo size={64} className="text-gray-400" />
+                  </div>
+                  
+                  <div className="text-center text-gray-600">
+                    <p>{t("Authentication will start")}</p>
+                    <div className="mt-4 flex justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {currentStep === "mask-detection" && (
+                <div className="relative flex flex-col items-center">
+                  <div className="relative w-80 h-80 md:w-96 md:h-96">
+                    <div className="absolute inset-0 rounded-full border-4 border-dashed border-blue-500 animate-pulse"></div>
+                    <div className="absolute inset-4 rounded-full border-4 border-[#003366]"></div>
+                    
+                    {maskDetected === true && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="bg-red-100 p-4 rounded-lg shadow-lg text-center">
+                          <FiX className="mx-auto mb-2 text-red-500" size={40} />
+                          <p className="text-red-700 font-bold">{t("Mask Detected")}</p>
+                          <p className="text-red-600">{t("Please remove your mask")}</p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {maskDetected === false && (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="bg-green-100 p-4 rounded-lg shadow-lg text-center">
+                          <FiCheckCircle className="mx-auto mb-2 text-green-500" size={40} />
+                          <p className="text-green-700 font-bold">{t("No Mask Detected")}</p>
+                          <p className="text-green-600">{t("Proceeding to face recognition")}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="mt-6 flex items-center justify-center">
+                    <div className="w-3 h-3 bg-green-500 rounded-full mr-2 animate-ping"></div>
+                    <p className="text-gray-700">{t("Camera Active")}</p>
+                  </div>
+                </div>
+              )}
+              
+              {currentStep === "face-recognition" && (
+                <div className="w-full max-w-lg">
+                  <div className="bg-gray-50 border border-gray-300 rounded-lg p-4 mb-4">
+                    <h3 className="font-medium text-gray-700 mb-2 flex items-center">
+                      <FiAlertCircle className="mr-2 text-blue-500" />
+                      {t("Face Recognition")}
+                    </h3>
+                    <p className="text-sm text-gray-600 mb-2">
+                      {t("Please look directly at the camera for verification")}
+                    </p>
+                  </div>
+                  
+                  <div className="bg-white border border-gray-300 rounded-lg shadow-lg overflow-hidden">
+                    <AutomaticWebcamCapture onSuccess={handleSuccessfulAuth} />
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
+      </main>
 
-        <button
-           ref={startButtonRef}
-          onClick={startCamera}
-          className={`w-80 ${isLoading ? 'bg-gray-400' : 'bg-[#006400]'} text-white py-6 rounded-full shadow-lg text-2xl font-bold start-button`}
-          disabled={isLoading}
-          onMouseEnter={playButtonHoverAudio} // Play hover audio on button hover
-        >
-          {isLoading ? "Please Wait..." : t("startButton")}
-        </button>
+      <div
+        onClick={toggleSpeaker}
+        className="fixed bottom-40 right-14 w-24 h-24 border-4 rounded-full flex items-center justify-center cursor-pointer hover:shadow-xl bg-transparent volume-control"
+        title={isSpeakerEnabled ? "Disable Audio" : "Enable Audio"}
+      >
+        <img
+          src={isSpeakerEnabled ? "/assets/images/volume.png" : "/assets/images/mute.png"}
+          alt={isSpeakerEnabled ? "Speaker On" : "Speaker Off"}
+          className="w-20 h-20"
+        />
+      </div>
 
-        {/* Speaker Toggle Button */}
-        <div
-  onClick={toggleSpeaker}
-  className="fixed bottom-40 right-14 w-24 h-24 border-4   rounded-full flex items-center justify-center cursor-pointer hover:shadow-xl bg-transparent volume-control"
-  title={isSpeakerEnabled ? "Disable Audio" : "Enable Audio"}
->
-  <img
-    src={isSpeakerEnabled ? "/assets/images/volume.png" : "/assets/images/mute.png"}
-    alt={isSpeakerEnabled ? "Speaker On" : "Speaker Off"}
-    className="w-20 h-20"
-  />
-</div>
-
-{/* Always show robot icon, but only show the text when startGuide is true */}
-<motion.div
-  initial={{ opacity: 0, scale: 0.5 }}
-  animate={{ opacity: 1, scale: 1 }}
-  transition={{ duration: 0.5 }}
-  className="fixed bottom-12 right-14 flex items-center space-x-4 cursor-pointer"
-  onClick={startGuide}
->
-  {needHelpInactive && (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.3 }}
-      className="bg-white text-gray-700 px-10 py-6 rounded-lg shadow-lg text-xl font-semibold"
-    >
-      Need help? Click me!
-    </motion.div>
-  )}
-  
-  <motion.div
+      <motion.div
+        initial={{ opacity: 0, scale: 0.5 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="fixed bottom-12 right-14 flex items-center space-x-4 cursor-pointer"
+        onClick={startGuide}
+      >
+        {needHelpInactive && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+            className="bg-white text-gray-700 px-10 py-6 rounded-lg shadow-lg text-xl font-semibold"
+          >
+            Need help? Click me!
+          </motion.div>
+        )}
+        
+        <motion.div
           whileHover={{ scale: 1.2 }}
           whileTap={{ scale: 0.9 }}
           className="w-24 h-24 bg-green-600 text-[30px] text-white flex items-center justify-center rounded-full shadow-lg font-bold"
         >
-          HELP
+         { t("help")}
         </motion.div>
-</motion.div>
+      </motion.div>
 
-{/* Only render GuideOverlay when mounted */}
-{isMounted && <GuideOverlay isActive={showGuide} onComplete={handleGuideComplete} currentScreen={currentScreen} />}
-      </main>
+      {isMounted && <GuideOverlay isActive={showGuide} onComplete={handleGuideComplete} currentScreen={currentScreen} />}
     </div>
   );
 };
@@ -370,5 +497,6 @@ export const getStaticProps = async ({ locale }: { locale: string }) => ({
     ...(await serverSideTranslations(locale, ["common"])),
   },
 });
+
 
 export default VoterAuthentication;

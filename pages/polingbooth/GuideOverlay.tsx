@@ -58,9 +58,24 @@ const GuideOverlay: React.FC<GuideOverlayProps> = ({ isActive, onComplete, curre
         placement: "bottom",
       },
       {
-        target: ".start-button",
-        content: "Click here to start the camera and begin the authentication process.",
+        target: ".mask-detection",
+        content: "We are checking if you are wearing a mask. Please remove it if you are.",
         placement: "bottom",
+      },
+      {
+        target: ".face-recognition",
+        content: "Now we will verify your face. Please look directly at the camera.",
+        placement: "bottom",
+      },
+      {
+        target: ".progress-indicator",
+        content: "This section shows your progress through the authentication steps.",
+        placement: "top",
+      },
+      {
+        target: ".circle-indicator",
+        content: "This circle indicates the current step you are on.",
+        placement: "top",
       },
     ],
     3: [

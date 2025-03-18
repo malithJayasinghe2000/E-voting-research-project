@@ -3,6 +3,25 @@
   "authInstruction": "කරුණාකර කැමරාව දෙස බලන්න.",
   "startButton": "අආරම්භ කරන්න",
 
+  "voterAuthentication" : "ඡන්දදායක සත්‍යාපනය" ,
+  "Start" : "ආරම්භ වෙයි",
+  "Mask Check" : "මාස්ක් පරීක්ෂාව",
+  "Face Recognition" : "මුහුණ හඳුනාගැනීම",
+  "Please wait, starting" : "කරුණාකර රැඳී සිටින්න",
+  "Mask Detected" : "මාස්ක් හඳුනාගන්නා ලදි",
+  "Please remove your mask" : "කරුණාකර ඔබේ මාස්ක් ඉවත් කරන්න",
+  "No Mask Detected" : " මාස්ක් හඳුනාගත නොහැකිවී ඇත",
+  "Proceeding to face recognition" : "මුහුණ හඳුනාගැනීම අඛණ්ඩව පටන් ගන්නවා...",
+  "Camera Active" : "කැමරා ක්‍රියාත්මකයි",
+  "Please look directly at the camera for verification" : "කරුණාකර කැමරාව දෙස කෙලින්ම බලන්න",
+  "Please wait" : "මාස්ක් පරීක්ෂා කිරීම සඳහා කරුණාකර රැඳී සිටින්න...",
+  "Scanning": "මාස්ක් පරීක්ෂා කිරීම...",
+  "Error detecting mask": "මාස්ක් හඳුනාගත නොහැකිවී ඇත. කරුණාකර නැවත උත්සාහ කරන්න.",
+  "No mask detected": "මාස්ක් හඳුනාගත නොහැකිවී ඇත. මුහුණ හඳුනාගැනීම අඛණ්ඩව පටන් ගන්නවා...",
+  "Starting authentication": "සත්‍යාපන ක්‍රියාවලිය ආරම්භ කරයි...",
+  "Authentication will start": "සත්‍යාපනය ආරම්භ වේ",
+  "Position your face": "ඔබගේ මුහුණ පටිය තුල ස්ථාපිත කරන්න",
+
   
   "candidateSelectionRulesTitle": "බෝතුවැඩිය සඳහා අපේක්ෂක තේරීමේ නියමයන්",
   "select3CandidatesRule": "නිවැරදිව 3 අපේක්ෂකවලට පමණක් තෝරා ගන්න.",
@@ -24,7 +43,9 @@
   "confirmButton": "තහවුරු කරන්න",
 
   
-    "thankYouTitle": "ස්තුතියි!"
+    "thankYouTitle": "ස්තුතියි!",
+
+    "help" : "උදව්"
     
    
   
