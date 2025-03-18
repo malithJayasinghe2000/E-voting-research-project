@@ -69,7 +69,6 @@ def encrypt_vote_route():
             encrypted_priority = he.encrypt_vote(priority)
             encrypted_priority_serialized = base64.b64encode(encrypted_priority.serialize()).decode('utf-8')
 
-            # Check if the candidate already has an entry **for this polling station**
             # Check if the candidate already exists in the database for the same polling manager
             existing_vote = votes_collection.find_one({"candidate_id": candidate_id, "poll_manager_id": poll_manager_id})
 
@@ -182,7 +181,7 @@ def recognize_employee():
         distance = np.linalg.norm(known_embedding - embedding)
         print(f"Comparing with {employee['name']}, Distance: {distance}")  # Debug
 
-        if distance < 1:  # Reduce threshold for normalized embeddings
+        if distance < 0.5:  # Reduce threshold for normalized embeddings
             record_attendance(employee["_id"], employee["name"])
             return jsonify({"message": f"Welcome {employee['name']}"})
 
@@ -206,10 +205,13 @@ def record_attendance(employee_id, name):
 
 def play_greeting(name):
     greeting = f"Welcome {name}"
-    tts = gTTS(greeting, lang='en')
-    tts.save("greeting.mp3")
-    os.system("greeting.mp3")
+    print(greeting)  # Print the greeting instead of playing audio
 
+# def play_greeting(name):
+#     greeting = f"Welcome {name}"
+#     tts = gTTS(greeting, lang='en')
+#     tts.save("greeting.mp3")
+#     os.system("greeting.mp3")
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

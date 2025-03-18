@@ -6,11 +6,11 @@ contract VoteStorage {
         uint256 priority1;
         uint256 priority2;
         uint256 priority3;
-        string pollingManagerId; // Store polling manager ID
     }
 
-    mapping(string => VoteRecord) public voteCounts;
-    string[] public candidateList;
+    mapping(string => mapping(string => VoteRecord)) public voteCounts; // Mapping pollingManagerId => candidateId => VoteRecord
+    mapping(string => string[]) public candidateList; // Mapping pollingManagerId => candidateList
+    string[] public pollingManagerIds; // List of all polling manager IDs
 
     event VotesStored(string pollingManagerId, string[] candidateIds, uint256 priority, uint256[] counts);
 
@@ -22,56 +22,74 @@ contract VoteStorage {
     ) public {
         require(candidateIds.length == counts.length, "Mismatched input lengths");
 
+        // Add polling manager ID if not exists
+        bool managerExists = false;
+        for (uint256 i = 0; i < pollingManagerIds.length; i++) {
+            if (keccak256(bytes(pollingManagerIds[i])) == keccak256(bytes(pollingManagerId))) {
+                managerExists = true;
+                break;
+            }
+        }
+        if (!managerExists) {
+            pollingManagerIds.push(pollingManagerId);
+        }
+
         for (uint256 i = 0; i < candidateIds.length; i++) {
             if (priority == 1) {
-                voteCounts[candidateIds[i]].priority1 = counts[i];
+                voteCounts[pollingManagerId][candidateIds[i]].priority1 = counts[i];
             } else if (priority == 2) {
-                voteCounts[candidateIds[i]].priority2 = counts[i];
+                voteCounts[pollingManagerId][candidateIds[i]].priority2 = counts[i];
             } else if (priority == 3) {
-                voteCounts[candidateIds[i]].priority3 = counts[i];
-            }
-
-            // Store polling manager ID only once
-            if (bytes(voteCounts[candidateIds[i]].pollingManagerId).length == 0) {
-                voteCounts[candidateIds[i]].pollingManagerId = pollingManagerId;
+                voteCounts[pollingManagerId][candidateIds[i]].priority3 = counts[i];
             }
 
             // Add candidate if not exists
             bool exists = false;
-            for (uint256 j = 0; j < candidateList.length; j++) {
-                if (keccak256(bytes(candidateList[j])) == keccak256(bytes(candidateIds[i]))) {
+            for (uint256 j = 0; j < candidateList[pollingManagerId].length; j++) {
+                if (keccak256(bytes(candidateList[pollingManagerId][j])) == keccak256(bytes(candidateIds[i]))) {
                     exists = true;
                     break;
                 }
             }
             if (!exists) {
-                candidateList.push(candidateIds[i]);
+                candidateList[pollingManagerId].push(candidateIds[i]);
             }
         }
 
         emit VotesStored(pollingManagerId, candidateIds, priority, counts);
     }
 
-    function getVoteCounts(string memory candidateId) public view returns (uint256, uint256, uint256) {
-        VoteRecord memory record = voteCounts[candidateId];
+    function getVoteCounts(string memory pollingManagerId, string memory candidateId) public view returns (uint256, uint256, uint256) {
+        VoteRecord memory record = voteCounts[pollingManagerId][candidateId];
         return (record.priority1, record.priority2, record.priority3);
     }
 
-    function getAllVoteCounts() public view returns (string[] memory, uint256[] memory, uint256[] memory, uint256[] memory) {
-        uint256 length = candidateList.length;
-        string[] memory ids = new string[](length);
-        uint256[] memory p1 = new uint256[](length);
-        uint256[] memory p2 = new uint256[](length);
-        uint256[] memory p3 = new uint256[](length);
-
-        for (uint256 i = 0; i < length; i++) {
-            ids[i] = candidateList[i];
-            VoteRecord memory record = voteCounts[candidateList[i]];
-            p1[i] = record.priority1;
-            p2[i] = record.priority2;
-            p3[i] = record.priority3;
+    function getAllVoteCounts() public view returns (string[] memory, string[] memory, uint256[] memory, uint256[] memory, uint256[] memory) {
+        uint256 totalCandidates = 0;
+        for (uint256 i = 0; i < pollingManagerIds.length; i++) {
+            totalCandidates += candidateList[pollingManagerIds[i]].length;
         }
 
-        return (ids, p1, p2, p3);
+        string[] memory pollingManagerIdsArray = new string[](totalCandidates);
+        string[] memory candidateIds = new string[](totalCandidates);
+        uint256[] memory p1 = new uint256[](totalCandidates);
+        uint256[] memory p2 = new uint256[](totalCandidates);
+        uint256[] memory p3 = new uint256[](totalCandidates);
+
+        uint256 index = 0;
+        for (uint256 i = 0; i < pollingManagerIds.length; i++) {
+            string memory managerId = pollingManagerIds[i];
+            for (uint256 j = 0; j < candidateList[managerId].length; j++) {
+                pollingManagerIdsArray[index] = managerId;
+                candidateIds[index] = candidateList[managerId][j];
+                VoteRecord memory record = voteCounts[managerId][candidateList[managerId][j]];
+                p1[index] = record.priority1;
+                p2[index] = record.priority2;
+                p3[index] = record.priority3;
+                index++;
+            }
+        }
+
+        return (pollingManagerIdsArray, candidateIds, p1, p2, p3);
     }
 }
