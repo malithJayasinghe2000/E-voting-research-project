@@ -20,7 +20,10 @@ const upload = multer({
     }
     cb(null, true);
   },
-}).single("image");
+}).fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'profileImage', maxCount: 1 }
+]);
 
 export const config = {
   api: {
@@ -54,11 +57,12 @@ export default async function handler(req, res) {
 
       // Parse the form data
       const candidateData = req.body;
-      const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+      const imagePath = req.files.image ? `/uploads/${req.files.image[0].filename}` : null;
+      const profileImagePath = req.files.profileImage ? `/uploads/${req.files.profileImage[0].filename}` : imagePath;
 
       // Validate required fields
-      const { bio, name,no, party, nationalId, electionId } = candidateData;
-      if (!bio || !name || !no || !imagePath || !party || !nationalId || !electionId) {
+      const { name, no, party, nationalId, electionId } = candidateData;
+      if (!name || !no || !imagePath || !party || !nationalId || !electionId) {
         return res.status(400).json({ message: "All required fields must be provided" });
       }
 
@@ -68,14 +72,85 @@ export default async function handler(req, res) {
         return res.status(409).json({ message: "Candidate with this National ID already exists" });
       }
 
+      // Parse JSON fields if they are strings
+      let education = [];
+      let experience = [];
+      let socialLinks = { linkedin: "", github: "", twitter: "", whatsapp: "" };
+      let bio = { 
+        description: candidateData.bio || "",
+        dob: "",
+        nationality: "",
+        religion: "",
+        maritalStatus: "",
+        netWorth: ""
+      };
+
+      if (candidateData.education) {
+        try {
+          education = typeof candidateData.education === 'string' 
+            ? JSON.parse(candidateData.education) 
+            : candidateData.education;
+        } catch (e) {
+          education = [candidateData.education];
+        }
+      }
+
+      if (candidateData.experience) {
+        try {
+          experience = typeof candidateData.experience === 'string' 
+            ? JSON.parse(candidateData.experience) 
+            : candidateData.experience;
+        } catch (e) {
+          experience = [candidateData.experience];
+        }
+      }
+
+      if (candidateData.socialLinks) {
+        try {
+          socialLinks = typeof candidateData.socialLinks === 'string' 
+            ? JSON.parse(candidateData.socialLinks) 
+            : candidateData.socialLinks;
+        } catch (e) {
+          // Keep default empty social links
+        }
+      }
+
+      if (candidateData.bio) {
+        try {
+          if (typeof candidateData.bio === 'string') {
+            const parsedBio = JSON.parse(candidateData.bio);
+            bio = {
+              description: parsedBio.description || candidateData.bio,
+              dob: parsedBio.dob || "",
+              nationality: parsedBio.nationality || "",
+              religion: parsedBio.religion || "",
+              maritalStatus: parsedBio.maritalStatus || "",
+              netWorth: parsedBio.netWorth || ""
+            };
+          } else {
+            bio = {
+              ...bio,
+              ...candidateData.bio
+            };
+          }
+        } catch (e) {
+          bio.description = candidateData.bio;
+        }
+      }
+
       // Create the new candidate
       const newCandidate = await Candidate.create({
         name,
         no,
         image: imagePath,
+        profileImage: profileImagePath,
         party,
         nationalId,
+        slogan: candidateData.slogan || "",
         bio,
+        socialLinks,
+        education,
+        experience,
         role: "candidate",
         electionId,
       });
