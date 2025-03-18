@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -8,43 +8,42 @@ import Portfolio from '@/components/Politicians';
 import ResultDashboard from './resultDashboard';
 import { PollStruct } from '@/utils/types';
 import { generateFakePolls } from '@/services/data';
-import HomeNavbar from '@/components/Home-Navbar';
 import PredictionDashboard from './predictionDashboard';
-//import { router } from 'next/router';
 import CandidatePortfolio from './portfolio';
 import { PortfolioItem } from '@/types/PortfolioItem';
 
 export default function Home({ pollsData }: { pollsData: PollStruct[] }) {
-  const [currentView, setCurrentView] = useState('home'); // State to toggle views
-  //const { search } = router.query;
+  const [currentView, setCurrentView] = useState('home');
   const [selectedPortfolioItem, setSelectedPortfolioItem] = useState<PortfolioItem | null>(null);
+  const [portfolioItems, setPortfolioItems] = useState<PortfolioItem[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const portfolioItems = [
-    {
-      id: '1',
-      title: 'Namal Perera',
-      description: 'A responsive website built using React and Tailwind CSS.',
-      party: "NPP",
-      image: '/assets/images/pic1.jpg',
-      date: '2024-11-20',
-    },
-    {
-        id: '2',
-        title: 'Saman Kumara',
-        description: 'A user-friendly mobile app design for e-commerce platforms.',
-        party:"SPP",
-        image: '/assets/images/pic2.jpg',
-        date: '2024-10-15',
-      },
-      {
-        id: '3',
-        title: 'Lal Hemasinghe',
-        description: 'A chatbot system powered by natural language processing and machine learning.',
-        party:"IND-10",
-        image: '/assets/images/pic3.jpg',
-        date: '2024-09-10',
-      },
-  ];
+  useEffect(() => {
+    const fetchCandidates = async () => {
+      try {
+        const res = await fetch('/api/Candidates/getCandidates'); // Adjust your route if needed
+        const data = await res.json();
+
+        const mappedItems = data.candidates.map((candidate: any) => ({
+          id: candidate._id,
+          title: candidate.name,
+          description: candidate.description,
+          party: candidate.party,
+          image: candidate.image || '/assets/images/default.jpg', // fallback image
+          date: candidate.date || 'TBD', // optional fallback
+        }));
+
+        setPortfolioItems(mappedItems);
+      } catch (err) {
+        console.error('Failed to fetch candidates', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCandidates();
+  }, []);
+
   const handleViewProfile = (id: string) => {
     const selectedItem = portfolioItems.find(item => item.id === id);
     if (selectedItem) {
@@ -60,11 +59,6 @@ export default function Home({ pollsData }: { pollsData: PollStruct[] }) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="min-h-screen relative backdrop-blur">
-      {/* {search && (
-                <p className="mt-3 text-lg">
-                    You searched for: <span className="font-semibold text-blue-500">{search}</span>
-                </p>
-            )} */}
         <div
           className="absolute inset-0 before:absolute before:inset-0
           before:w-full before:h-full before:bg-[url('/assets/images/bg.jpeg')]
@@ -72,23 +66,23 @@ export default function Home({ pollsData }: { pollsData: PollStruct[] }) {
         />
 
         <section className="relative px-5 py-10 space-y-16 text-white sm:p-10">
-          {/* <HomeNavbar
-            onResultDashboardClick={() => setCurrentView('resultDashboard')}
-            onPredictionDashboardClick={() => setCurrentView('predictionDashboard')} // Add handler
-            onHomeClick={() => setCurrentView('home')}
-          /> */}
           <Navbar />
           {currentView === 'home' && (
             <>
               <HomeBanner />
               <About />
-              <Portfolio portfolioItems={portfolioItems} onViewProfile={handleViewProfile} />
+              {loading ? (
+                <p>Loading candidates...</p>
+              ) : (
+                <Portfolio portfolioItems={portfolioItems} onViewProfile={handleViewProfile} />
+              )}
             </>
           )}
           {currentView === 'resultDashboard' && <ResultDashboard />}
           {currentView === 'predictionDashboard' && <PredictionDashboard />}
-          {currentView === 'profile' && <CandidatePortfolio />}
-
+          {currentView === 'profile' && selectedPortfolioItem && (
+            <CandidatePortfolio candidate={selectedPortfolioItem || ""} />
+          )}
           <Footer />
         </section>
       </div>

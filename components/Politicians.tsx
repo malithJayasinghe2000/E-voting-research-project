@@ -6,12 +6,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 interface PortfolioItem {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-  party: string;
-  date: string;
+  id?: string;
+  title?: string;
+  description?: string;
+  image?: string;
+  party?: string;
+  date?: string;
 }
 
 const Portfolio: React.FC<{ portfolioItems: PortfolioItem[]; onViewProfile: (id: string) => void }> = ({ portfolioItems, onViewProfile }) => {
@@ -42,7 +42,7 @@ const PortfolioCard: React.FC<{ item: PortfolioItem; onViewProfile: (id: string)
   return (
     <div className="rounded-xl shadow-xl hover:scale-105 ease-in duration-300 bg-white bg-opacity-70">
       <div className="w-full h-[400px] mx-auto overflow-hidden rounded-t-xl">
-        <Image src={item.image} alt={item.title} width={200} height={150} className="object-cover w-full h-full" />
+        <Image src={item.image || ""} alt={item.title|| ""} width={200} height={150} className="object-cover w-full h-full" />
       </div>
 
       <div className="p-2 bg-white rounded-b-xl align-center">
@@ -55,7 +55,7 @@ const PortfolioCard: React.FC<{ item: PortfolioItem; onViewProfile: (id: string)
         <button
   className="h-[48px] w-[130px] sm:w-[148px] px-3 rounded-full text-sm font-bold
     transition-all duration-300 bg-[#1B5CFE] hover:bg-blue-500"
-            onClick={() => onViewProfile(item.id)}
+            onClick={() => onViewProfile(item.id|| "")}
           >
             View Profile
           </button>
