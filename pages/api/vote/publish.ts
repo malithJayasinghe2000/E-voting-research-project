@@ -22,6 +22,16 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       return res.status(404).json({ message: "PLK user not found" });
     }
 
+    // Get district and local_council from the PLK user
+    const { district, local_council } = plkUserData;
+    
+    // Ensure district and local_council exist
+    if (!district || !local_council) {
+      return res.status(400).json({ 
+        message: "District or local council information missing for the PLK user"
+      });
+    }
+
     // Check if an entry already exists for this PLK user
     const existingEntry = await PublishedVotes.findOne({ plkUserId: plkUserData._id }).exec();
 
@@ -30,9 +40,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       existingEntry.pollingManagers.push(...pollingManagers);
       await existingEntry.save();
     } else {
-      // Create a new entry
+      // Create a new entry with district and local_council
       await PublishedVotes.create({
         plkUserId: plkUserData._id,
+        district: district,
+        local_council: local_council,
         pollingManagers,
       });
     }

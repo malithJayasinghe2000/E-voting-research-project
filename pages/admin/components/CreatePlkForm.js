@@ -6,6 +6,35 @@ import { toast, ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
 import { FiUser, FiMail, FiLock, FiPhone, FiMapPin, FiCreditCard, FiHome, FiUserCheck } from "react-icons/fi"
 
+// District and local council data
+const districtData = {
+  "Colombo": ["Homagama", "Kaduwela", "Seethawaka"],
+  "Gampaha": ["Kelaniya", "Biyagama", "Katana", "Minuwangoda", "Attanagalla", "Divulapitiya", "Mahara", "Ja-Ela", "Mirigama", "Gampaha"],
+  "Kalutara": ["Bandaragama", "Agalawatta", "Mathugama", "Dodangoda", "Ingiriya", "Madurawala", "Millaniya", "Walallawita"],
+  "Kandy": ["Pathahewaheta", "Kundasale", "Harispattuwa", "Udunuwara", "Yatinuwara", "Medadumbara", "Pasbage Korale", "Ganga Ihala Korale", "Ududumbara", "Panvila"],
+  "Matale": ["Rattota", "Dambulla", "Ukuwela", "Yatawatta", "Naula", "Pallepola", "Ambanganga Korale", "Galewela", "Laggala-Pallegama", "Wilgamuwa"],
+  "Nuwara Eliya": ["Ambagamuwa", "Kotmale", "Hanguranketha", "Walapane"],
+  "Galle": ["Elpitiya", "Akmeemana", "Baddegama", "Habaraduwa", "Ambalangoda", "Karandeniya", "Nagoda", "Neluwa", "Imaduwa", "Yakkalamulla", "Gonapinuwala"],
+  "Matara": ["Hakmana", "Devinuwara", "Weligama", "Malimbada", "Kirinda-Puhulwella", "Pasgoda", "Akuressa", "Kamburupitiya", "Thihagoda", "Athuraliya"],
+  "Hambantota": ["Ambalantota", "Tissamaharama", "Lunugamvehera", "Weeraketiya", "Beliatta", "Okewela", "Angunakolapelessa", "Tangalle", "Walasmulla", "Katuwana"],
+  "Jaffna": ["Velanai", "Karainagar", "Delft", "Nallur", "Kopay", "Chavakachcheri", "Point Pedro", "Sandilipay", "Tellippalai", "Kayts", "Uduvil", "Vadamarachchi East", "Vadamarachchi South-West"],
+  "Kilinochchi": ["Karachchi", "Poonakary", "Pachchilaipalli"],
+  "Mannar": ["Nanaddan", "Manthai West", "Musali", "Madhu"],
+  "Vavuniya": ["Vavuniya South", "Vavuniya North", "Cheddikulam"],
+  "Mullaitivu": ["Maritimepattu", "Oddusuddan", "Puthukkudiyiruppu", "Thunukkai", "Manthai East"],
+  "Batticaloa": ["Eravur Pattu", "Koralaipattu", "Porativu Pattu", "Manmunai South & Eruvil Pattu", "Koralai Pattu West", "Koralai Pattu North", "Koralai Pattu Central", "Manmunai Pattu"],
+  "Ampara": ["Maha Oya", "Damana", "Uhana", "Lahugala", "Dehiattakandiya", "Padiyathalawa"],
+  "Trincomalee": ["Kinniya", "Seruvila", "Muttur", "Kuchchaveli", "Morawewa", "Gomarankadawala"],
+  "Kurunegala": ["Panduwasnuwara", "Narammala", "Alawwa", "Mawathagama", "Rideegama", "Weerambugedara", "Bamunakotuwa", "Polgahawela", "Rasnayakapura", "Galgamuwa", "Giribawa", "Kotavehera", "Yapahuwa", "Ambanpola"],
+  "Puttalam": ["Anamaduwa", "Nawagattegama", "Pallama", "Karuwalagaswewa", "Vanathavilluwa", "Mahakumbukkadawala"],
+  "Anuradhapura": ["Galnewa", "Nochchiyagama", "Kahatagasdigiliya", "Thalawa", "Horowpothana", "Mihintale", "Nuwaragam Palatha East", "Nuwaragam Palatha Central", "Palagala"],
+  "Polonnaruwa": ["Dimbulagala", "Lankapura", "Thamankaduwa", "Medirigiriya", "Hingurakgoda"],
+  "Badulla": ["Bandarawela", "Haputale", "Ella", "Hali-Ela", "Passara", "Lunugala", "Welimada", "Uva Paranagama", "Haldummulla"],
+  "Monaragala": ["Bibile", "Madulla", "Badalkumbura", "Wellawaya", "Thanamalwila", "Buttala", "Sewanagala"],
+  "Ratnapura": ["Kalawana", "Ayagama", "Balangoda", "Opanayake", "Godakawela", "Weligepola", "Embilipitiya", "Kuruwita", "Eheliyagoda", "Elapatha"],
+  "Kegalle": ["Ruwanwella", "Mawanella", "Warakapola", "Bulathkohupitiya", "Deraniyagala", "Yatiyantota", "Galigamuwa", "Aranayaka"]
+};
+
 const CreatePlkForm = () => {
     const router = useRouter()
     const [formData, setFormData] = useState({
@@ -20,13 +49,26 @@ const CreatePlkForm = () => {
     })
     const [submitting, setSubmitting] = useState(false)
     const [formErrors, setFormErrors] = useState({})
+    
+    // Get available local councils based on selected district
+    const availableLocalCouncils = formData.district ? districtData[formData.district] || [] : [];
 
     const handleChange = (e) => {
         const { name, value } = e.target
-        setFormData((prevState) => ({
-            ...prevState,
-            [name]: value
-        }))
+        
+        // If district is changed, reset local_council value
+        if (name === 'district') {
+            setFormData((prev) => ({
+                ...prev,
+                [name]: value,
+                local_council: "" // Reset local council when district changes
+            }));
+        } else {
+            setFormData((prevState) => ({
+                ...prevState,
+                [name]: value
+            }));
+        }
         
         // Clear error when field is edited
         if (formErrors[name]) {
@@ -194,15 +236,20 @@ const CreatePlkForm = () => {
                             <FiMapPin className="mr-2 text-gray-500" /> District<span className="text-red-500 ml-1">*</span>
                         </label>
                         <div className={`mt-1 relative rounded-md shadow-sm ${formErrors.district ? 'ring-1 ring-red-500' : ''}`}>
-                            <input
+                            <select
                                 id="district"
-                                type="text"
                                 name="district"
-                                placeholder="Enter district"
                                 onChange={handleChange}
                                 value={formData.district}
                                 className={`block w-full px-4 py-2 border ${formErrors.district ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                            />
+                            >
+                                <option value="">Select district</option>
+                                {Object.keys(districtData).map((district) => (
+                                    <option key={district} value={district}>
+                                        {district}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                         {formErrors.district && (
                             <p className="mt-1 text-sm text-red-600">{formErrors.district}</p>
@@ -214,18 +261,27 @@ const CreatePlkForm = () => {
                             <FiHome className="mr-2 text-gray-500" /> Local Council<span className="text-red-500 ml-1">*</span>
                         </label>
                         <div className={`mt-1 relative rounded-md shadow-sm ${formErrors.local_council ? 'ring-1 ring-red-500' : ''}`}>
-                            <input
+                            <select
                                 id="local_council"
-                                type="text"
                                 name="local_council"
-                                placeholder="Enter local council"
                                 onChange={handleChange}
                                 value={formData.local_council}
-                                className={`block w-full px-4 py-2 border ${formErrors.local_council ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500`}
-                            />
+                                disabled={!formData.district} // Disable if no district is selected
+                                className={`block w-full px-4 py-2 border ${formErrors.local_council ? 'border-red-500' : 'border-gray-300'} rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${!formData.district ? 'bg-gray-100' : ''}`}
+                            >
+                                <option value="">Select local council</option>
+                                {availableLocalCouncils.map((council) => (
+                                    <option key={council} value={council}>
+                                        {council}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                         {formErrors.local_council && (
                             <p className="mt-1 text-sm text-red-600">{formErrors.local_council}</p>
+                        )}
+                        {!formData.district && (
+                            <p className="mt-1 text-xs text-gray-500">Please select a district first</p>
                         )}
                     </div>
                 </div>
