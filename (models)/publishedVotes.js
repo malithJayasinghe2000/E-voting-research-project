@@ -15,7 +15,9 @@ const PollingManagerSchema = new mongoose.Schema({
 const PublishedVotesSchema = new mongoose.Schema(
   {
     plkUserId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-    pollingManagers: [PollingManagerSchema], // Store multiple polling managers in one entry
+    district: { type: String, required: true },
+    local_council: { type: String, required: true },
+    pollingManagers: [PollingManagerSchema],
     timestamp: { type: Date, default: Date.now },
   },
   { collection: "vote_results" }
