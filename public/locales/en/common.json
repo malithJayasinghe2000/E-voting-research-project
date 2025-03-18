@@ -3,6 +3,26 @@
   "authInstruction": "Please look at the camera to authenticate your identity.",
   "startButton": "Start",
 
+  "voterAuthentication" : "VoterAuthentication",
+  "Start" : "Start",
+  "Mask Check" : "Mask Check",
+  "Face Recognition" : "Face Recognition",
+  "Please wait, starting" : "Please wait, starting authentication...",
+  "Mask Detected" : "Mask Detected",
+  "Please remove your mask" : "Please remove your mask",
+  "No Mask Detected" : " No Mask Detected",
+  "Proceeding to face recognition" : "Proceeding to face recognition...",
+  "Camera Active" : "Camera Active",
+  "Please look directly at the camera for verification" : "Please look directly at the camera for verification",
+  "Please wait" : "Please wait while we check for face mask...",
+  "Scanning": "Scanning for face mask...",
+  "Error detecting mask": "Error detecting mask. Please try again.",
+  "No mask detected": "No mask detected. Proceeding to face recognition...",
+  "Starting authentication": "Starting authentication process...",
+  "Authentication will start": "Authentication will start" ,
+  "Position your": "Position your face in the frame",
+
+
   "candidateSelectionRulesTitle": "Voting Rules for Candidate Selection",
   "select3CandidatesRule": "Select exactly 3 candidates.",
   "clickToSelectCandidate": "Click the button next to a candidate's name to select them.",
@@ -23,7 +43,9 @@
 
   
   
-    "thankYouTitle": "Thank You!"
+    "thankYouTitle": "Thank You!",
+
+    "help" : "HELP"
     
    
   
