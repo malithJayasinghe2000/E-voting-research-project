@@ -65,7 +65,9 @@ export default function Home({ pollsData }: { pollsData: PollStruct[] }) {
           <Navbar />
           <Banner />
           <Polls polls={polls} />
-          <Portfolio portfolioItems={portfolioItems} />
+          <Portfolio portfolioItems={portfolioItems} onViewProfile={function (id: string): void {
+            throw new Error('Function not implemented.')
+          } } />
           <Footer />
         </section>
         <CreatePoll />
