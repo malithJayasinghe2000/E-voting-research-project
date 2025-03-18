@@ -49,18 +49,21 @@ const VoteCounts: React.FC<VoteCountsProps> = () => {
 
   const handlePublishResults = async (plkUser: string) => {
     try {
+      const groupDetails = groupedPollingManagers.find(group => group.plkUser === plkUser)?.plkUserDetails;
       const resultsToPublish = {
-        plkUser, 
+        plkUser,
+        local_council: groupDetails?.local_council,
+        district: groupDetails?.district,
         pollingManagers: groupedPollingManagers
           .find(group => group.plkUser === plkUser)
           ?.pollingManagers.map((pollingManager: any) => ({
-            pollingManagerId: pollingManager._id,
-            votes: Object.entries(voteCounts[pollingManager._id] || {}).map(([candidateId, counts]) => ({
-              candidateId,
-              priority1: Number(counts["1"]) || 0,
-              priority2: Number(counts["2"]) || 0,
-              priority3: Number(counts["3"]) || 0,
-            })),
+        pollingManagerId: pollingManager._id,
+        votes: Object.entries(voteCounts[pollingManager._id] || {}).map(([candidateId, counts]) => ({
+          candidateId,
+          priority1: Number(counts["1"]) || 0,
+          priority2: Number(counts["2"]) || 0,
+          priority3: Number(counts["3"]) || 0,
+        })),
           })) || []
       };
   
@@ -90,8 +93,9 @@ const VoteCounts: React.FC<VoteCountsProps> = () => {
           <div className="space-y-8">
             {groupedPollingManagers.map(({ plkUser, pollingManagers }) => (
               <div key={plkUser} className="border border-gray-200 rounded-lg p-6">
+                Disctrict : {groupedPollingManagers.find(group => group.plkUser === plkUser)?.plkUserDetails.district}
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-semibold text-blue-700">Devision: {plkUser}</h3>
+                    <h3 className="text-xl font-semibold text-blue-700">Division: {groupedPollingManagers.find(group => group.plkUser === plkUser)?.plkUserDetails.local_council}</h3>
                   <button
                     className="px-4 py-2 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-lg shadow hover:from-red-600 hover:to-pink-700 transition-all duration-300 flex items-center space-x-2"
                     onClick={() => handlePublishResults(plkUser)}
@@ -106,7 +110,7 @@ const VoteCounts: React.FC<VoteCountsProps> = () => {
                   {pollingManagers.map((pollingManager: any) => (
                     <div key={pollingManager._id} className="bg-gray-50 rounded-lg p-4 shadow-sm hover:shadow-md transition-shadow duration-300">
                       <h4 className="text-lg font-medium text-gray-700 mb-3">
-                        <span className="text-gray-500">Manager:</span> {pollingManager.email}
+                        <span className="text-gray-500">Polling Station:</span> {pollingManager._id}
                       </h4>
                       {voteCounts[pollingManager._id] ? (
                         <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
