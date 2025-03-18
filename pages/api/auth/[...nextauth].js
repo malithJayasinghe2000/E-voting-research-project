@@ -16,7 +16,7 @@ export const authOptions = {
         console.log("it21233494@my.sliit.lk", profile.email);
 
         let userRole = "Github User";
-        if (profile?.email === "IT21268144@my.sliit.lk") {
+        if (profile?.email === "it21233494@my.sliit.lk") {
           userRole = "admin";
           console.log("admin");
         }

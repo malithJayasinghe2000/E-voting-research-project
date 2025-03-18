@@ -24,7 +24,7 @@ const upload = multer({
 
 export const config = {
   api: {
-    bodyParser: false, // Disable Next.js's default bodyParser
+    bodyParser: false,
   },
 };
 
@@ -41,41 +41,59 @@ export default async function handler(req, res) {
     }
 
     try {
-      // Get the current session
       const session = await getServerSession(req, res, authOptions);
       if (!session?.user?.email) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      // Check if the user has permission to add a candidate
       if (session.user.role !== "admin") {
         return res.status(403).json({ message: "Forbidden: You do not have permission to add a candidate" });
       }
 
-      // Parse the form data
-      const candidateData = req.body;
       const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
 
+      const {
+        name,
+        no,
+        party,
+        nationalId,
+        electionId,
+        slogan,
+        profileImage,
+        bio,
+        socialLinks,
+        education,
+        experience
+      } = req.body;
+
       // Validate required fields
-      const { bio, name,no, party, nationalId, electionId } = candidateData;
-      if (!bio || !name || !no || !imagePath || !party || !nationalId || !electionId) {
+      if (!name || !no || !party || !nationalId || !electionId || !imagePath) {
         return res.status(400).json({ message: "All required fields must be provided" });
       }
 
-      // Check for duplicate national ID
+      // Parse JSON fields
+      const parsedBio = bio ? JSON.parse(bio) : {};
+      const parsedSocialLinks = socialLinks ? JSON.parse(socialLinks) : {};
+      const parsedEducation = education ? JSON.parse(education) : [];
+      const parsedExperience = experience ? JSON.parse(experience) : [];
+
       const duplicate = await Candidate.findOne({ nationalId }).lean().exec();
       if (duplicate) {
         return res.status(409).json({ message: "Candidate with this National ID already exists" });
       }
 
-      // Create the new candidate
       const newCandidate = await Candidate.create({
         name,
         no,
         image: imagePath,
         party,
         nationalId,
-        bio,
+        slogan: slogan || "",
+        profileImage: profileImage || "",
+        bio: parsedBio,
+        socialLinks: parsedSocialLinks,
+        education: parsedEducation,
+        experience: parsedExperience,
         role: "candidate",
         electionId,
       });
