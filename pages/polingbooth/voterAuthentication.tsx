@@ -75,7 +75,7 @@ const VoterAuthentication = () => {
   
         if (data.mask_detected === null) {
           setMaskDetected(null);
-          setStatusMessage("Position your face in the frame");
+          setStatusMessage("Please remove your mask for verification");
         } else if (data.mask_detected) {
           setMaskDetected(true);
           setStatusMessage("Please remove your mask for verification");

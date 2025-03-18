@@ -44,9 +44,9 @@ const WebcamCapture: React.FC = () => {
         <button onClick={() => capture("add")} className="bg-blue-500 text-white px-4 py-2 rounded">
           Add Voter
         </button>
-        {/* <button onClick={() => capture("recognize")} className="bg-green-500 text-white px-4 py-2 rounded">
+        <button onClick={() => capture("recognize")} className="bg-green-500 text-white px-4 py-2 rounded">
           Recognize Employee
-        </button> */}
+        </button>
       </div>
 
       {message && <p className="mt-3 text-gray-700">{message}</p>}

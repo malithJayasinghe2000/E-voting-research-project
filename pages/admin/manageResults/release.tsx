@@ -87,7 +87,7 @@ const VoteCounts: React.FC<VoteCountsProps> = () => {
           </div>
         ) : groupedPollingManagers.length === 0 ? (
           <div className="text-center p-6 bg-gray-50 rounded-lg">
-            <p className="text-lg text-gray-600">No polling managers found.</p>
+            <p className="text-lg text-gray-600">No polling Stations found.</p>
           </div>
         ) : (
           <div className="space-y-8">

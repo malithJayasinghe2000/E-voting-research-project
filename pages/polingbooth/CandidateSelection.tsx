@@ -3,6 +3,8 @@ import { useState, useEffect, useRef } from "react";
 import { serverSideTranslations } from "next-i18next/serverSideTranslations";
 import { useTranslation } from "next-i18next";
 import Navbar from "./navbar";
+import MultiPersonDetector from "@/components/MultiPersonDetector";
+import { FiAlertTriangle } from "react-icons/fi";
 
 // Simulate fetching candidate data from an API
 const fetchCandidates = async () => {
@@ -28,6 +30,7 @@ const CandidateSelection = () => {
   const [isSpeakerEnabled, setSpeakerEnabled] = useState<boolean>(false);
   const audioRef = useRef<HTMLAudioElement | null>(null); // Ref for audio element to avoid conflicts
   const [parties, setParties] = useState<any[]>([]);
+  const [multiplePeopleDetected, setMultiplePeopleDetected] = useState<boolean>(false);
 
   // Handle audio play function for different actions
   const playAudio = (type: string) => {
@@ -41,10 +44,11 @@ const CandidateSelection = () => {
       audio.play(); // Play the audio
     }
   };
+
   useEffect(() => {
     if (typeof window !== "undefined") {
       const newAudioInstance = new Audio(); // Create new audio instance
-      // setAudioInstance(newAudioInstance); // Store it in state
+      audioRef.current = newAudioInstance; // Store it in ref
 
       // Load speaker state from localStorage
       const savedSpeakerState = localStorage.getItem("isSpeakerEnabled");
@@ -56,7 +60,6 @@ const CandidateSelection = () => {
 
   // Fetch candidates and parties data on page load
   useEffect(() => {
-    // Fetch candidates data on page load
     const fetchData = async () => {
       const candidatesData = await fetchCandidates();
       setCandidates(candidatesData);
@@ -79,8 +82,6 @@ const CandidateSelection = () => {
       }
     };
   }, [locale, isSpeakerEnabled]);
-
-
 
   // Handle candidate selection (selection, deselection, max selection)
   const handleCandidateSelection = (candidateId: number) => {
@@ -125,7 +126,6 @@ const CandidateSelection = () => {
       alert(t("selectExactly3Alert"));
     }
   };
-  
 
   // Speaker Toggle Handler
   const toggleSpeaker = () => {
@@ -151,85 +151,134 @@ const CandidateSelection = () => {
     return party ? party.logo : "";
   };
 
+  // Handler for when multiple people are detected by the security monitor
+  const handleMultiplePeopleDetected = () => {
+    setMultiplePeopleDetected(true);
+    if (isSpeakerEnabled) {
+      // Play alert audio if available
+      playAudio("multiple_faces_detected");
+    }
+    
+    // Log the security event
+    console.log("Security alert: Multiple people detected during voting");
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#F1F1F1] to-[#B0D0E6]">
       <Navbar />
 
-      <div className="p-6 bg-gradient-to-b from-[#F1F1F1] to-[#B0D0E6] text-[#003366] text-xl font-semibold">
-        <h2 className="mb-4 text-4xl">{t("candidateSelectionRulesTitle")}</h2>
-        <ul className="list-disc ml-8 text-2xl">
-          <li>{t("select3CandidatesRule")}</li>
-          <li>{t("clickToSelectCandidate")}</li>
-          <li>{t("votePreferenceInstructions")}</li>
-        </ul>
+      {/* Security Monitor - Hidden but still active when multiple people detected */}
+      <div className={multiplePeopleDetected ? "hidden" : "block"}>
+        <MultiPersonDetector onMultiplePersonsDetected={handleMultiplePeopleDetected} />
       </div>
 
-      <main className="flex flex-col items-center justify-center flex-grow px-0">
-        <div className="w-full max-w-full overflow-x-auto bg-gradient-to-b from-[#F1F1F1] to-[#B0D0E6] border-4 border-gray-300 shadow-lg rounded-lg">
-          <table className="table-auto w-full border-collapse text-left text-xl">
-            <thead className="bg-[#003366] text-white font-semibold text-2xl">
-              <tr>
-                <th className="px-8 py-6 border">{}</th>
-                <th className="px-8 py-6 border">{t("candidateName")}</th>
-                <th className="px-8 py-6 border">{t("party")}</th>
-                <th className="px-8 py-6 border">{t("symble")}</th>
-                <th className="px-8 py-6 border text-center">{t("candidateNo")}</th>
-                <th className="px-8 py-6 border text-center">{t("select")}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {candidates.map((candidate) => (
-                <tr key={candidate._id} className="hover:bg-gray-100 bg-white">
-                  <td className="px-8 py-6 border text-center">
-                    <img src={candidate.image} alt={candidate.name} className="w-20 h-20 object-cover rounded-full mx-auto" />
-                  </td>
-                  <td className="px-8 py-6 border">
-                    <div className="text-2xl font-bold">{candidate.name}</div>
-                  </td>
-                    <td className="px-8 py-6 border text-2xl font-bold">
-                    {parties.find((party) => party._id === candidate.party)?.short_name || candidate.party}
-                    </td>
-                  <td className="px-8 py-6 border text-center">
-                    <img src={getPartyLogo(candidate.party)} alt={candidate.party} className="w-20 h-20 object-cover rounded-full mx-auto" />
-                  </td>
-                  <td className="px-8 py-6 border text-center text-5xl">{candidate.no}</td>
-                  <td className="px-8 py-6 border text-center">
-                    <button
-                      className={`w-20 h-20 ${selectedCandidates.includes(candidate._id) ? "bg-blue-600 text-white" : "bg-transparent border-4 border-gray-400"} rounded-full text-4xl font-bold`}
-                      onClick={() => handleCandidateSelection(candidate._id)}
-                    >
-                      {selectedCandidates.includes(candidate._id)
-                        ? selectedCandidates.indexOf(candidate._id) + 1
-                        : ""}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {multiplePeopleDetected ? (
+        <div className="flex flex-col items-center justify-center flex-grow p-6">
+          <div className="bg-red-100 border-l-4 border-red-500 p-6 rounded-lg max-w-2xl w-full shadow-lg">
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <FiAlertTriangle className="h-12 w-12 text-red-600" />
+              </div>
+              <div className="ml-4">
+                <h3 className="text-2xl font-bold text-red-800 mb-3">
+                  Security Alert: Multiple People Detected
+                </h3>
+                <p className="text-lg text-red-700 mb-4">
+                  For security and voting integrity, only one person is allowed to be present during the voting process.
+                </p>
+                <p className="text-lg text-red-700 mb-6">
+                  Please ensure you are alone before continuing. This incident has been logged.
+                </p>
+                <button
+                  onClick={() => setMultiplePeopleDetected(false)}
+                  className="bg-red-600 hover:bg-red-700 text-white py-2 px-6 rounded-lg shadow-md transition-colors duration-300"
+                >
+                  Retry Verification
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
+      ) : (
+        <>
+          {/* Existing content for candidate selection when no security issues */}
+          <div className="p-6 bg-gradient-to-b from-[#F1F1F1] to-[#B0D0E6] text-[#003366] text-xl font-semibold">
+            <h2 className="mb-4 text-4xl">{t("candidateSelectionRulesTitle")}</h2>
+            <ul className="list-disc ml-8 text-2xl">
+              <li>{t("select3CandidatesRule")}</li>
+              <li>{t("clickToSelectCandidate")}</li>
+              <li>{t("votePreferenceInstructions")}</li>
+            </ul>
+          </div>
 
-        <button
-          onClick={handleSubmit}
-          onMouseEnter={handleHoverSubmitButton} // Trigger hover audio
-          className="w-96 bg-[#003366] text-white py-8 rounded-full shadow-lg text-3xl font-bold hover:bg-[#005B8D] hover:scale-105 transition-transform duration-300 mt-12 mb-12"
-        >
-          {t("submitVoteButton")}
-        </button>
-      </main>
+          <main className="flex flex-col items-center justify-center flex-grow px-0">
+            <div className="w-full max-w-full overflow-x-auto bg-gradient-to-b from-[#F1F1F1] to-[#B0D0E6] border-4 border-gray-300 shadow-lg rounded-lg">
+              <table className="table-auto w-full border-collapse text-left text-xl">
+                <thead className="bg-[#003366] text-white font-semibold text-2xl">
+                  <tr>
+                    <th className="px-8 py-6 border">{}</th>
+                    <th className="px-8 py-6 border">{t("candidateName")}</th>
+                    <th className="px-8 py-6 border">{t("party")}</th>
+                    <th className="px-8 py-6 border">{t("symble")}</th>
+                    <th className="px-8 py-6 border text-center">{t("candidateNo")}</th>
+                    <th className="px-8 py-6 border text-center">{t("select")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {candidates.map((candidate) => (
+                    <tr key={candidate._id} className="hover:bg-gray-100 bg-white">
+                      <td className="px-8 py-6 border text-center">
+                        <img src={candidate.image} alt={candidate.name} className="w-20 h-20 object-cover rounded-full mx-auto" />
+                      </td>
+                      <td className="px-8 py-6 border">
+                        <div className="text-2xl font-bold">{candidate.name}</div>
+                      </td>
+                      <td className="px-8 py-6 border text-2xl font-bold">
+                        {parties.find((party) => party._id === candidate.party)?.short_name || candidate.party}
+                      </td>
+                      <td className="px-8 py-6 border text-center">
+                        <img src={getPartyLogo(candidate.party)} alt={candidate.party} className="w-20 h-20 object-cover rounded-full mx-auto" />
+                      </td>
+                      <td className="px-8 py-6 border text-center text-5xl">{candidate.no}</td>
+                      <td className="px-8 py-6 border text-center">
+                        <button
+                          className={`w-20 h-20 ${selectedCandidates.includes(candidate._id) ? "bg-blue-600 text-white" : "bg-transparent border-4 border-gray-400"} rounded-full text-4xl font-bold`}
+                          onClick={() => handleCandidateSelection(candidate._id)}
+                        >
+                          {selectedCandidates.includes(candidate._id)
+                            ? selectedCandidates.indexOf(candidate._id) + 1
+                            : ""}
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <button
+              onClick={handleSubmit}
+              onMouseEnter={handleHoverSubmitButton} // Trigger hover audio
+              className="w-96 bg-[#003366] text-white py-8 rounded-full shadow-lg text-3xl font-bold hover:bg-[#005B8D] hover:scale-105 transition-transform duration-300 mt-12 mb-12"
+            >
+              {t("submitVoteButton")}
+            </button>
+          </main>
+        </>
+      )}
 
       {/* Speaker Toggle Button */}
       <div
-  onClick={toggleSpeaker}
-  className="fixed bottom-20 right-14 w-24 h-24 border-4   rounded-full flex items-center justify-center cursor-pointer hover:shadow-xl bg-transparent"
-  title={isSpeakerEnabled ? "Disable Audio" : "Enable Audio"}
->
-  <img
-    src={isSpeakerEnabled ? "/assets/images/volume.png" : "/assets/images/mute.png"}
-    alt={isSpeakerEnabled ? "Speaker On" : "Speaker Off"}
-    className="w-20 h-20"
-  />
-</div>
+        onClick={toggleSpeaker}
+        className="fixed bottom-20 right-14 w-24 h-24 border-4 rounded-full flex items-center justify-center cursor-pointer hover:shadow-xl bg-transparent"
+        title={isSpeakerEnabled ? "Disable Audio" : "Enable Audio"}
+      >
+        <img
+          src={isSpeakerEnabled ? "/assets/images/volume.png" : "/assets/images/mute.png"}
+          alt={isSpeakerEnabled ? "Speaker On" : "Speaker Off"}
+          className="w-20 h-20"
+        />
+      </div>
     </div>
   );
 };
@@ -240,6 +289,5 @@ export const getStaticProps = async ({ locale }: { locale: string }) => ({
     ...(await serverSideTranslations(locale, ["common"])),
   },
 });
-
 
 export default CandidateSelection;
