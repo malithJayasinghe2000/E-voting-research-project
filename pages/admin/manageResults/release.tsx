@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
-import { getAllResultsFromBlockchain } from '../../../services/blockchain';
-import axios from 'axios';
+import { useEffect, useState } from "react";
+import { getAllResultsFromBlockchain } from "../../../services/blockchain";
+import axios from "axios";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
-interface VoteCountsProps {}
-
-const VoteCounts: React.FC<VoteCountsProps> = () => {
+const VoteCounts: React.FC = () => {
   const [groupedPollingManagers, setGroupedPollingManagers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [voteCounts, setVoteCounts] = useState<Record<string, Record<string, Record<string, number>>>>({});
@@ -12,7 +12,7 @@ const VoteCounts: React.FC<VoteCountsProps> = () => {
   useEffect(() => {
     const fetchPollingManagers = async () => {
       try {
-        const response = await axios.get('/api/pollingManagers/groupByPlk');
+        const response = await axios.get("/api/pollingManagers/groupByPlk");
         setGroupedPollingManagers(response.data);
       } catch (error) {
         console.error("Error fetching polling managers:", error);
@@ -29,12 +29,8 @@ const VoteCounts: React.FC<VoteCountsProps> = () => {
       const results = await getAllResultsFromBlockchain();
       if (results) {
         const counts = results.reduce((acc, { pollingManagerId, candidateId, priority1, priority2, priority3 }) => {
-          if (!acc[pollingManagerId]) {
-            acc[pollingManagerId] = {};
-          }
-          if (!acc[pollingManagerId][candidateId]) {
-            acc[pollingManagerId][candidateId] = { 1: 0, 2: 0, 3: 0 };
-          }
+          if (!acc[pollingManagerId]) acc[pollingManagerId] = {};
+          if (!acc[pollingManagerId][candidateId]) acc[pollingManagerId][candidateId] = { 1: 0, 2: 0, 3: 0 };
           acc[pollingManagerId][candidateId][1] += priority1;
           acc[pollingManagerId][candidateId][2] += priority2;
           acc[pollingManagerId][candidateId][3] += priority3;
@@ -50,10 +46,9 @@ const VoteCounts: React.FC<VoteCountsProps> = () => {
   const handlePublishResults = async (plkUser: string) => {
     try {
       const resultsToPublish = {
-        plkUser, 
-        pollingManagers: groupedPollingManagers
-          .find(group => group.plkUser === plkUser)
-          ?.pollingManagers.map((pollingManager: any) => ({
+        plkUser,
+        pollingManagers:
+          groupedPollingManagers.find((group) => group.plkUser === plkUser)?.pollingManagers.map((pollingManager: any) => ({
             pollingManagerId: pollingManager._id,
             votes: Object.entries(voteCounts[pollingManager._id] || {}).map(([candidateId, counts]) => ({
               candidateId,
@@ -61,18 +56,34 @@ const VoteCounts: React.FC<VoteCountsProps> = () => {
               priority2: Number(counts["2"]) || 0,
               priority3: Number(counts["3"]) || 0,
             })),
-          })) || []
+          })) || [],
       };
-  
-      await axios.post('/api/vote/publish', resultsToPublish);
-      console.log(resultsToPublish)
-      alert(`Results for PLK user ${plkUser} published successfully!`);
+
+      await axios.post("/api/vote/publish", resultsToPublish);
+
+      // ✅ Show success notification
+      toast.success(`✅ Division: ${plkUser}. Results released!`, {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     } catch (error) {
       console.error("Failed to publish results:", error);
-      alert("Failed to publish results.");
+
+      // ❌ Show error notification
+      toast.error("❌ Failed to publish results!", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
     }
   };
-  
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
@@ -91,13 +102,17 @@ const VoteCounts: React.FC<VoteCountsProps> = () => {
             {groupedPollingManagers.map(({ plkUser, pollingManagers }) => (
               <div key={plkUser} className="border border-gray-200 rounded-lg p-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-semibold text-blue-700">Devision: {plkUser}</h3>
+                  <h3 className="text-xl font-semibold text-blue-700">Division: {plkUser}</h3>
                   <button
-                    className="px-4 py-2 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-lg shadow hover:from-red-600 hover:to-pink-700 transition-all duration-300 flex items-center space-x-2"
+                    className="px-4 py-2 bg-gradient-to-r from-green-500 to-blue-600 text-white rounded-lg shadow hover:from-green-600 hover:to-blue-700 transition-all duration-300 flex items-center space-x-2"
                     onClick={() => handlePublishResults(plkUser)}
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                        clipRule="evenodd"
+                      />
                     </svg>
                     <span>Publish Results</span>
                   </button>
@@ -112,16 +127,12 @@ const VoteCounts: React.FC<VoteCountsProps> = () => {
                         <div className="space-y-3 max-h-80 overflow-y-auto pr-2">
                           {Object.entries(voteCounts[pollingManager._id]).map(([candidateId, votes]) => (
                             <div key={candidateId} className="bg-white p-3 rounded-lg border border-gray-200">
-                              <h5 className="font-medium text-gray-800 mb-2 pb-2 border-b border-gray-100">
-                                Candidate: {candidateId}
-                              </h5>
+                              <h5 className="font-medium text-gray-800 mb-2 pb-2 border-b border-gray-100">Candidate: {candidateId}</h5>
                               <div className="space-y-1">
                                 {Object.entries(votes).map(([priority, count]) => (
                                   <div key={priority} className="flex justify-between items-center">
                                     <span className="text-gray-600">Priority {priority}:</span>
-                                    <span className="font-semibold bg-blue-100 text-blue-800 py-1 px-2 rounded-full text-sm">
-                                      {count} votes
-                                    </span>
+                                    <span className="font-semibold bg-blue-100 text-blue-800 py-1 px-2 rounded-full text-sm">{count} votes</span>
                                   </div>
                                 ))}
                               </div>

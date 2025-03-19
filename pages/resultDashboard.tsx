@@ -1,6 +1,6 @@
 import React from "react";
  import SriLankaMap from "@/components/map";
- import ElectionResults from '@/components/partyResult'
+ import ElectionResults from '@/components/partyResultsRelease'
  import PollingDistricts from '@/components/PollingDistricts'
  
  
