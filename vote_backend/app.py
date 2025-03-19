@@ -136,12 +136,34 @@ def decode_image(image_data):
 
 @app.route("/api/add_employee", methods=["POST"])
 def add_employee():
+    # Get all the fields from the request
     data = request.json
     name = data.get("name")
+    nic = data.get("nic")
+    birthday = data.get("birthday")
+    gender = data.get("gender")
+    voter_type = data.get("voterType")
+    village = data.get("village")
+    household_no = data.get("householdNo")
+    grama_niladari_division = data.get("gramaNiladariDivision")
+    polling_district_no = data.get("pollingDistrictNo")
+    polling_division = data.get("pollingDivision")
+    electoral_district = data.get("electoralDistrict")
+    relationship_to_chief = data.get("relationshipToChief")
     image_data = data.get("image")
+
+    # Check if all required fields are provided
+    required_fields = [
+        "name", "nic", "birthday", "gender", "voterType", "village", 
+        "householdNo", "gramaNiladariDivision", "pollingDistrictNo", 
+        "pollingDivision", "electoralDistrict", "relationshipToChief", "image"
+    ]
     
-    if not name or not image_data:
-        return jsonify({"error": "Name and image are required"}), 400
+    # If any required field is missing, return error
+    missing_fields = [field for field in required_fields if data.get(field) is None or data.get(field) == ""]
+    
+    if missing_fields:
+        return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
     
     frame = decode_image(image_data)
     embedding = get_face_embedding(frame)
@@ -151,9 +173,30 @@ def add_employee():
     embedding = get_face_embedding(frame)
     if embedding is None:
         return jsonify({"error": "Could not extract face embedding"}), 400
+    
+    
+    # Create MongoDB document
+    employee_data = {
+        "name": name,
+        "nic": nic,
+        "birthday": birthday,
+        "gender": gender,
+        "voterType": voter_type,
+        "village": village,
+        "householdNo": household_no,
+        "gramaNiladariDivision": grama_niladari_division,
+        "pollingDistrictNo": polling_district_no,
+        "pollingDivision": polling_division,
+        "electoralDistrict": electoral_district,
+        "relationshipToChief": relationship_to_chief,
+        "encoding": embedding,  # Store face embedding for recognition
+        "voted": 0  # Default value: 0 (not voted)
+    }
 
-    employees_collection.insert_one({"name": name, "encoding": embedding})
-    return jsonify({"message": f"{name} added successfully!"})
+    # Insert into MongoDB
+    employees_collection.insert_one(employee_data)
+
+    return jsonify({"message": f"{name} added successfully with all required voter details!"})
 
 @app.route("/api/recognize_employee", methods=["POST"])
 def recognize_employee():
@@ -182,10 +225,22 @@ def recognize_employee():
         print(f"Comparing with {employee['name']}, Distance: {distance}")  # Debug
 
         if distance < 0.5:  # Reduce threshold for normalized embeddings
+            # Check if this voter has already voted
+            if "voted" in employee and employee["voted"] == 1:
+                return jsonify({
+                    "error": "You have already voted in this election.",
+                    "already_voted": True
+                }), 403
+            
+            # Update the voter's status to "voted" = 1
+            employees_collection.update_one(
+                {"_id": employee["_id"]},
+                {"$set": {"voted": 1}}
+            )
+            
             record_attendance(employee["_id"], employee["name"])
             return jsonify({"message": f"Welcome {employee['name']}"})
 
-    
     return jsonify({"error": "Employee not recognized"}), 404
 
 def get_face_embedding(img):

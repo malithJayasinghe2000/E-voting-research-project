@@ -107,27 +107,59 @@ async def recognize_employee(data: ImageRequest):
     if liveness_result == "Fake":
         raise HTTPException(status_code=403, detail="Liveness check failed. User is not live.")
 
-    employees = employees_collection.find()
-    async for employee in employees:
+    # Initial best match variables
+    best_match_distance = 1.0  # Initialize with a high value
+    best_match_employee = None
+
+    # Find the best matching face embedding across all employees
+    async for employee in employees_collection.find():
+        if "encoding" not in employee:
+            continue
+            
         known_embedding = np.array(employee["encoding"], dtype=np.float32)
-        face_embedding = np.array(face_embedding, dtype=np.float32)
+        face_embedding_np = np.array(face_embedding, dtype=np.float32)
 
-        # Normalize embeddings
+        # Normalize embeddings for better comparison
         known_embedding /= np.linalg.norm(known_embedding)
-        face_embedding /= np.linalg.norm(face_embedding)
+        face_embedding_np /= np.linalg.norm(face_embedding_np)
 
-        # Compute similarity
-        distance = np.linalg.norm(known_embedding - face_embedding)
+        # Compute similarity distance
+        distance = np.linalg.norm(known_embedding - face_embedding_np)
+        
+        # Debug logging
+        print(f"Comparing with {employee.get('name', 'Unknown')}, Distance: {distance}")
+        
+        # Update best match if this is better
+        if distance < best_match_distance and distance < 0.5:  # Threshold for recognition
+            best_match_distance = distance
+            best_match_employee = employee
 
-        if distance < 0.5:
-            await record_attendance(employee["_id"], employee["name"])
-            return {
-                "message": f"Welcome {employee['name']}",
-                "liveness": liveness_result,
-                "confidence": confidence  # Now it's a Python float
-            }
+    # If we found a match
+    if best_match_employee:
+        # Check if this voter has already voted
+        if "voted" in best_match_employee and best_match_employee["voted"] == 1:
+            # This voter has already voted - return a recognizable error with 'already_voted' flag
+            raise HTTPException(
+                status_code=403, 
+                detail="You have already voted in this election.",
+                headers={"X-Already-Voted": "true"}  # Add custom header for more reliable detection
+            )
+        
+        # Update the voter's status to "voted"
+        await employees_collection.update_one(
+            {"_id": best_match_employee["_id"]},
+            {"$set": {"voted": 1}}
+        )
+        
+        await record_attendance(best_match_employee["_id"], best_match_employee["name"])
+        return {
+            "message": f"Welcome {best_match_employee['name']}",
+            "liveness": liveness_result,
+            "confidence": confidence
+        }
 
-    raise HTTPException(status_code=404, detail="Employee not recognized")
+    # No match found
+    raise HTTPException(status_code=404, detail="Voter not recognized")
 
 @app.get("/api/detect_mask")
 async def detect_mask():
