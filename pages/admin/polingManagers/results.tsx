@@ -21,7 +21,7 @@ const VoteCounts: React.FC<VoteCountsProps> = () => {
   useEffect(() => {
     const fetchVotes = async () => {
       setLoading(true);
-      const response = await fetch(`http://localhost:5000/api/vote/count?poll_manager_id=${pollingManagerId}`);
+      const response = await fetch(`http://127.0.0.1:5000/api/vote/count?poll_manager_id=${pollingManagerId}`);
       const counts = await response.json();
       console.log(counts);
       setVoteCounts(counts);

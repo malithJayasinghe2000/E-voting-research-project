@@ -32,5 +32,5 @@
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx"
-, "pages/admin/components/Sidebar.tsx", "pages/admin/layout.tsx", "pages/admin/page.tsx"  ]
+, "pages/admin/components/Sidebar.tsx", "pages/admin/layout.tsx", "pages/admin/page.tsx", "components/InteractionMonitor.js"  ]
 }
