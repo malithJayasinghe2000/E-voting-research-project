@@ -1,4 +1,3 @@
-// import { connectWallet } from '@/services/blockchain'
 import { truncate } from '@/utils/helper'
 import { RootState } from '@/utils/types'
 import Link from 'next/link'
@@ -7,7 +6,7 @@ import React, { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { useSession, signIn, signOut } from 'next-auth/react'
 import { motion } from 'framer-motion'
-import { FiUser, FiLogOut, FiLogIn, FiMenu, FiX, FiBarChart2, FiActivity } from 'react-icons/fi'
+import { FiUser, FiLogOut, FiLogIn, FiMenu, FiX, FiBarChart2, FiActivity, FiGrid } from 'react-icons/fi'
 
 const Navbar = () => {
   const {wallet} = useSelector((states:RootState)=>states.globalStates)
@@ -15,6 +14,8 @@ const Navbar = () => {
   const { data: session } = useSession()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+
+  const isAdminPanelVisible = ['admin', 'gsw', 'plk', 'polling_manager'].includes(session?.user?.role);
 
   // Handle scroll effect for navbar
   useEffect(() => {
@@ -107,6 +108,18 @@ const Navbar = () => {
                   <FiActivity className="mr-2" />
                   Predictions
                 </motion.button>
+
+                {isAdminPanelVisible && (
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="px-5 py-2 rounded-full bg-gradient-to-r from-green-500 to-green-600 text-white font-medium flex items-center shadow-md"
+                    onClick={() => navigate.push('/admin/page')}
+                  >
+                    <FiGrid className="mr-2" />
+                    Admin Panel
+                  </motion.button>
+                )}
               </motion.div>
             ) : (
               <motion.div
@@ -205,6 +218,19 @@ const Navbar = () => {
                   <FiActivity className="mr-2" />
                   Predictions Dashboard
                 </button>
+                
+                {isAdminPanelVisible && (
+                  <button
+                    className="w-full px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-full font-medium flex items-center justify-center mb-2"
+                    onClick={() => {
+                      navigate.push('/admin/page');
+                      setMobileMenuOpen(false);
+                    }}
+                  >
+                    <FiGrid className="mr-2" />
+                    Admin Panel
+                  </button>
+                )}
                 
                 <button
                   className="w-full px-4 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-full font-medium flex items-center justify-center"

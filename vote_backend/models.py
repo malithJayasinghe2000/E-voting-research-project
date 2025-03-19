@@ -1,5 +1,9 @@
 import cv2
 import numpy as np
+import yaml
+from yaml.loader import SafeLoader
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi import FastAPI, WebSocket, File, UploadFile, HTTPException, Depends
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -103,27 +107,59 @@ async def recognize_employee(data: ImageRequest):
     if liveness_result == "Fake":
         raise HTTPException(status_code=403, detail="Liveness check failed. User is not live.")
 
-    employees = employees_collection.find()
-    async for employee in employees:
+    # Initial best match variables
+    best_match_distance = 1.0  # Initialize with a high value
+    best_match_employee = None
+
+    # Find the best matching face embedding across all employees
+    async for employee in employees_collection.find():
+        if "encoding" not in employee:
+            continue
+            
         known_embedding = np.array(employee["encoding"], dtype=np.float32)
-        face_embedding = np.array(face_embedding, dtype=np.float32)
+        face_embedding_np = np.array(face_embedding, dtype=np.float32)
 
-        # Normalize embeddings
+        # Normalize embeddings for better comparison
         known_embedding /= np.linalg.norm(known_embedding)
-        face_embedding /= np.linalg.norm(face_embedding)
+        face_embedding_np /= np.linalg.norm(face_embedding_np)
 
-        # Compute similarity
-        distance = np.linalg.norm(known_embedding - face_embedding)
+        # Compute similarity distance
+        distance = np.linalg.norm(known_embedding - face_embedding_np)
+        
+        # Debug logging
+        print(f"Comparing with {employee.get('name', 'Unknown')}, Distance: {distance}")
+        
+        # Update best match if this is better
+        if distance < best_match_distance and distance < 0.5:  # Threshold for recognition
+            best_match_distance = distance
+            best_match_employee = employee
 
-        if distance < 0.5:
-            await record_attendance(employee["_id"], employee["name"])
-            return {
-                "message": f"Welcome {employee['name']}",
-                "liveness": liveness_result,
-                "confidence": confidence  # Now it's a Python float
-            }
+    # If we found a match
+    if best_match_employee:
+        # Check if this voter has already voted
+        if "voted" in best_match_employee and best_match_employee["voted"] == 1:
+            # This voter has already voted - return a recognizable error with 'already_voted' flag
+            raise HTTPException(
+                status_code=403, 
+                detail="You have already voted in this election.",
+                headers={"X-Already-Voted": "true"}  # Add custom header for more reliable detection
+            )
+        
+        # Update the voter's status to "voted"
+        await employees_collection.update_one(
+            {"_id": best_match_employee["_id"]},
+            {"$set": {"voted": 1}}
+        )
+        
+        await record_attendance(best_match_employee["_id"], best_match_employee["name"])
+        return {
+            "message": f"Welcome {best_match_employee['name']}",
+            "liveness": liveness_result,
+            "confidence": confidence
+        }
 
-    raise HTTPException(status_code=404, detail="Employee not recognized")
+    # No match found
+    raise HTTPException(status_code=404, detail="Voter not recognized")
 
 @app.get("/api/detect_mask")
 async def detect_mask():
@@ -193,6 +229,131 @@ async def detect_mask(ws: WebSocket):
     finally:
         cap.release()
         print("Camera released on WebSocket close")
+
+class YOLO_Pred:
+    def __init__(self, onnx_model, data_yaml):
+        with open(data_yaml, mode='r') as f:
+            data_yaml = yaml.load(f, Loader=SafeLoader)
+
+        self.labels = data_yaml['names']
+        self.nc = data_yaml['nc']
+        
+        self.yolo = cv2.dnn.readNetFromONNX(onnx_model)
+        self.yolo.setPreferableBackend(cv2.dnn.DNN_BACKEND_OPENCV)
+        self.yolo.setPreferableTarget(cv2.dnn.DNN_TARGET_CPU)
+
+    def detect_faces(self, frame):
+        row, col, _ = frame.shape
+        max_rc = max(row, col)
+        input_image = np.zeros((max_rc, max_rc, 3), dtype=np.uint8)
+        input_image[0:row, 0:col] = frame
+        
+        INPUT_WH_YOLO = 640
+        blob = cv2.dnn.blobFromImage(input_image, 1/255, (INPUT_WH_YOLO, INPUT_WH_YOLO), swapRB=True, crop=False)
+        self.yolo.setInput(blob)
+        preds = self.yolo.forward()
+        
+        detections = preds[0]
+        boxes, confidences, classes = [], [], []
+        image_w, image_h = input_image.shape[:2]
+        x_factor = image_w / INPUT_WH_YOLO
+        y_factor = image_h / INPUT_WH_YOLO
+        
+        for row in detections:
+            confidence = row[4]
+            if confidence > 0.4:
+                class_score = row[5:].max()
+                class_id = row[5:].argmax()
+                if class_score > 0.25:
+                    cx, cy, w, h = row[:4]
+                    left = int((cx - 0.5 * w) * x_factor)
+                    top = int((cy - 0.5 * h) * y_factor)
+                    width = int(w * x_factor)
+                    height = int(h * y_factor)
+                    
+                    boxes.append([left, top, width, height])
+                    confidences.append(confidence)
+                    classes.append(class_id)
+        
+        boxes_np, confidences_np = np.array(boxes), np.array(confidences)
+        indexes = cv2.dnn.NMSBoxes(boxes_np.tolist(), confidences_np.tolist(), 0.25, 0.45)
+        
+        if isinstance(indexes, tuple) or len(indexes) == 0:
+            indexes = []
+        else:
+            indexes = indexes.flatten()
+        
+        for i in indexes:
+            x, y, w, h = boxes_np[i]
+            cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+        
+        return frame, len(indexes)
+
+@app.websocket("/ws/face_detection")
+async def face_detection(ws: WebSocket):
+    """
+    WebSocket endpoint for real-time face detection.
+    This endpoint opens the webcam and streams face detection results to the frontend.
+    """
+    print("WebSocket connection attempt for face detection")
+    await ws.accept()
+    print("WebSocket connection accepted")
+    
+    # Initialize YOLO model
+    yolo = YOLO_Pred('best.onnx', 'data.yaml')
+    
+    # Initialize webcam
+    cap = cv2.VideoCapture(0)
+    if not cap.isOpened():
+        print("Could not open webcam")
+        await ws.send_json({"error": "Could not open webcam"})
+        await ws.close()
+        return
+    
+    # Counter for tracking consecutive frames with multiple faces
+    high_face_count = 0
+    high_face_threshold = 5  # Alert after 5 consecutive frames with multiple faces
+    
+    try:
+        while True:
+            ret, frame = cap.read()
+            if not ret:
+                print("Failed to read frame")
+                await ws.send_json({"error": "Failed to read frame"})
+                break
+            
+            # Detect faces using YOLO
+            _, face_count = yolo.detect_faces(frame)
+            print(f"Detected {face_count} faces")
+            
+            # Send face count to frontend
+            await ws.send_json({"face_count": face_count})
+            
+            # Track consecutive frames with multiple faces
+            if face_count >= 2:  # Alert if 2 or more faces are detected
+                high_face_count += 1
+                if high_face_count >= high_face_threshold:
+                    print("Multiple faces detected for too many frames")
+                    await ws.send_json({
+                        "face_count": face_count,
+                        "alert": True,
+                        "message": "Multiple faces detected. Please ensure only one person is in front of the camera."
+                    })
+            else:
+                # Reset counter if face count is normal
+                high_face_count = 0
+            
+            # Brief pause to control the frame rate
+            await asyncio.sleep(0.1)
+            
+    except WebSocketDisconnect:
+        print("WebSocket client disconnected")
+    except Exception as e:
+        print(f"Error in face detection WebSocket: {str(e)}")
+        await ws.send_json({"error": f"Error: {str(e)}"})
+    finally:
+        cap.release()
+        print("WebSocket connection closed, camera released")
 
 if __name__ == "__main__":
     import uvicorn

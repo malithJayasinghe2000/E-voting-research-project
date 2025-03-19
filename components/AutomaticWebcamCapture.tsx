@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useRef, useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Webcam from "react-webcam";
 import { recognizeEmployee } from "../utils/api";
-import { FiCheck, FiAlertCircle } from "react-icons/fi";
+import { FiCheck, FiAlertCircle, FiUserX } from "react-icons/fi";
 
 interface AutomaticWebcamCaptureProps {
   onSuccess?: () => void;
@@ -19,19 +19,17 @@ const AutomaticWebcamCapture: React.FC<AutomaticWebcamCaptureProps> = ({
   const webcamRef = useRef<Webcam>(null);
   const [message, setMessage] = useState("Preparing to scan your face...");
   const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState<"idle" | "success" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "success" | "error" | "already_voted">("idle");
   const [attempts, setAttempts] = useState(0);
 
   // Function to capture image and process it
   const captureAndProcess = async () => {
-    if (!webcamRef.current || status === "success" || attempts >= maxAttempts) {
+    if (!webcamRef.current || status === "success" || status === "already_voted" || attempts >= maxAttempts) {
       return;
     }
 
     setLoading(true);
     setMessage(`Scanning your face...`);
-
-    // setMessage(`Scanning your face (attempt ${attempts + 1}/${maxAttempts})...`);
 
     try {
       const imageSrc = webcamRef.current.getScreenshot();
@@ -54,7 +52,16 @@ const AutomaticWebcamCapture: React.FC<AutomaticWebcamCaptureProps> = ({
         }, 1500);
       }
     } catch (error: any) {
-      // If failed, increment attempt counter
+      console.log("Recognition error:", error.message);
+      
+      // Check if this is an "already voted" error - ensure case insensitive matching
+      if (error.message?.toLowerCase().includes("already voted")) {
+        setMessage("You have already voted in this election. Access denied.");
+        setStatus("already_voted");
+        return;
+      }
+      
+      // If failed for other reasons, increment attempt counter
       setAttempts(prev => prev + 1);
       
       if (attempts + 1 >= maxAttempts) {
@@ -70,8 +77,8 @@ const AutomaticWebcamCapture: React.FC<AutomaticWebcamCaptureProps> = ({
 
   // Trigger automatic capture at regular intervals
   useEffect(() => {
-    // If max attempts reached or already successful, don't try again
-    if (status === "success" || attempts >= maxAttempts) return;
+    // If max attempts reached or already successful or already voted, don't try again
+    if (status === "success" || status === "already_voted" || attempts >= maxAttempts) return;
     
     // Initial delay before first capture to let camera initialize properly
     const initialDelay = setTimeout(() => {
@@ -83,8 +90,8 @@ const AutomaticWebcamCapture: React.FC<AutomaticWebcamCaptureProps> = ({
 
   // Set up interval for repeated attempts
   useEffect(() => {
-    // If max attempts reached or already successful, don't try again
-    if (status === "success" || attempts >= maxAttempts) return;
+    // If max attempts reached or already successful or already voted, don't try again
+    if (status === "success" || status === "already_voted" || attempts >= maxAttempts) return;
     
     // Skip the first attempt as it's handled by the initial effect
     if (attempts === 0) return;
@@ -122,6 +129,13 @@ const AutomaticWebcamCapture: React.FC<AutomaticWebcamCaptureProps> = ({
           <p className="text-red-700">{message}</p>
         </div>
       )}
+      
+      {status === "already_voted" && (
+        <div className="flex items-center justify-center mb-4 p-3 w-full bg-orange-100 border-l-4 border-orange-500 rounded-lg">
+          <FiUserX className="text-orange-500 mr-2" size={20} />
+          <p className="text-orange-700">{message}</p>
+        </div>
+      )}
 
       <div className="w-full bg-blue-50 p-4 rounded-lg text-center">
         {loading ? (
@@ -134,22 +148,7 @@ const AutomaticWebcamCapture: React.FC<AutomaticWebcamCaptureProps> = ({
           </div>
         ) : (
           <div className="text-blue-700">
-            {status === "idle" && attempts < maxAttempts ? message : (
-              status === "error" ? 
-              <div className="flex justify-center">
-                <button 
-                  onClick={() => {
-                    setAttempts(0);
-                    setStatus("idle");
-                    captureAndProcess();
-                  }}
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
-                >
-                  Try Again
-                </button>
-              </div> : 
-              message
-            )}
+            {status === "idle" && attempts < maxAttempts ? message : message}
           </div>
         )}
       </div>
