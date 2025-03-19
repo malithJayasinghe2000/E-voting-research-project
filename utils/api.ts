@@ -2,12 +2,12 @@ import axios from 'axios';
 
 const API_URL = "http://localhost:8000"; // Update to FastAPI's port
 
-export const addEmployee = async (name: string, image: string) => {
+export const addEmployee = async (data: Record<string, any>) => {
   try {
-    const response = await fetch(`http://localhost:5000/api/add_employee`, {
+    const response = await fetch("http://localhost:5000/api/add_employee", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, image }),
+      body: JSON.stringify(data),
     });
 
     const result = await response.json();
@@ -18,6 +18,7 @@ export const addEmployee = async (name: string, image: string) => {
     throw new Error("Failed to add employee.");
   }
 };
+
 
 interface RecognizeEmployeeResponse {
   message: string;
