@@ -39,6 +39,7 @@
     "ethers": "5",
     "firebase-admin": "13.2.0",
     "formidable": "3.5.2",
+    "framer-motion": "12.5.0",
     "highcharts": "11.4.8",
     "highcharts-react-official": "3.2.1",
     "i18next": "24.2.2",

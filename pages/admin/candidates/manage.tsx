@@ -175,9 +175,9 @@ export default function ManageCandidates() {
   if (error) return <p>Error: {error}</p>;
 
   return (
-    <div className="flex">
+    <div className="flex h-screen bg-gray-100">
       <Sidebar />
-      <div className="w-full">
+      <div className="flex-1 flex flex-col overflow-hidden">
         <Header />
         <div className="p-10">
           <h1 className="text-2xl font-bold">Manage Candidates</h1>

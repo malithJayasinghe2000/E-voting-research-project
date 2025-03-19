@@ -1,24 +1,42 @@
 "use client";
 import { Menu, X } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Users, FileText, Settings, ChevronDown, ChevronUp } from "lucide-react";
-import { icon } from "leaflet";
+import { 
+  LayoutDashboard, 
+  Users, 
+  FileText, 
+  Settings, 
+  ChevronDown, 
+  ChevronUp,
+  Flag,
+  Vote,
+  BarChart2,
+  Award,
+  Building,
+  UserCheck,
+  MapPin,
+  LogOut
+} from "lucide-react";
+import { signOut } from "next-auth/react";
+import Image from "next/image";
 
 const navItems = [
   { href: "/admin/page", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/admin/manageplk/", 
+  { 
+    href: "/admin/manageplk/", 
     label: "Divisional Secretaries", 
-    icon: Users ,
+    icon: Building,
     subLinks: [
       { href: "/admin/manageplk/createPlk", label: "Create" },
       { href: "/admin/manageplk/manage", label: "Manage" },
     ],
   },
-  { href: "/admin/manageGsw/", 
+  { 
+    href: "/admin/manageGsw/", 
     label: "Grama Niladhari", 
-    icon: Users ,
+    icon: MapPin,
     subLinks: [
       { href: "/admin/manageGsw/create", label: "Create" },
       { href: "/admin/manageGsw/manage", label: "Manage" },
@@ -27,7 +45,7 @@ const navItems = [
   {
     href: "/admin/elections",
     label: "Elections",
-    icon: FileText,
+    icon: Vote,
     subLinks: [
       { href: "/admin/elections/page", label: "Create Election" },
       { href: "/admin/elections/manage", label: "Manage Elections" },
@@ -35,8 +53,8 @@ const navItems = [
   },
   {
     href: "/admin/polingManager",
-    label: "polling managers",
-    icon: Users,
+    label: "Polling Managers",
+    icon: UserCheck,
     subLinks: [
       { href: "/admin/polingManagers/create", label: "Add Polling Manager" },
       { href: "/admin/polingManagers/manage", label: "Manage Polling Manager" },
@@ -46,42 +64,38 @@ const navItems = [
   {
     href: "/admin/manageResults",
     label: "Results",
-    icon: Users,
+    icon: BarChart2,
     subLinks: [
-      { href: "/admin/manageResults/release", label: "Release results" },
-      // { href: "/admin/voters/manage", label: "Manage Voters" },
+      { href: "/admin/manageResults/release", label: "Release Results" },
     ],
   },
-
   {
-    href: "/admin/dd",
-    label: "Add Voters",
+    href: "/admin/voters",
+    label: "Voters",
     icon: Users,
     subLinks: [
-      { href: "/admin/dd/create", label: "Add Polling Manager" },
-      { href: "/admin/ded/manage", label: "Manage Polling Manager" },
+      { href: "/admin/voters/create", label: "Add Voters" },
+      { href: "/admin/voters/manage", label: "Manage Voters" },
     ],
   },
-
-  { href: "/admin/candidates", 
+  { 
+    href: "/admin/candidates", 
     label: "Candidates", 
-    icon: Users ,
+    icon: Award,
     subLinks: [
       { href: "/admin/candidates/create", label: "Add Candidate" },
       { href: "/admin/candidates/manage", label: "Manage Candidates" },
     ],
   },
-
-  { href: "/admin/parties", 
+  { 
+    href: "/admin/parties", 
     label: "Parties", 
-    icon: Users ,
+    icon: Flag,
     subLinks: [
       { href: "/admin/parties/create", label: "Add Party" },
       { href: "/admin/parties/manage", label: "Manage Parties" },
     ],
   },
-
-
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
 
@@ -89,6 +103,21 @@ export default function Sidebar() {
   const pathname = usePathname();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [activeItem, setActiveItem] = useState<string>("");
+
+  // Set active item on path change
+  useEffect(() => {
+    // Find which main section is active
+    const active = navItems.find(item => 
+      pathname === item.href || 
+      (item.subLinks && item.subLinks.some(sub => pathname === sub.href))
+    );
+    
+    if (active) {
+      setActiveItem(active.href);
+      setOpenDropdown(active.href);
+    }
+  }, [pathname]);
 
   const toggleDropdown = (href: string) => {
     setOpenDropdown(openDropdown === href ? null : href);
@@ -100,12 +129,12 @@ export default function Sidebar() {
 
   return (
     <>
-      
-      {/* Conditionally Render Mobile Menu Button */}
+      {/* Mobile Menu Button */}
       {!isSidebarOpen && (
         <button
           onClick={toggleSidebar}
-          className="block md:hidden fixed top-4 left-4 z-50 text-gray-200 p-2 bg-gray-800 rounded-full"
+          className="block lg:hidden fixed top-4 left-4 z-50 p-2 bg-indigo-600 text-white rounded-full shadow-lg"
+          aria-label="Open menu"
         >
           <Menu className="h-6 w-6" />
         </button>
@@ -113,80 +142,133 @@ export default function Sidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`fixed top-0 left-0 h-screen w-64 bg-gray-800 text-white z-40 transform transition-transform duration-300 ${
+        className={`fixed top-0 left-0 h-screen w-72 bg-gradient-to-b from-indigo-800 to-indigo-900 text-white z-40 shadow-2xl transform transition-transform duration-300 ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } md:translate-x-0`}
+        } lg:translate-x-0`}
       >
-        {/* Close Button for Mobile */}
-        <button
-          onClick={() => setIsSidebarOpen(false)}
-          className="absolute top-4 right-4 md:hidden text-white"
-        >
-          <X className="w-5 h-5" />
-        </button>
+        {/* Admin Logo Area */}
+        <div className="flex items-center justify-between px-6 py-6 border-b border-indigo-700">
+          <Link href="/admin/page" className="flex items-center">
+            <div className="relative h-10 w-10 mr-3">
+              {/* <Image
+                src="/assets/images/gov-logo-small.png"
+                alt="Admin Logo"
+                width={40}
+                height={40}
+                layout="responsive"
+              /> */}
+            </div>
+            <div>
+              <h1 className="text-xl font-bold tracking-wide text-white">
+                Election <span className="text-blue-300">Handle</span>
+              </h1>
+              <p className="text-xs text-indigo-300">Administration</p>
+            </div>
+          </Link>
+          
+          {/* Close Button (Mobile) */}
+          <button
+            onClick={toggleSidebar}
+            className="lg:hidden text-indigo-300 hover:text-white transition-colors"
+            aria-label="Close menu"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
 
-        <nav className="p-4">
-          <ul>
+        {/* Navigation Links */}
+        <nav className="p-4 overflow-y-auto h-[calc(100vh-76px)]">
+          <div className="space-y-1">
             {navItems.map((item) => {
-              const isActive = pathname.startsWith(item.href);
-
+              const isActive = pathname === item.href || 
+                (item.subLinks && item.subLinks.some(sub => pathname === sub.href));
+              const isOpen = openDropdown === item.href;
+              
               return (
-                <li key={item.href} className="mb-2">
-                  <div className="flex items-center justify-between">
-                    <Link
-                      href={item.subLinks ? "#" : item.href}
-                      onClick={item.subLinks ? () => toggleDropdown(item.href) : undefined}
-                      className={`flex items-center p-2 rounded hover:bg-gray-700 transition-colors ${
-                        isActive ? "bg-gray-700" : ""
-                      }`}
-                    >
-                      <item.icon className="mr-2 h-5 w-5" />
-                      {item.label}
-                    </Link>
+                <div key={item.href} className="mb-1">
+                  <button
+                    onClick={() => {
+                      if (item.subLinks) {
+                        toggleDropdown(item.href);
+                      } else {
+                        // Navigate to the href
+                        window.location.href = item.href;
+                      }
+                    }}
+                    className={`w-full flex items-center justify-between px-4 py-3 rounded-lg transition-all duration-200 ${
+                      isActive 
+                        ? "bg-indigo-700 text-white shadow-md" 
+                        : "text-indigo-100 hover:bg-indigo-700/50"
+                    }`}
+                  >
+                    <div className="flex items-center">
+                      <item.icon className="mr-3 h-5 w-5" />
+                      <span className="font-medium">{item.label}</span>
+                    </div>
+                    
                     {item.subLinks && (
-                      <button
-                        onClick={() => toggleDropdown(item.href)}
-                        className="text-gray-400 focus:outline-none"
-                      >
-                        {openDropdown === item.href ? (
+                      <div className="text-indigo-300">
+                        {isOpen ? (
                           <ChevronUp className="h-4 w-4" />
                         ) : (
                           <ChevronDown className="h-4 w-4" />
                         )}
-                      </button>
+                      </div>
                     )}
-                  </div>
-                  {item.subLinks && openDropdown === item.href && (
-                    <ul className="pl-6 mt-2 space-y-1">
-                      {item.subLinks.map((subItem) => (
-                        <li key={subItem.href}>
+                  </button>
+                  
+                  {/* Submenu */}
+                  {item.subLinks && (
+                    <div
+                      className={`overflow-hidden transition-all duration-200 ${
+                        isOpen ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
+                      }`}
+                    >
+                      <div className="pl-10 pr-4 py-2 space-y-1">
+                        {item.subLinks.map((subItem) => (
                           <Link
+                            key={subItem.href}
                             href={subItem.href}
-                            className={`block p-2 rounded hover:bg-gray-700 transition-colors ${
-                              pathname === subItem.href ? "bg-gray-700" : ""
+                            className={`block px-3 py-2 rounded-md text-sm transition-colors ${
+                              pathname === subItem.href
+                                ? "bg-indigo-600/50 text-white font-medium"
+                                : "text-indigo-200 hover:bg-indigo-700/30 hover:text-white"
                             }`}
                           >
                             {subItem.label}
                           </Link>
-                        </li>
-                      ))}
-                    </ul>
+                        ))}
+                      </div>
+                    </div>
                   )}
-                </li>
+                </div>
               );
             })}
-          </ul>
+          </div>
+
+          {/* Logout Button */}
+          {/* <div className="absolute bottom-4 left-4 right-4">
+            <button
+              onClick={() => signOut({ callbackUrl: '/' })}
+              className="w-full flex items-center justify-center px-4 py-3 bg-red-600/20 hover:bg-red-600/30 text-red-100 rounded-lg transition-colors"
+            >
+              <LogOut className="mr-2 h-5 w-5" />
+              <span>Logout</span>
+            </button>
+          </div> */}
         </nav>
       </aside>
 
-      {/* Main Content Overlay Adjustment */}
-      <div
-        className={`transition-all duration-300 ${
-          isSidebarOpen ? "ml-64 md:ml-0" : "ml-0"
-        } md:ml-64`}
-      >
-        {/* Empty for content adjustment */}
-      </div>
+      {/* Overlay for mobile */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          onClick={toggleSidebar}
+        ></div>
+      )}
+
+      {/* Content offset for desktop */}
+      <div className="lg:ml-72"></div>
     </>
   );
 }
