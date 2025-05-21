@@ -197,7 +197,7 @@ const GuideOverlay: React.FC<GuideOverlayProps> = ({ isActive, onComplete, curre
               color: "#333333", // Dark text
             },
             buttonNext: {
-              backgroundColor: "#FF4081",
+              backgroundColor: "#008000",
               color: "#fff",
               fontWeight: "bold",
               padding: "16px 28px",

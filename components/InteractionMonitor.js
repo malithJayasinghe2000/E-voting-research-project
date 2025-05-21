@@ -1,6 +1,7 @@
 //interactioMonitor.js
 import { getSocket } from './SocketSingleton'; // Import the singleton socket instance
 
+
 const socket = getSocket(); // Use the singleton socket instance
 
 // Helper function to send interaction data to the backend

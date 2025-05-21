@@ -37,7 +37,7 @@ const ThankYou = () => {
     // Redirect to language selection page after 10 seconds
     const timer = setTimeout(() => {
       router.push("/polingbooth/languageSelection");
-    }, 10000);
+    }, 5000);
 
     // Cleanup the timeout on component unmount
     return () => clearTimeout(timer);
