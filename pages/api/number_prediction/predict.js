@@ -2,7 +2,7 @@ import { IncomingForm } from "formidable";
 import fs from "fs";
 import fetch from "node-fetch";
 import FormData from "form-data";
-import { io } from "../../../utils/socket"; 
+import { io } from "../../../utils/socket";
 
 export const config = {
   api: {
@@ -35,7 +35,7 @@ export default async function handler(req, res) {
     });
 
     try {
-      const response = await fetch("http://127.0.0.1:5001/predict", {
+      const response = await fetch("http://127.0.0.1:8000/predict", {
         method: "POST",
         body: formData,
         headers: formData.getHeaders(),
@@ -44,8 +44,8 @@ export default async function handler(req, res) {
       const data = await response.json();
       console.log("Prediction Data:", data); // Display prediction in console
 
-      // Combine consecutive predictions to form multi-digit numbers
-      const predictedNumber = data.predictions.map(prediction => prediction.digit).join('');
+      // Combine predictions to form full number string
+      let predictedNumber = data.predictions.map(pred => pred.digit).join('');
       console.log("Combined Predicted Number:", predictedNumber);
 
       // Fetch candidate list
@@ -53,8 +53,9 @@ export default async function handler(req, res) {
       const candidatesData = await candidatesResponse.json();
       const candidates = candidatesData.candidates;
 
-      // Check if predicted number is in candidate list
-      const candidate = candidates.find(candidate => candidate.no === predictedNumber);
+      // Compare as numbers (or normalize to strings without leading zeros)
+      const predictedNumberNormalized = parseInt(predictedNumber, 10);
+      const candidate = candidates.find(candidate => parseInt(candidate.no, 10) === predictedNumberNormalized);
 
       if (candidate) {
         console.log(`Predicted Number: ${predictedNumber}, Candidate Name: ${candidate.name} , Candidate ID: ${candidate._id}`);
@@ -79,4 +80,3 @@ export default async function handler(req, res) {
     }
   });
 }
-
