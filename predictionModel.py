@@ -25,10 +25,10 @@ model = joblib.load("election_model.pkl")
 prediction_running = False
 
 
-def load_tweets_from_firestore():
-    """Load tweets from Firestore and extract features for prediction."""
+def load_tweets_from_firestore(batch_size=10):
+    """Load tweets from Firestore in batches and extract features for prediction."""
     tweets_ref = db.collection("tweets")
-    docs = tweets_ref.stream()
+    docs = tweets_ref.limit(batch_size).stream()  # ✅ Fetch only 10 at a time
 
     data = []
     for doc in docs:
@@ -56,7 +56,7 @@ def load_tweets_from_firestore():
         })
 
     df = pd.DataFrame(data)
-    
+
     # ✅ Convert 'created_at' to a valid datetime format
     df['created_at'] = pd.to_datetime(df['created_at'], errors='coerce')
 
@@ -92,6 +92,7 @@ def predict_and_save_votes():
     while prediction_running:
         try:
             df = load_tweets_from_firestore()
+            print("✅ succesfully load tweets from Firestore!")
             df = analyze_sentiments(df)
 
             # ✅ Ensure required features are present
@@ -146,6 +147,14 @@ def stop_prediction():
 
     prediction_running = False
     return jsonify({"message": "Prediction stopped successfully!"})
+
+@app.route("/api/test_load_tweets", methods=["GET"])
+def test_load_tweets():
+    try:
+        df = load_tweets_from_firestore()
+        return jsonify(df.to_dict()), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 if __name__ == "__main__":

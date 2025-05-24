@@ -108,7 +108,10 @@ const TweetCollectionForm: React.FC = () => {
   const handleStartPrediction = async () => {
     setMessage("Starting prediction...");
     try {
+      console.log("Sending request to start prediction...");
       const response = await axios.post("http://127.0.0.1:5000/api/start_prediction");
+      console.log("Prediction started:", response.data);
+
       setMessage(response.data.message);
       setRunning(true);
     } catch (error) {
