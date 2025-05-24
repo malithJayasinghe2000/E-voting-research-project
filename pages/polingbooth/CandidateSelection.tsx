@@ -226,6 +226,8 @@ const CandidateSelection = () => {
     setShowHelpButton(false); // Hide the text after the guide is completed
     setShowHelpRepeat(false);
     setneedHelpInactive(false);
+    
+    console.log("Security alert: Multiple people detected during voting");
   };
 
   const startGuide = () => {
