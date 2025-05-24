@@ -159,7 +159,7 @@ const CandidateSelection = () => {
       playAudio("multiple_faces_detected");
     }
     
-    // Log the security event
+    
     console.log("Security alert: Multiple people detected during voting");
   };
 
