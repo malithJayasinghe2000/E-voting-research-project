@@ -4,6 +4,9 @@ import DistrictResults from "../components/DistrictResults";
 import PollingDivisions from "../components/PollingDivisions";
 import Sidebar from "../components/Sidebar";
 import axios from "axios";
+import HomeNavbar from "@/components/Home-Navbar";
+import ResultDashboard from "./resultDashboard";
+import PredictionDashboard from "./predictionDashboard";
 
 const colorMap: Record<string, string> = {
   "Anura Kumara": "#FF0000",
@@ -21,6 +24,7 @@ const DistrictPage: React.FC = () => {
 
   const [loading, setLoading] = useState(true);
   const [districtData, setDistrictData] = useState<null | any>(null);
+  const [currentView, setCurrentView] = useState('home');
 
   useEffect(() => {
     if (!district) return;
@@ -68,6 +72,19 @@ const DistrictPage: React.FC = () => {
   }
 
   return (
+    <div className="min-h-screen relative backdrop-blur">
+      <div
+          className="absolute inset-0 before:absolute before:inset-0
+          before:w-full before:h-full before:bg-[url('/assets/images/bg.jpeg')]
+          before:blur-sm before:z-[-1] before:bg-no-repeat before:bg-cover"
+        />
+        <HomeNavbar
+            onResultDashboardClick={() => setCurrentView('resultDashboard')}
+            onPredictionDashboardClick={() => setCurrentView('predictionDashboard')} // Add handler
+            onHomeClick={() => setCurrentView('home')}
+          />
+          {currentView === 'resultDashboard' && <ResultDashboard />}
+          {currentView === 'predictionDashboard' && <PredictionDashboard />}
     <div style={{ padding: "20px" }}>
       {/* Page Title */}
       <div style={{ marginBottom: "20px", textAlign: "center", backgroundColor: "#af3512", padding: "15px", borderRadius: "20px" }}>
@@ -105,6 +122,7 @@ const DistrictPage: React.FC = () => {
 
       {/* Polling Divisions */}
       <PollingDivisions divisions={districtData.pollingDivisions} />
+    </div>
     </div>
   );
 };

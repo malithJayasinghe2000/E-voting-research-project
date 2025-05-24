@@ -35,6 +35,7 @@ const initialDistricts: District[] = [
 const PollingDistricts: React.FC = () => {
   const [districts, setDistricts] = useState<District[]>(initialDistricts);
   const [voteResults, setVoteResults] = useState<any[]>([]); // new state to hold actual vote data
+  const navigate = useRouter()
   
   useEffect(() => {
     const fetchResults = async () => {
@@ -60,7 +61,7 @@ const PollingDistricts: React.FC = () => {
   
   const handleDistrictClick = (district: string) => {
     const districtVotes = voteResults.filter((v) => v.district === district);
-    router.push({
+    navigate.push({
       pathname: '/district',
       query: { district },
     }, `/district?district=${district}`, {
