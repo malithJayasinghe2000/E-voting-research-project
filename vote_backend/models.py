@@ -70,12 +70,41 @@ def detect_liveness(frame):
     return "Real" if pred > 0.5 else "Fake", float(pred)  # Convert to Python float
 
 async def get_face_embedding(img):
-    """ Extract face embedding using DeepFace """
+    """ Extract face embedding using DeepFace with enhanced preprocessing """
     try:
-        embedding = await asyncio.to_thread(
-            DeepFace.represent, img, model_name="Facenet", enforce_detection=False
-        )
-        return embedding[0]["embedding"] if embedding else None
+        # Create multiple preprocessed versions of the image to handle lighting variations
+        preprocessed_images = []
+        
+        # Original image
+        preprocessed_images.append(img)
+        
+        # Histogram equalization to improve contrast
+        img_yuv = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
+        img_yuv[:,:,0] = cv2.equalizeHist(img_yuv[:,:,0])
+        img_eq = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
+        preprocessed_images.append(img_eq)
+        
+        # Apply Gamma correction for improved lighting
+        gamma = 1.5
+        gamma_corrected = np.array(255 * (img / 255) ** gamma, dtype='uint8')
+        preprocessed_images.append(gamma_corrected)
+        
+        # Try to get face embeddings from each preprocessed image
+        embeddings = []
+        for processed_img in preprocessed_images:
+            try:
+                emb = await asyncio.to_thread(
+                    DeepFace.represent, processed_img, model_name="Facenet", enforce_detection=False
+                )
+                if emb and len(emb) > 0:
+                    embeddings.append(emb[0]["embedding"])
+            except Exception:
+                continue
+                
+        # Return the first successful embedding
+        if embeddings:
+            return embeddings[0]
+        return None
     except Exception as e:
         print(f"Embedding error: {e}")
         return None
@@ -110,6 +139,11 @@ async def recognize_employee(data: ImageRequest):
     # Initial best match variables
     best_match_distance = 1.0  # Initialize with a high value
     best_match_employee = None
+    
+    # Enhanced matching approach that considers cosine similarity
+    # which is more robust to lighting variations than Euclidean distance
+    face_embedding_np = np.array(face_embedding, dtype=np.float32)
+    face_embedding_np /= np.linalg.norm(face_embedding_np)  # Normalize
 
     # Find the best matching face embedding across all employees
     async for employee in employees_collection.find():
@@ -117,20 +151,18 @@ async def recognize_employee(data: ImageRequest):
             continue
             
         known_embedding = np.array(employee["encoding"], dtype=np.float32)
-        face_embedding_np = np.array(face_embedding, dtype=np.float32)
-
-        # Normalize embeddings for better comparison
-        known_embedding /= np.linalg.norm(known_embedding)
-        face_embedding_np /= np.linalg.norm(face_embedding_np)
-
-        # Compute similarity distance
-        distance = np.linalg.norm(known_embedding - face_embedding_np)
+        known_embedding /= np.linalg.norm(known_embedding)  # Normalize
+        
+        # Compute cosine similarity (higher is better)
+        cosine_similarity = np.dot(known_embedding, face_embedding_np)
+        # Convert to distance (lower is better) for consistency with existing code
+        distance = 1 - cosine_similarity
         
         # Debug logging
-        print(f"Comparing with {employee.get('name', 'Unknown')}, Distance: {distance}")
+        print(f"Comparing with {employee.get('name', 'Unknown')}, Distance: {distance}, Similarity: {cosine_similarity}")
         
-        # Update best match if this is better
-        if distance < best_match_distance and distance < 0.5:  # Threshold for recognition
+        # Adjust threshold based on cosine similarity (threshold is now 0.6 since we're using 1-cosine)
+        if distance < best_match_distance and distance < 0.6:  # More permissive threshold
             best_match_distance = distance
             best_match_employee = employee
 

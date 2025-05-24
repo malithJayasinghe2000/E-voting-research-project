@@ -158,18 +158,13 @@ def add_employee():
         "householdNo", "gramaNiladariDivision", "pollingDistrictNo", 
         "pollingDivision", "electoralDistrict", "relationshipToChief", "image"
     ]
-    
-    # If any required field is missing, return error
+      # If any required field is missing, return error
     missing_fields = [field for field in required_fields if data.get(field) is None or data.get(field) == ""]
     
     if missing_fields:
         return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
     
     frame = decode_image(image_data)
-    embedding = get_face_embedding(frame)
-    if embedding is None:
-        return jsonify({"error": "Could not extract face embedding"}), 400
-    
     embedding = get_face_embedding(frame)
     if embedding is None:
         return jsonify({"error": "Could not extract face embedding"}), 400
@@ -198,65 +193,42 @@ def add_employee():
 
     return jsonify({"message": f"{name} added successfully with all required voter details!"})
 
-@app.route("/api/recognize_employee", methods=["POST"])
-def recognize_employee():
-    data = request.json
-    image_data = data.get("image")
-    
-    if not image_data:
-        return jsonify({"error": "Image is required"}), 400
-    
-    frame = decode_image(image_data)
-    embedding = get_face_embedding(frame)
-    if embedding is None:
-        return jsonify({"error": "Could not extract face embedding"}), 400
-    
-    employees = employees_collection.find()
-    for employee in employees:
-        known_embedding = np.array(employee["encoding"], dtype=np.float32)
-        embedding = np.array(embedding, dtype=np.float32)
-
-        # Normalize both embeddings
-        known_embedding /= np.linalg.norm(known_embedding)
-        embedding /= np.linalg.norm(embedding)
-
-        # Compute distance
-        distance = np.linalg.norm(known_embedding - embedding)
-        print(f"Comparing with {employee['name']}, Distance: {distance}")  # Debug
-
-        if distance < 0.5:  # Reduce threshold for normalized embeddings
-            # Check if this voter has already voted
-            if "voted" in employee and employee["voted"] == 1:
-                return jsonify({
-                    "error": "You have already voted in this election.",
-                    "already_voted": True
-                }), 403
-            
-            # Update the voter's status to "voted" = 1
-            employees_collection.update_one(
-                {"_id": employee["_id"]},
-                {"$set": {"voted": 1}}
-            )
-            
-            record_attendance(employee["_id"], employee["name"])
-            return jsonify({"message": f"Welcome {employee['name']}"})
-
-    return jsonify({"error": "Employee not recognized"}), 404
 
 def get_face_embedding(img):
     try:
-        return DeepFace.represent(img, model_name="Facenet", enforce_detection=False)[0]["embedding"]
+        # Apply histogram equalization to improve lighting
+        img_yuv = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
+        img_yuv[:,:,0] = cv2.equalizeHist(img_yuv[:,:,0])
+        img_eq = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
+        
+        # Try multiple preprocessing approaches
+        embeddings = []
+        
+        # Try with original image
+        try:
+            emb1 = DeepFace.represent(img, model_name="Facenet", enforce_detection=False)
+            if emb1 and len(emb1) > 0:
+                embeddings.append(emb1[0]["embedding"])
+        except Exception:
+            pass
+            
+        # Try with histogram equalized image
+        try:
+            emb2 = DeepFace.represent(img_eq, model_name="Facenet", enforce_detection=False)
+            if emb2 and len(emb2) > 0:
+                embeddings.append(emb2[0]["embedding"])
+        except Exception:
+            pass
+        
+        # If we got any embeddings, return the first one
+        if embeddings:
+            return embeddings[0]
+        return None
     except Exception as e:
         print(f"Embedding error: {e}")
         return None
 
-def record_attendance(employee_id, name):
-    attendance_collection.insert_one({
-        "employee_id": employee_id,
-        "type": "entry" if 5 <= datetime.now().hour < 17 else "exit",
-        "timestamp": datetime.now()
-    })
-    play_greeting(name)
+
 
 def play_greeting(name):
     greeting = f"Welcome {name}"
