@@ -60,7 +60,7 @@ const VoterAuthentication = () => {
   useEffect(() => {
     if (currentStep !== 'mask-detection') return
 
-    setStatusMessage('Please wait while we check for face mask...')
+    setStatusMessage(t('Please wait'))
 
     const websocket = new WebSocket('ws://127.0.0.1:8000/ws/detect')
 
@@ -82,10 +82,10 @@ const VoterAuthentication = () => {
 
         if (data.mask_detected === null) {
           setMaskDetected(null)
-          setStatusMessage('Please remove your mask for verification')
+          setStatusMessage(t('Please remove your mask'))
         } else if (data.mask_detected) {
           setMaskDetected(true)
-          setStatusMessage('Please remove your mask for verification')
+          setStatusMessage(t('Please remove your mask'))
 
           if (audioInstance && isSpeakerEnabled) {
             const audioPath =
@@ -99,7 +99,7 @@ const VoterAuthentication = () => {
           }
         } else {
           setMaskDetected(false)
-          setStatusMessage('No mask detected. Proceeding to face recognition...')
+          setStatusMessage(t('No mask detected'))
           websocket.close()
 
           // Automatically proceed to face recognition step after a short delay
@@ -383,7 +383,7 @@ const VoterAuthentication = () => {
                 maskDetected === false ? "text-green-600 font-bold" :
                 "text-gray-700"
               }`}>
-                {statusMessage || t("Please wait, starting authentication")}
+                {statusMessage || t("Please wait, starting")}
               </p>
             </div>
 
