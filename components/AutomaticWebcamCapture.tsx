@@ -56,7 +56,7 @@ const AutomaticWebcamCapture: React.FC<AutomaticWebcamCaptureProps> = ({
       
       // Check if this is an "already voted" error - ensure case insensitive matching
       if (error.message?.toLowerCase().includes("already voted")) {
-        setMessage("You have already voted in this election. Access denied.");
+        setMessage("Access denied.");
         setStatus("already_voted");
         return;
       }
