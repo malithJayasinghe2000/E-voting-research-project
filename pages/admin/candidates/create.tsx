@@ -153,7 +153,7 @@ const AddCandidateForm: React.FC = () => {
     setSuccess(null);
   
     const { name, party, electionId } = formData;
-    if (!name || !party || !electionId) {
+    if (!name || !party ) {
       setError("Please fill in all required fields.");
       return;
     }
@@ -234,7 +234,7 @@ const AddCandidateForm: React.FC = () => {
           <select name="party" value={formData.party} onChange={handleSelectChange} className="w-full border rounded p-2" required>
             <option value="">Select a party</option>
             {parties.map((party) => (
-              <option key={party._id} value={party._id}>{party.short_name}</option>
+              <option key={party.short_name} value={party.short_name}>{party.short_name}</option>
             ))}
           </select>
         </div>

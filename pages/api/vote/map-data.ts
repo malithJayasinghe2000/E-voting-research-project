@@ -37,23 +37,36 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     votes.forEach((doc) => {
       const district = doc.district;
       const voteMap: Record<string, number> = {};
-
+    
       doc.pollingManagers.forEach((pm: any) => {
         pm.votes.forEach((vote: any) => {
           const cid = vote.candidateId;
           voteMap[cid] = (voteMap[cid] || 0) + vote.priority1;
         });
       });
-
-      const winnerId = Object.keys(voteMap).reduce((a, b) => (voteMap[a] > voteMap[b] ? a : b));
+    
+      const voteKeys = Object.keys(voteMap);
+    
+      if (voteKeys.length === 0) {
+        // No votes for this district
+        districtResults[district] = {
+          winnerName: "No Data",
+          color: "#999999",
+          votes: 0,
+        };
+        return; // Skip to next district
+      }
+    
+      const winnerId = voteKeys.reduce((a, b) => (voteMap[a] > voteMap[b] ? a : b));
       const winnerName = candidateMap[winnerId] || "Unknown";
-
+    
       districtResults[district] = {
         winnerName,
         color: candidateColors[winnerName] || "#999999",
         votes: voteMap[winnerId],
       };
     });
+    
 
     return res.status(200).json(districtResults);
   } catch (error) {

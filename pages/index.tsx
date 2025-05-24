@@ -11,6 +11,7 @@ import { generateFakePolls } from '@/services/data';
 import PredictionDashboard from './predictionDashboard';
 import CandidatePortfolio from './portfolio';
 import { PortfolioItem } from '@/types/PortfolioItem';
+import HomeNavbar from '@/components/Home-Navbar';
 
 export default function Home({ pollsData }: { pollsData: PollStruct[] }) {
   const [currentView, setCurrentView] = useState('home');
@@ -86,7 +87,12 @@ export default function Home({ pollsData }: { pollsData: PollStruct[] }) {
         />
 
         <section className="relative px-5 py-10 space-y-16 text-white sm:p-10">
-          <Navbar />
+          {/* <Navbar /> */}
+          <HomeNavbar
+            onResultDashboardClick={() => setCurrentView('resultDashboard')}
+            onPredictionDashboardClick={() => setCurrentView('predictionDashboard')} // Add handler
+            onHomeClick={() => setCurrentView('home')}
+          />
           {currentView === 'home' && (
             <>
               <HomeBanner />
