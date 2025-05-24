@@ -80,6 +80,11 @@ export default function Home({ pollsData }: { pollsData: PollStruct[] }) {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className="min-h-screen relative backdrop-blur">
+      {/* {search && (
+                <p className="mt-3 text-lg">
+                    You searched for: <span className="font-semibold text-blue-500">{search}</span>
+                </p>
+            )} */}
         <div
           className="absolute inset-0 before:absolute before:inset-0
           before:w-full before:h-full before:bg-[url('/assets/images/bg.jpeg')]

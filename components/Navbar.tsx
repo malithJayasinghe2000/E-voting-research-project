@@ -1,4 +1,3 @@
-// import { connectWallet } from '@/services/blockchain'
 import { truncate } from '@/utils/helper'
 import { RootState } from '@/utils/types'
 import Link from 'next/link'

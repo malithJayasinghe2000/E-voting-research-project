@@ -4,6 +4,8 @@ import Link from "next/link";
 import { FaThumbsUp } from "react-icons/fa";
 import { Line } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from "chart.js";
+import React from 'react'; // Make sure React is imported
+import HomeNavbar from "@/components/Home-Navbar";
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
