@@ -3,13 +3,25 @@ import path from "path";
 import fs from "fs";
 
 // ✅ Initialize Firebase Admin (only once)
-const serviceAccountPath = path.join(process.cwd(), "serviceAccountKey.json");
+// Load Firebase credentials
+const serviceAccountPath = path.resolve("secure", "firebase-credentials.json"); // Update path
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(JSON.parse(fs.readFileSync(serviceAccountPath, "utf-8"))),
-  });
+console.log("Number of Firebase apps before init:", admin.apps.length);
+
+// 💥 Reset Firebase admin apps in dev mode
+if (admin.apps.length) {
+  console.log("Deleting old Firebase app...");
+  admin.app().delete();
 }
+
+console.log("Number of Firebase apps before init:", admin.apps.length);
+
+const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount),
+  databaseURL: process.env.FIREBASE_DATABASE_URL,
+});
+console.log("Firebase app initialized ✅");
 
 const db = admin.firestore();
 

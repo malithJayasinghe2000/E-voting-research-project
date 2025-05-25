@@ -14,7 +14,7 @@ app = Flask(__name__)
 CORS(app, resources={r"/api/*": {"origins": "*"}})
 
 # ✅ Initialize Firebase
-cred = credentials.Certificate("serviceAccountKey.json")  # Replace with your Firebase key
+cred = credentials.Certificate("firebase-credentials.json")  # Replace with your Firebase key
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
