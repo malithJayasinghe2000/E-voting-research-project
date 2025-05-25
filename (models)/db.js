@@ -9,7 +9,7 @@ export default async function connectDB() {
     }
 
     try {
-        const db = await mongoose.connect(process.env.MONGODB_URI, {
+        const db = await mongoose.connect("mongodb+srv://sandaru2:sandaru2@test.bgjabxi.mongodb.net/biznesAdverticerDB?retryWrites=true&w=majority", {
             useNewUrlParser: true,
             useUnifiedTopology: true,
         });

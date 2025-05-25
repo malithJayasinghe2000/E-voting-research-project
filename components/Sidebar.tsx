@@ -7,6 +7,7 @@ const Sidebar: React.FC<{ divisions: string[] }> = ({ divisions }) => {
           backgroundColor: "#f9f9f9",
           padding: "10px",
           borderRadius: "8px",
+          height: "500px"
         }}
       >
         <h4 style={{backgroundColor: "#ffffff",color:"#d82b06", fontStyle:"Bold",textAlign:"center", }}>LATEST RELEASED RESULTS</h4>

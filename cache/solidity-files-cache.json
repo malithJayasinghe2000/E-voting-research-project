@@ -1,8 +1,8 @@
 {
   "_format": "hh-sol-cache-2",
   "files": {
-    "D:\\voting\\dappVote\\contracts\\DappVotes.sol": {
-      "lastModificationDate": 1741594687188,
+    "C:\\y4s1\\research\\E-voting-research-project\\contracts\\DappVotes.sol": {
+      "lastModificationDate": 1741595023989,
       "contentHash": "941f94b925479d6e67674dd2cf46b856",
       "sourceName": "contracts/DappVotes.sol",
       "solcConfig": {
@@ -34,41 +34,6 @@
       ],
       "artifacts": [
         "VoteStorage"
-      ]
-    },
-    "D:\\voting\\dappVote\\node_modules\\@openzeppelin\\contracts\\utils\\Counters.sol": {
-      "lastModificationDate": 1734688664860,
-      "contentHash": "74654e3ae5d7f39555055dfe244dab7a",
-      "sourceName": "@openzeppelin/contracts/utils/Counters.sol",
-      "solcConfig": {
-        "version": "0.8.17",
-        "settings": {
-          "optimizer": {
-            "enabled": true,
-            "runs": 200
-          },
-          "outputSelection": {
-            "*": {
-              "*": [
-                "abi",
-                "evm.bytecode",
-                "evm.deployedBytecode",
-                "evm.methodIdentifiers",
-                "metadata"
-              ],
-              "": [
-                "ast"
-              ]
-            }
-          }
-        }
-      },
-      "imports": [],
-      "versionPragmas": [
-        "^0.8.0"
-      ],
-      "artifacts": [
-        "Counters"
       ]
     }
   }

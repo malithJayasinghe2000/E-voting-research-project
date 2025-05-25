@@ -7,7 +7,7 @@ interface Candidate {
   votes: number;
   percentage: number;
   color: string;
-  imageUrl:string
+  image:string
 }
 
 interface DistrictResultsProps {
@@ -47,7 +47,7 @@ const DistrictResults: React.FC<DistrictResultsProps> = ({ candidates, totalVote
               >
                 {/* Candidate Image */}
                 <img
-                  src={candidate.imageUrl}
+                  src={candidate.image}
                   alt={candidate.name}
                   style={{
                     width: "50px",
@@ -117,7 +117,7 @@ const DistrictResults: React.FC<DistrictResultsProps> = ({ candidates, totalVote
                   marginTop: "5px",
                 }}
               >
-                {candidate.percentage.toFixed(2)}%
+                {Number(candidate.percentage).toFixed(2)}%
               </div>
             </div>
           ))}
@@ -146,7 +146,7 @@ const DistrictResults: React.FC<DistrictResultsProps> = ({ candidates, totalVote
               cy="50%"
               outerRadius={100}
               fill="#8884d8"
-              label={(entry) => `${entry.party}: ${entry.percentage.toFixed(1)}%`}
+              label={(entry) => `${entry.party}: ${Number(entry.percentage).toFixed(1)}%`}
             >
               {candidates.map((candidate, index) => (
                 <Cell key={`cell-${index}`} fill={candidate.color} />

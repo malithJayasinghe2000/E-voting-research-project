@@ -256,6 +256,8 @@ const CandidateSelection = () => {
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-[#F1F1F1] to-[#B0D0E6]">
       <Navbar />
+      {/* Add ToastContainer for toast messages */}
+     
 
       {/* Security Monitor - Hidden but still active when multiple people detected */}
       <div className={multiplePeopleDetected ? "hidden" : "block"}>

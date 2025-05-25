@@ -20,14 +20,11 @@ const upload = multer({
     }
     cb(null, true);
   },
-}).fields([
-  { name: 'image', maxCount: 1 },
-  { name: 'profileImage', maxCount: 1 }
-]);
+}).single("image");
 
 export const config = {
   api: {
-    bodyParser: false, // Disable Next.js's default bodyParser
+    bodyParser: false,
   },
 };
 
@@ -44,113 +41,59 @@ export default async function handler(req, res) {
     }
 
     try {
-      // Get the current session
       const session = await getServerSession(req, res, authOptions);
       if (!session?.user?.email) {
         return res.status(401).json({ message: "Unauthorized" });
       }
 
-      // Check if the user has permission to add a candidate
       if (session.user.role !== "admin") {
         return res.status(403).json({ message: "Forbidden: You do not have permission to add a candidate" });
       }
 
-      // Parse the form data
-      const candidateData = req.body;
-      const imagePath = req.files.image ? `/uploads/${req.files.image[0].filename}` : null;
-      const profileImagePath = req.files.profileImage ? `/uploads/${req.files.profileImage[0].filename}` : imagePath;
+      const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
+
+      const {
+        name,
+        no,
+        party,
+        nationalId,
+        electionId,
+        slogan,
+        profileImage,
+        bio,
+        socialLinks,
+        education,
+        experience
+      } = req.body;
 
       // Validate required fields
-      const { name, no, party, nationalId, electionId } = candidateData;
-      if (!name || !no || !imagePath || !party || !nationalId || !electionId) {
+      if (!name || !no || !party || !nationalId || !electionId || !imagePath) {
         return res.status(400).json({ message: "All required fields must be provided" });
       }
 
-      // Check for duplicate national ID
+      // Parse JSON fields
+      const parsedBio = bio ? JSON.parse(bio) : {};
+      const parsedSocialLinks = socialLinks ? JSON.parse(socialLinks) : {};
+      const parsedEducation = education ? JSON.parse(education) : [];
+      const parsedExperience = experience ? JSON.parse(experience) : [];
+
       const duplicate = await Candidate.findOne({ nationalId }).lean().exec();
       if (duplicate) {
         return res.status(409).json({ message: "Candidate with this National ID already exists" });
       }
 
-      // Parse JSON fields if they are strings
-      let education = [];
-      let experience = [];
-      let socialLinks = { linkedin: "", github: "", twitter: "", whatsapp: "" };
-      let bio = { 
-        description: candidateData.bio || "",
-        dob: "",
-        nationality: "",
-        religion: "",
-        maritalStatus: "",
-        netWorth: ""
-      };
-
-      if (candidateData.education) {
-        try {
-          education = typeof candidateData.education === 'string' 
-            ? JSON.parse(candidateData.education) 
-            : candidateData.education;
-        } catch (e) {
-          education = [candidateData.education];
-        }
-      }
-
-      if (candidateData.experience) {
-        try {
-          experience = typeof candidateData.experience === 'string' 
-            ? JSON.parse(candidateData.experience) 
-            : candidateData.experience;
-        } catch (e) {
-          experience = [candidateData.experience];
-        }
-      }
-
-      if (candidateData.socialLinks) {
-        try {
-          socialLinks = typeof candidateData.socialLinks === 'string' 
-            ? JSON.parse(candidateData.socialLinks) 
-            : candidateData.socialLinks;
-        } catch (e) {
-          // Keep default empty social links
-        }
-      }
-
-      if (candidateData.bio) {
-        try {
-          if (typeof candidateData.bio === 'string') {
-            const parsedBio = JSON.parse(candidateData.bio);
-            bio = {
-              description: parsedBio.description || candidateData.bio,
-              dob: parsedBio.dob || "",
-              nationality: parsedBio.nationality || "",
-              religion: parsedBio.religion || "",
-              maritalStatus: parsedBio.maritalStatus || "",
-              netWorth: parsedBio.netWorth || ""
-            };
-          } else {
-            bio = {
-              ...bio,
-              ...candidateData.bio
-            };
-          }
-        } catch (e) {
-          bio.description = candidateData.bio;
-        }
-      }
-
-      // Create the new candidate
       const newCandidate = await Candidate.create({
         name,
         no,
         image: imagePath,
-        profileImage: profileImagePath,
         party,
         nationalId,
-        slogan: candidateData.slogan || "",
-        bio,
-        socialLinks,
-        education,
-        experience,
+        slogan: slogan || "",
+        profileImage: profileImage || "",
+        bio: parsedBio,
+        socialLinks: parsedSocialLinks,
+        education: parsedEducation,
+        experience: parsedExperience,
         role: "candidate",
         electionId,
       });

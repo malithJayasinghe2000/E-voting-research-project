@@ -4,7 +4,7 @@ import axios from 'axios';
 
 export const addEmployee = async (data: Record<string, any>) => {
   try {
-    const response = await fetch("http://localhost:5000/api/add_employee", {
+    const response = await fetch("http://127.0.0.1:5000/api/add_employee", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -47,4 +47,3 @@ export const recognizeEmployee = async (imageData: string): Promise<RecognizeEmp
     }
   }
 };
-
