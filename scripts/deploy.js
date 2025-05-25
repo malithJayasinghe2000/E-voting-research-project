@@ -1,24 +1,15 @@
-const {ethers} = require('hardhat')
-const fs = require('fs')
+const hre = require("hardhat");
 
 async function main() {
-    const Contract = await ethers.getContractFactory('DappVotes')
-    const contract = await Contract.deploy()
-    await contract.deployed()
+  const VoteStorage = await hre.ethers.getContractFactory("VoteStorage");
+  const voteStorage = await VoteStorage.deploy();
 
-    const address = JSON.stringify({address: contract.address},null,4)
+  await voteStorage.deployed();
 
-    fs.writeFile('./artifacts/contractAddress.json',address,'utf8', (err) => {
-        if (err) {
-            console.log(err)
-            return
-        }
-        console.log('Deployed contract address',contract.address)
-
-    })
+  console.log(`VoteStorage deployed to: ${voteStorage.address}`);
 }
 
 main().catch((error) => {
-        console.error(error)
-        process.exitCode = 1
-    })
+  console.error(error);
+  process.exitCode = 1;
+});

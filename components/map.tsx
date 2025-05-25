@@ -1,79 +1,84 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Highcharts from "highcharts";
 import HighchartsReact from "highcharts-react-official";
 import HighchartsMap from "highcharts/modules/map";
 import mapData from "@highcharts/map-collection/countries/lk/lk-all.topo.json";
+import axios from "axios";
 
-// Initialize the map module
+// Initialize Highcharts map module
 if (typeof Highcharts === "object") {
   HighchartsMap(Highcharts);
 }
 
-interface DistrictData {
-  key: string;
-  name: string;
+// Mapping between district names and Highcharts district keys
+const districtKeyMap: Record<string, string> = {
+  Kurunegala: "lk-kg",
+  Colombo: "lk-co",
+  Gampaha: "lk-gq",
+  Kandy: "lk-ky",
+  Jaffna: "lk-ja",
+  Matale: "lk-mb",
+  Badulla: "lk-bc",
+  // Add the rest as needed
+};
+type DistrictMapData = {
+  "hc-key": string;
   value: number;
   color: string;
-}
+  winnerName: string;
+};
 
 const SriLankaMap: React.FC = () => {
+  const [mapDataFromAPI, setMapDataFromAPI] = useState<DistrictMapData[]>([]);
+
   useEffect(() => {
-    // Election results with some predefined districts and colors
-    const predefinedResults: DistrictData[] = [
-      { key: "lk-bc", name: "Badulla", value: 10, color: "#FF0000" }, // Party A (Red)
-      { key: "lk-mb", name: "Matale", value: 11, color: "#0000FF" }, // Party B (Blue)
-      { key: "lk-ja", name: "Jaffna", value: 12, color: "#00FF00" }, // Party C (Green)
-    ];
+    const fetchMapData = async () => {
+      try {
+        const { data } = await axios.get("/api/vote/map-data"); // Call your API
+        
+        const processedData: any[] = [];
 
-    // Map data manually configured
-    const allDistricts = [
-      "lk-bc", "lk-mb", "lk-ja", "lk-kl", "lk-ky", "lk-mt", "lk-nw", "lk-ap",
-      "lk-pr", "lk-tc", "lk-ad", "lk-va", "lk-mp", "lk-kg", "lk-px", "lk-rn",
-      "lk-gl", "lk-hb", "lk-mh", "lk-bd", "lk-mj", "lk-ke", "lk-co", "lk-gq",
-      "lk-kt",
-    ];
+        // Process the API data
+        for (const districtName in data) {
+          const districtResult = data[districtName];
+          const hcKey = districtKeyMap[districtName]; // Map district name to Highcharts key
+          
+          if (hcKey) {
+            processedData.push({
+              "hc-key": hcKey,
+              value: districtResult.votes,
+              color: districtResult.color,
+              winnerName: districtResult.winnerName,
+            });
+          }
+        }
 
-    const colorOptions = ["#FF0000", "#0000FF", "#00FF00"]; // Red, Blue, Green
-
-    // Create random results for districts not in predefined results
-    const randomResults = allDistricts.map((district) => {
-      const predefinedDistrict = predefinedResults.find(
-        (result) => result.key === district
-      );
-
-      if (predefinedDistrict) {
-        return predefinedDistrict;
+        setMapDataFromAPI(processedData);
+      } catch (error) {
+        console.error("Error fetching map data:", error);
       }
+    };
 
-      return {
-        key: district,
-        name: district.toUpperCase(),
-        value: Math.floor(Math.random() * 100),
-        color: colorOptions[Math.floor(Math.random() * colorOptions.length)],
-      };
-    });
+    fetchMapData();
+  }, []);
 
-    const data = randomResults.map((district) => ({
-      "hc-key": district.key,
-      value: district.value,
-      color: district.color,
-    }));
+  useEffect(() => {
+    if (mapDataFromAPI.length === 0) return;
 
-    // Initialize the Highcharts map
     Highcharts.mapChart("container", {
       chart: {
         map: mapData,
-        margin: [0, 0, 0, 0], // Remove margins
+        margin: [0, 0, 0, 0],
       },
       title: {
         text: "Sri Lanka Election Results",
       },
       subtitle: {
-        text: 'Source map: <a href="https://code.highcharts.com/mapdata/countries/lk/lk-all.topo.json">Sri Lanka</a>',
+        text: 'Source: <a href="https://code.highcharts.com/mapdata/countries/lk/lk-all.topo.json">Sri Lanka Map</a>',
       },
       mapView: {
-        center: [80.7718, 7.8731], // Center of Sri Lanka (longitude, latitude)
-        zoom: 8, // Adjust zoom level
+        center: [80.7718, 7.8731],
+        zoom: 8,
       },
       mapNavigation: {
         enabled: true,
@@ -81,26 +86,36 @@ const SriLankaMap: React.FC = () => {
           verticalAlign: "bottom",
         },
       },
+      tooltip: {
+        formatter: function () {
+          return `
+          <b>${this.point.name}</b><br/>
+          Winner: ${(this.point.options as DistrictMapData).winnerName}<br/>
+          Votes: ${this.point.value}
+          `;
+        },
+      },
       series: [
         {
-          data: data,
+          type: "map",
+          data: mapDataFromAPI,
           name: "Election Results",
           states: {
             hover: {
-              color: "#BADA55", // Hover color
+              color: "#BADA55",
             },
           },
           dataLabels: {
             enabled: true,
-            format: "{point.name}", // Show district names
+            format: "{point.name}",
           },
-          colorKey: "color", // Use color for district visualization
+          colorKey: "color",
         },
       ],
     });
-  }, []);
+  }, [mapDataFromAPI]);
 
-  return <div id="container" style={{ height: "800px", width: "500px" }} />;
+  return <div id="container" style={{ height: "800px", width: "100%" }} />;
 };
 
 export default SriLankaMap;

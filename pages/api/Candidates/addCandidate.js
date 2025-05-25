@@ -1,69 +1,107 @@
-export const config = {
-    runtime:'nodejs',
-}
-
-import bodyParser from "body-parser";
+import multer from "multer";
+import path from "path";
 import connectDB from "../../../(models)/db";
 import Candidate from "../../../(models)/Candidate";
-import { getServerSession } from "next-auth"; // Import session management
+import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]";
 
-const jsonParser = bodyParser.json();
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: "./public/uploads/",
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + "-" + file.originalname;
+      cb(null, uniqueSuffix);
+    },
+  }),
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (![".jpg", ".jpeg", ".png"].includes(ext)) {
+      return cb(new Error("Only images are allowed"));
+    }
+    cb(null, true);
+  },
+}).single("image");
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
 export default async function handler(req, res) {
-    await connectDB();
+  await connectDB();
 
-    if (req.method !== "POST") {
-        return res.status(405).json({ message: "Method Not Allowed" });
+  if (req.method !== "POST") {
+    return res.status(405).json({ message: "Method Not Allowed" });
+  }
+
+  upload(req, res, async (err) => {
+    if (err) {
+      return res.status(400).json({ message: err.message });
     }
 
-    jsonParser(req, res, async () => {
-        try {
-            // Get the current session
-            const session = await getServerSession(req, res, authOptions);
-            if (!session?.user?.email) {
-                return res.status(401).json({ message: "Unauthorized" });
-            }
+    try {
+      const session = await getServerSession(req, res, authOptions);
+      if (!session?.user?.email) {
+        return res.status(401).json({ message: "Unauthorized" });
+      }
 
-            // Check if the user has permission to add a candidate
-            if (session.user.role !== "admin") {
-                return res.status(403).json({ message: "Forbidden: You do not have permission to add a candidate" });
-            }
+      if (session.user.role !== "admin") {
+        return res.status(403).json({ message: "Forbidden: You do not have permission to add a candidate" });
+      }
 
-            // Extract candidate data from request body
-            const candidateData = req.body;
+      const imagePath = req.file ? `/uploads/${req.file.filename}` : null;
 
-            console.log("Candidate data:", candidateData);
+      const {
+        name,
+        no,
+        party,
+        nationalId,
+        electionId,
+        slogan,
+        profileImage,
+        bio,
+        socialLinks,
+        education,
+        experience
+      } = req.body;
 
-            // Validate required fields
-            const { name, image, party, nationalId, electionId, electionName } = candidateData;
-            if (!name || !image || !party || !nationalId || !electionId || !electionName) {
-                return res.status(400).json({ message: "All required fields must be provided" });
-                
-            }
+      // Validate required fields
+      if (!name || !no || !party || !nationalId || !electionId || !imagePath) {
+        return res.status(400).json({ message: "All required fields must be provided" });
+      }
 
-            // Check for duplicate national ID
-            const duplicate = await Candidate.findOne({ nationalId }).lean().exec();
-            if (duplicate) {
-                return res.status(409).json({ message: "Candidate with this National ID already exists" });
-            }
+      // Parse JSON fields
+      const parsedBio = bio ? JSON.parse(bio) : {};
+      const parsedSocialLinks = socialLinks ? JSON.parse(socialLinks) : {};
+      const parsedEducation = education ? JSON.parse(education) : [];
+      const parsedExperience = experience ? JSON.parse(experience) : [];
 
-            // Create the new candidate
-            const newCandidate = await Candidate.create({
-                name,
-                image,
-                party,
-                nationalId,
-                bio: candidateData.bio || "",
-                role: "candidate", 
-                electionId,
-                electionName,
-            });
+      const duplicate = await Candidate.findOne({ nationalId }).lean().exec();
+      if (duplicate) {
+        return res.status(409).json({ message: "Candidate with this National ID already exists" });
+      }
 
-            return res.status(201).json({ message: "Candidate added successfully", candidate: newCandidate });
-        } catch (error) {
-            console.error("Error adding candidate:", error);
-            return res.status(500).json({ message: "Server error", error: error.message });
-        }
-    });
+      const newCandidate = await Candidate.create({
+        name,
+        no,
+        image: imagePath,
+        party,
+        nationalId,
+        slogan: slogan || "",
+        profileImage: profileImage || "",
+        bio: parsedBio,
+        socialLinks: parsedSocialLinks,
+        education: parsedEducation,
+        experience: parsedExperience,
+        role: "candidate",
+        electionId,
+      });
+
+      return res.status(201).json({ message: "Candidate added successfully", candidate: newCandidate });
+    } catch (error) {
+      console.error("Error adding candidate:", error);
+      return res.status(500).json({ message: "Server error", error: error.message });
+    }
+  });
 }
