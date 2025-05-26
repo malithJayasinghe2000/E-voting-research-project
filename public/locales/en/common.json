@@ -21,6 +21,8 @@
   "Starting authentication": "Starting authentication process...",
   "Authentication will start": "Authentication will start" ,
   "Position your": "Position your face in the frame",
+  "Connection error": "Connection error. Please try again",
+  "Help is on the way": "Help is on the way. Please wait...",
 
 
   "candidateSelectionRulesTitle": "Voting Rules for Candidate Selection",

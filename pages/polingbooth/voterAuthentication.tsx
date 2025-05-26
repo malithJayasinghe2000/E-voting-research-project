@@ -114,7 +114,7 @@ const VoterAuthentication = () => {
 
     websocket.onerror = (error) => {
       console.error('WebSocket Error:', error)
-      setStatusMessage('Connection error. Please try again.')
+      setStatusMessage(t('Connection error'))
     }
 
     websocket.onclose = () => {
@@ -291,7 +291,7 @@ const VoterAuthentication = () => {
   const startGuide = () => {
     setShowGuide(true);
     setNeedHelpInactive(false);
-    setStatusMessage(t("Help is on the way. Please wait..."));
+    setStatusMessage(t("Help is on the way"));
 
     // Pause WebSocket connection if active
     if (ws) {

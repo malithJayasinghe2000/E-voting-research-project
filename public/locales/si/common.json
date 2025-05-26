@@ -21,6 +21,8 @@
   "Starting authentication": "සත්‍යාපන ක්‍රියාවලිය ආරම්භ කරයි...",
   "Authentication will start": "සත්‍යාපනය ආරම්භ වේ",
   "Position your face": "ඔබගේ මුහුණ පටිය තුල ස්ථාපිත කරන්න",
+  "Connection error": "සම්බන්ධතාවයේ දෝෂයක්. කරුණාකර නැවත උත්සාහ කරන්න",
+  "Help is on the way": "උදවු එමින් පවතියි. කරුණාකර රැඳී සිටින්න...",
 
   
   "candidateSelectionRulesTitle": "බෝතුවැඩිය සඳහා අපේක්ෂක තේරීමේ නියමයන්",
